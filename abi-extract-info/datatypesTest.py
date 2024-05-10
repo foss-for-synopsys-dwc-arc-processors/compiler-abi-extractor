@@ -1,3 +1,4 @@
+#! /bin/env python
 
 variables = [
         ("char", "x10"),
