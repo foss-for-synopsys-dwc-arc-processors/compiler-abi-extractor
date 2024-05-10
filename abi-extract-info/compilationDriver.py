@@ -8,11 +8,14 @@
 import subprocess
 
 class CompilationDriver:
-    def __init__():
+    def __init__(self):
         self.cc = "gcc"
         self.linker = "gcc"
         self.simulator = "TODO_SIM"
         self.cflags = ["-O1"]
+
+    def isWindows(self):
+        return False # For now, later on, we can also support windows
 
     def info(self, W):
         print("%s" % W)
@@ -21,12 +24,12 @@ class CompilationDriver:
     def cmd(self, c, stdout=None, stderr=None, env=None):
         if self.isWindows() and c[0]=="bash":
             c=[c[0], "-o", "igncr"]+c[1:]
-        self.info("EXECUTING: %s" % (self.cursesCMD(" ".join(c))))
+        self.info("EXECUTING: %s" % (" ".join(c)))
         return subprocess.call(c, stdout=stdout, stderr=stderr, env=env)
 
     # c: an array of arguments. The first element is the program to execute.
     # Returns the output
-   def cmdWithResult(self, c, errorMsg=None, env=None):
+    def cmdWithResult(self, c, errorMsg=None, env=None):
         try:
             return subprocess.Popen(c, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
         except OSError as oserror:
@@ -39,7 +42,7 @@ class CompilationDriver:
     def link(self, InputFile, OutputFile):
         self.cmd([self.linker] + self.cflags + [InputFile, "-o", OutputFile])
 
-    def execute(self, args, OutputFile):
+    def simulate(self, args, OutputFile):
         # TODO: Run simulation, return output
         # self.cmdWithResult([self.simulator] + self.cflags + [InputFile, "-o", OutputFile])
-        raise "SIM NOT IMPLEMENTED"
+        raise Exception("SIM NOT IMPLEMENTED")
