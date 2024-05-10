@@ -29,15 +29,18 @@ void print_info(const char *datatype, size_t size, uintptr_t theOffset) {
 """)
 
     # Generate global variabels for each type and print runtime information about them
-    def generateTypeChecksUsingGlobals(self):
+    def generateTypeChecksUsingStructs(self):
         for I, T in enumerate(Types):
             # Ensure we always start with an odd address (as far as C standard guarantees this)
-            self.append(f"char dummy{I};")
-            self.append(f"{T} type{I};\n")
+            self.append("""struct Type%d {
+  char dummy;
+  %s theType;
+} theTypeObject%d;
+""" % (I, T, I))
 
         self.append("void analyzeTypesUsingGlobals() {")
         for I, T in enumerate(Types):
-            self.append(f"  print_info(\"{T}\", sizeof({T}), (uintptr_t)&type{I}-(uintptr_t)&dummy{I});")
+            self.append(f"  print_info(\"{T}\", sizeof({T}), (uintptr_t)&theTypeObject{I}.theType-(uintptr_t)&theTypeObject{I}.dummy);")
         self.append("}\n")
 
     def generateMain(self):
@@ -52,7 +55,7 @@ int main() {
 
     def generate(self):
         self.generateBase()
-        self.generateTypeChecksUsingGlobals()
+        self.generateTypeChecksUsingStructs()
         self.generateMain()
 
         return self.getResult()
