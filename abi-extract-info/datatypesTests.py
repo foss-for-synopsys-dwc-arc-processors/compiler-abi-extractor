@@ -23,7 +23,7 @@ class DataTypesGenerator:
 #include <stdint.h>
 
 void print_info(const char *datatype, size_t size, uintptr_t theOffset) {
-   printf("%s: size: %zu, align: %zu\\n", datatype, size, (size_t)theOffset);
+   printf("%-20s: size: %zu, align: %zu\\n", datatype, size, (size_t)theOffset);
 }
 
 """)
@@ -37,7 +37,7 @@ void print_info(const char *datatype, size_t size, uintptr_t theOffset) {
 
         self.append("void analyzeTypesUsingGlobals() {")
         for I, T in enumerate(Types):
-            self.append(f"  print_info(\"{T}\", sizeof({T}), (uintptr_t)type{I}-(uintptr_t)dummy{I});")
+            self.append(f"  print_info(\"{T}\", sizeof({T}), (uintptr_t)&type{I}-(uintptr_t)&dummy{I});")
         self.append("}\n")
 
     def generateMain(self):
