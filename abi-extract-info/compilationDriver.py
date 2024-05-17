@@ -11,7 +11,7 @@ class CompilationDriver:
     def __init__(self):
         self.cc = "gcc"
         self.linker = "gcc"
-        self.simulator = "TODO_SIM"
+        self.simulator = "wrapper_x86"
         self.cflags = ["-O1"]
 
     def isWindows(self):
@@ -31,6 +31,7 @@ class CompilationDriver:
     # Returns the output
     def cmdWithResult(self, c, errorMsg=None, env=None):
         try:
+            self.info("EXECUTING: %s" % (" ".join(c)))
             return subprocess.Popen(c, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
         except OSError as oserror:
             return None
@@ -42,7 +43,6 @@ class CompilationDriver:
     def link(self, InputFile, OutputFile):
         self.cmd([self.linker] + self.cflags + [InputFile, "-o", OutputFile])
 
-    def simulate(self, args, OutputFile):
-        # TODO: Run simulation, return output
-        # self.cmdWithResult([self.simulator] + self.cflags + [InputFile, "-o", OutputFile])
-        raise Exception("SIM NOT IMPLEMENTED")
+    def simulate(self, args, InputFile, OutputFile):
+        Content = self.cmdWithResult([self.simulator] + [InputFile]).decode()
+        open(OutputFile, "w").write(Content)

@@ -13,7 +13,7 @@ def do_datatypes(Driver):
     open("out_datatypes.c", "w").write(Content)
     Driver.compile("out_datatypes.c", "out_datatypes.o")
     Driver.link("out_datatypes.o", "out_datatypes.elf")
-    Driver.simulate("out_datatypes.elf", "out_datatypes.txt")
+    Driver.simulate("", "out_datatypes.elf", "out_datatypes.txt")
 
 def do_tests(Driver):
      do_datatypes(Driver)
