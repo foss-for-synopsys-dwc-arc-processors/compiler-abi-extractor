@@ -11,7 +11,8 @@ import datatypesTests
 def do_datatypes(Driver):
     Content = datatypesTests.generate()
     open("out_datatypes.c", "w").write(Content)
-    Driver.compile("out_datatypes.c", "out_datatypes.o")
+    Driver.compile("out_datatypes.c", "out_datatypes.s")
+    Driver.assemble("out_datatypes.s", "out_datatypes.o")
     Driver.link("out_datatypes.o", "out_datatypes.elf")
     Driver.simulate("", "out_datatypes.elf", "out_datatypes.txt")
 

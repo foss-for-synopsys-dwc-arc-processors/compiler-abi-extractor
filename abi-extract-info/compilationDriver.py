@@ -10,6 +10,7 @@ import subprocess
 class CompilationDriver:
     def __init__(self):
         self.cc = "gcc"
+        self.assembler = "gcc"
         self.linker = "gcc"
         self.simulator = "wrapper_x86"
         self.cflags = ["-O1"]
@@ -38,7 +39,10 @@ class CompilationDriver:
 
     # Compiler the specified program into an object file
     def compile(self, InputFile, OutputFile):
-        self.cmd([self.cc] + self.cflags + [InputFile, "-c", "-o", OutputFile])
+        self.cmd([self.cc] + self.cflags + [InputFile, "-S", "-o", OutputFile])
+
+    def assemble(self, InputFile, OutputFile):
+        self.cmd([self.assembler] + self.cflags + [InputFile, "-c", "-o", OutputFile])
 
     def link(self, InputFile, OutputFile):
         self.cmd([self.linker] + self.cflags + [InputFile, "-o", OutputFile])
