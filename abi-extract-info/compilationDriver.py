@@ -44,8 +44,13 @@ class CompilationDriver:
     def assemble(self, InputFile, OutputFile):
         self.cmd([self.assembler] + self.cflags + [InputFile, "-c", "-o", OutputFile])
 
+    # Initialy, only one input file was needed, but now multiple files are required
+    # for expanded tests. A mechanism was added to handle multiple files, converting
+    # a single file into a list of necessary.
     def link(self, InputFile, OutputFile):
-        self.cmd([self.linker] + self.cflags + [InputFile, "-o", OutputFile])
+        if isinstance(InputFile, str):
+            InputFile = [InputFile]
+        self.cmd([self.linker] + self.cflags + InputFile + ["-o", OutputFile])
 
     def simulate(self, args, InputFile, OutputFile):
         Content = self.cmdWithResult([self.simulator] + [InputFile]).decode()
