@@ -13,6 +13,12 @@ It analyzes a register and stack (up to 128 bytes) dump values
 as input and matches these magic numbers to appropriate
 labels (registers, and/or stack), considering the sequecne
 in which they appear.
+
+Additionally, it checks for any duplicate occurrences of
+magic numbers, which might occur if a magic number is generated
+by the compiler and stored in a register, leading to potential
+conflicts. When duplicates are detected, it issues a warning
+alerting that was unable to distinct.
 """
 
 class RISCV:
@@ -49,10 +55,13 @@ class RISCV:
         return mapp
 
     # Identify the magic numbers (1001 to 1017)
+    # If duplicate magic numbers are found,
+    # a warning is issued.
     def find_magic_number(self, mapp):
         magic_numbers = set(range(1001, 1018))
         found_magic_numbers = []
         number_keys = {num: [] for num in magic_numbers}
+        warnings = []
 
         for number in magic_numbers:
             for key, val in mapp.items():
@@ -60,7 +69,11 @@ class RISCV:
                     number_keys[number].append(key)
                     found_magic_numbers.append(key)
 
-        return found_magic_numbers
+        for num, keys in number_keys.items():
+            if len(keys) > 1:
+                warnings.append(f"Warning: Argument value '{num}' duplicated at {keys}. Unable to distinct.")
+
+        return found_magic_numbers, warnings
 
 class Parser:
     def __init__(self):
@@ -78,18 +91,22 @@ class Parser:
     def run(self, file_name):
         content = self.read_file(file_name)
         mapp = self.Riscv.mapping(content)
-        found_magic_numbers = self.Riscv.find_magic_number(mapp)
+        found_magic_numbers, warnings = self.Riscv.find_magic_number(mapp)
 
-        self.print_magic_numbers(found_magic_numbers)
+        self.print_magic_numbers(found_magic_numbers, warnings)
         return self.Result
 
     # Append the results and return it.
-    def print_magic_numbers(self, found_magic_numbers):
+    def print_magic_numbers(self, found_magic_numbers, warnings):
         self.append("Argument Passing layout - 17 arguments:")
         for item in found_magic_numbers:
             self.append("\n" + item)
 
         self.append("\n")
+
+        if warnings:
+            for warning in warnings:
+                self.append(warning)
 
 def parser(file_name):
     Parser().run(file_name)
