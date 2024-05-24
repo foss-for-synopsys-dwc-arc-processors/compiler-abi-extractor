@@ -9,10 +9,10 @@ import subprocess
 
 class CompilationDriver:
     def __init__(self):
-        self.cc = "gcc"
-        self.assembler = "gcc"
-        self.linker = "gcc"
-        self.simulator = "wrapper_x86"
+        self.cc = "riscv32-unknown-elf-gcc"
+        self.assembler = "riscv32-unknown-elf-gcc"
+        self.linker = "riscv32-unknown-elf-gcc"
+        self.simulator = "riscv32-unknown-elf-run"
         self.cflags = ["-O1"]
 
     def isWindows(self):
