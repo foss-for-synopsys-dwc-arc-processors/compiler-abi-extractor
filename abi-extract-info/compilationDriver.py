@@ -9,9 +9,9 @@ import subprocess
 
 class CompilationDriver:
     def __init__(self):
-        self.cc = "riscv32-unknown-elf-gcc"
-        self.assembler = "riscv32-unknown-elf-gcc"
-        self.linker = "riscv32-unknown-elf-gcc"
+        self.cc = "riscv32-wrapper-gcc"
+        self.assembler = "riscv32-wrapper-gcc"
+        self.linker = "riscv32-wrapper-ld"
         self.simulator = "riscv32-unknown-elf-run"
         self.cflags = ["-O1"]
 
