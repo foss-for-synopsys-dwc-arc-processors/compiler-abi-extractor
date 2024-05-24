@@ -1,5 +1,5 @@
 
-extern callee (int,int,int,int,
+extern void callee (int,int,int,int,
         int,int,int,int,
         int,int,int,int,
         int,int,int,int,
