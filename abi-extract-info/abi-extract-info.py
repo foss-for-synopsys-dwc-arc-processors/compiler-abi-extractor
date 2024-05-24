@@ -18,9 +18,9 @@ def do_datatypes(Driver):
     Driver.simulate("", "out_datatypes.elf", "out_datatypes.txt")
 
 def do_argpass(Driver):
-    Driver.compile("tests/argpass/caller.c", "out_caller.s")
+    Driver.compile("src/argpass/caller.c", "out_caller.s")
     Driver.assemble("out_caller.s", "out_caller.o")
-    Driver.assemble("tests/argpass/callee.s", "out_callee.o")
+    Driver.assemble("src/argpass/riscv/callee.s", "out_callee.o")
     Driver.link(["out_callee.o", "out_caller.o"], "out_argpass.elf")
     Driver.simulate("", "out_argpass.elf", "out_argpass.stdout")
     Content = argPassTests.parser("out_argpass.stdout")
