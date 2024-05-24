@@ -7,6 +7,7 @@
 
 import compilationDriver
 import datatypesTests
+import argPassTests
 
 def do_datatypes(Driver):
     Content = datatypesTests.generate()
@@ -16,8 +17,18 @@ def do_datatypes(Driver):
     Driver.link("out_datatypes.o", "out_datatypes.elf")
     Driver.simulate("", "out_datatypes.elf", "out_datatypes.txt")
 
+def do_argpass(Driver):
+    Driver.compile("tests/argpass/caller.c", "out_caller.s")
+    Driver.assemble("out_caller.s", "out_caller.o")
+    Driver.assemble("tests/argpass/callee.s", "out_callee.o")
+    Driver.link(["out_callee.o", "out_caller.o"], "out_argpass.elf")
+    Driver.simulate("", "out_argpass.elf", "out_argpass.stdout")
+    Content = argPassTests.parser("out_argpass.stdout")
+    open("out_argpass.txt", "w").write(" ".join(Content))
+
 def do_tests(Driver):
      do_datatypes(Driver)
+     do_argpass(Driver)
      # ,, more different kind of tests here
 
 if __name__ == "__main__":
