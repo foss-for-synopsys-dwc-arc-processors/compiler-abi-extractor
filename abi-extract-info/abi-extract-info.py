@@ -11,20 +11,20 @@ import argPassTests
 
 def do_datatypes(Driver):
     Content = datatypesTests.generate()
-    open("out_datatypes.c", "w").write(Content)
-    Driver.compile("out_datatypes.c", "out_datatypes.s")
-    Driver.assemble("out_datatypes.s", "out_datatypes.o")
-    Driver.link("out_datatypes.o", "out_datatypes.elf")
-    Driver.simulate("", "out_datatypes.elf", "out_datatypes.txt")
+    open("tmp/out_datatypes.c", "w").write(Content)
+    Driver.compile("tmp/out_datatypes.c", "tmp/out_datatypes.s")
+    Driver.assemble("tmp/out_datatypes.s", "tmp/out_datatypes.o")
+    Driver.link("tmp/out_datatypes.o", "tmp/out_datatypes.elf")
+    Driver.simulate("", "tmp/out_datatypes.elf", "tmp/out_datatypes.txt")
 
 def do_argpass(Driver):
-    Driver.compile("src/argpass/caller.c", "out_caller.s")
-    Driver.assemble("out_caller.s", "out_caller.o")
-    Driver.assemble("src/argpass/riscv/callee.s", "out_callee.o")
-    Driver.link(["out_callee.o", "out_caller.o"], "out_argpass.elf")
-    Driver.simulate("", "out_argpass.elf", "out_argpass.stdout")
-    Content = argPassTests.parser("out_argpass.stdout")
-    open("out_argpass.txt", "w").write(" ".join(Content))
+    Driver.compile("src/argpass/caller.c", "tmp/out_caller.s")
+    Driver.assemble("tmp/out_caller.s", "tmp/out_caller.o")
+    Driver.assemble("src/argpass/riscv/callee.s", "tmp/out_callee.o")
+    Driver.link(["tmp/out_callee.o", "tmp/out_caller.o"], "tmp/out_argpass.elf")
+    Driver.simulate("", "tmp/out_argpass.elf", "tmp/out_argpass.stdout")
+    Content = argPassTests.parser("tmp/out_argpass.stdout")
+    open("tmp/out_argpass.txt", "w").write(" ".join(Content))
 
 def do_tests(Driver):
      do_datatypes(Driver)
