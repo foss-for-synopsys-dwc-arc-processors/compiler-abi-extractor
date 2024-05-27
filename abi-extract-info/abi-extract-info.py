@@ -29,7 +29,7 @@ def do_argpass(Driver, Report):
     Driver.link(["tmp/out_callee.o", "tmp/out_caller.o"], "tmp/out_argpass.elf")
     Driver.simulate("", "tmp/out_argpass.elf", "tmp/out_argpass.stdout")
     Content = argPassTests.parser("tmp/out_argpass.stdout")
-    open("tmp/out_argpass.txt", "w").write(" ".join(Content))
+    open("tmp/out_argpass.txt", "w").write("".join(Content))
 
     # Store the generated report file for argument passing test case.
     Report.append("tmp/out_argpass.txt")
