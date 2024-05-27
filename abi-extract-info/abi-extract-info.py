@@ -5,9 +5,9 @@
 # This source code is licensed under the GPL-3.0 license found in
 # the LICENSE file in the root directory of this source tree.
 
-import compilationDriver
-import datatypesTests
-import argPassTests
+from lib import compilationDriver
+from lib import datatypesTests
+from lib import argPassTests
 
 def do_datatypes(Driver):
     Content = datatypesTests.generate()
