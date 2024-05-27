@@ -77,7 +77,7 @@ class RISCV:
 
 class Parser:
     def __init__(self):
-        self.Riscv = RISCV()
+        self.Target = RISCV()
         self.Result = []
 
     def read_file(self, file_name):
@@ -90,8 +90,8 @@ class Parser:
 
     def run(self, file_name):
         content = self.read_file(file_name)
-        mapp = self.Riscv.mapping(content)
-        found_magic_numbers, warnings = self.Riscv.find_magic_number(mapp)
+        mapp = self.Target.mapping(content)
+        found_magic_numbers, warnings = self.Target.find_magic_number(mapp)
 
         self.print_magic_numbers(found_magic_numbers, warnings)
         return self.Result
