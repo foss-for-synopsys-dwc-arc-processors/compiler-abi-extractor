@@ -6,10 +6,12 @@
 # the LICENSE file in the root directory of this source tree.
 
 from lib import compilationDriver
+from lib import reportDriver
 from lib import datatypesTests
 from lib import argPassTests
 
-def do_datatypes(Driver):
+
+def do_datatypes(Driver, Report):
     Content = datatypesTests.generate()
     open("tmp/out_datatypes.c", "w").write(Content)
     Driver.compile("tmp/out_datatypes.c", "tmp/out_datatypes.s")
@@ -17,7 +19,10 @@ def do_datatypes(Driver):
     Driver.link("tmp/out_datatypes.o", "tmp/out_datatypes.elf")
     Driver.simulate("", "tmp/out_datatypes.elf", "tmp/out_datatypes.txt")
 
-def do_argpass(Driver):
+    # Store the generated report file for datatypes test case.
+    Report.append("tmp/out_datatypes.txt")
+
+def do_argpass(Driver, Report):
     Driver.compile("src/argpass/caller.c", "tmp/out_caller.s")
     Driver.assemble("tmp/out_caller.s", "tmp/out_caller.o")
     Driver.assemble("src/argpass/riscv/callee.s", "tmp/out_callee.o")
@@ -26,11 +31,18 @@ def do_argpass(Driver):
     Content = argPassTests.parser("tmp/out_argpass.stdout")
     open("tmp/out_argpass.txt", "w").write(" ".join(Content))
 
-def do_tests(Driver):
-     do_datatypes(Driver)
-     do_argpass(Driver)
+    # Store the generated report file for argument passing test case.
+    Report.append("tmp/out_argpass.txt")
+
+def do_tests(Driver, Report):
+     do_datatypes(Driver, Report)
+     do_argpass(Driver, Report)
      # ,, more different kind of tests here
 
 if __name__ == "__main__":
     Driver = compilationDriver.CompilationDriver()
-    do_tests(Driver)
+    Report = reportDriver.ReportDriver()
+    do_tests(Driver, Report)
+
+    # Generate summary report.
+    Report.generateReport()
