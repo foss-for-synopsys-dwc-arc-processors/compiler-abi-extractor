@@ -98,15 +98,14 @@ class Parser:
 
     # Append the results and return it.
     def print_magic_numbers(self, found_magic_numbers, warnings):
-        self.append("Argument Passing layout - 17 arguments:")
+        self.append("Argument Passing layout - 17 arguments:\n")
         for item in found_magic_numbers:
-            self.append("\n" + item)
+            self.append(item + "\n")
 
-        self.append("\n")
 
         if warnings:
             for warning in warnings:
-                self.append(warning)
+                self.append(warning + "\n")
 
 def parser(file_name):
     Parser().run(file_name)
@@ -120,4 +119,4 @@ if __name__ == "__main__":
 
     file_name = sys.argv[1]
     result = Parser().run(file_name)
-    print(" ".join(result))
+    print("".join(result), end="")
