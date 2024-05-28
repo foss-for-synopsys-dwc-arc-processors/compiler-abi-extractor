@@ -25,19 +25,28 @@ class ReportDriver:
             content = file.read()
         return content
 
-    def generateReport(self):
-        with open(self.ReportFile, "w") as outFile:
+    def generateReport(self, reportFile=None):
+        # By default the report file output is defined
+        # in the class constructor, althought for testing
+        # purposes the output file path needs to be altered
+        # through command-line execution.
+        if reportFile is None:
+            reportFile = self.ReportFile
+        with open(reportFile, "w") as outFile:
             for filePath in self.Files:
                 content = self.readFile(filePath)
                 outFile.writelines(content + "\n")
 
 import sys
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python3 reportDriver.py <file_name01>,<file_name02>,..")
+    if len(sys.argv) < 2:
+        print("Usage: python3 reportDriver.py <file_name01>,<file_name02>,.. [output_file]")
         sys.exit(1)
     Driver = ReportDriver()
     for f in sys.argv[1].split(","):
         Driver.append(f)
 
-    Driver.generateReport()
+    reportFile = None
+    if len(sys.argv) > 2:
+        reportFile = sys.argv[2]
+    Driver.generateReport(reportFile)
