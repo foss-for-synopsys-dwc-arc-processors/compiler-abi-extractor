@@ -34,9 +34,18 @@ def do_argpass(Driver, Report):
     # Store the generated report file for argument passing test case.
     Report.append("tmp/out_argpass.txt")
 
+def do_endianness(Driver, Report):
+    Driver.compile("src/endianness/endianness.c", "tmp/out_endianness.s")
+    Driver.assemble("tmp/out_endianness.s", "tmp/out_endianness.o")
+    Driver.link("tmp/out_endianness.o", "tmp/out_endianness.elf")
+    Driver.simulate("", "tmp/out_endianness.elf", "tmp/out_endianness.stdout")
+
+    Report.append("tmp/out_endianness.stdout")
+
 def do_tests(Driver, Report):
      do_datatypes(Driver, Report)
      do_argpass(Driver, Report)
+     do_endianness(Driver, Report)
      # ,, more different kind of tests here
 
 if __name__ == "__main__":
