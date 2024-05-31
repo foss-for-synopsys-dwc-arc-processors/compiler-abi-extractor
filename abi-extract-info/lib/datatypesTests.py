@@ -6,7 +6,7 @@
 # the LICENSE file in the root directory of this source tree.
 
 Types = [ "char", "signed char", "unsigned char", "short", "int", "long", "long long",
-          "float", "double", "long double",
+          "void*", "float", "double", "long double",
         ]
 
 class DataTypesGenerator:
