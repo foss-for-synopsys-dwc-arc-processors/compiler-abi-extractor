@@ -58,7 +58,7 @@ class RISCV:
     # If duplicate magic numbers are found,
     # a warning is issued.
     def find_magic_number(self, mapp):
-        magic_numbers = set(range(1001, 1018))
+        magic_numbers = range(1001, 1018)
         found_magic_numbers = []
         number_keys = {num: [] for num in magic_numbers}
         warnings = []
