@@ -14,33 +14,22 @@ from lib import argPassTests
 def do_datatypes(Driver, Report):
     Content = datatypesTests.generate()
     open("tmp/out_datatypes.c", "w").write(Content)
-    Driver.compile("tmp/out_datatypes.c", "tmp/out_datatypes.s")
-    Driver.assemble("tmp/out_datatypes.s", "tmp/out_datatypes.o")
-    Driver.link("tmp/out_datatypes.o", "tmp/out_datatypes.elf")
-    Driver.simulate("", "tmp/out_datatypes.elf", "tmp/out_datatypes.txt")
+    stdoutFile = Driver.run(["tmp/out_datatypes.c"], [], "out_datatypes")
 
     # Store the generated report file for datatypes test case.
-    Report.append("tmp/out_datatypes.txt")
+    Report.append(stdoutFile)
 
 def do_argpass(Driver, Report):
-    Driver.compile("src/argpass/caller.c", "tmp/out_caller.s")
-    Driver.assemble("tmp/out_caller.s", "tmp/out_caller.o")
-    Driver.assemble("src/argpass/riscv/callee.s", "tmp/out_callee.o")
-    Driver.link(["tmp/out_callee.o", "tmp/out_caller.o"], "tmp/out_argpass.elf")
-    Driver.simulate("", "tmp/out_argpass.elf", "tmp/out_argpass.stdout")
-    Content = argPassTests.parser("tmp/out_argpass.stdout")
+    stdoutFile = Driver.run(["src/argpass/caller.c"], ["src/argpass/riscv/callee.s"], "out_argpass")
+    Content = argPassTests.parser(stdoutFile, "int")
     open("tmp/out_argpass.txt", "w").write("".join(Content))
 
     # Store the generated report file for argument passing test case.
     Report.append("tmp/out_argpass.txt")
 
 def do_endianness(Driver, Report):
-    Driver.compile("src/endianness/endianness.c", "tmp/out_endianness.s")
-    Driver.assemble("tmp/out_endianness.s", "tmp/out_endianness.o")
-    Driver.link("tmp/out_endianness.o", "tmp/out_endianness.elf")
-    Driver.simulate("", "tmp/out_endianness.elf", "tmp/out_endianness.stdout")
-
-    Report.append("tmp/out_endianness.stdout")
+    stdoutFile = Driver.run(["src/endianness/endianness.c"], [], "out_endianness")
+    Report.append(stdoutFile)
 
 def do_tests(Driver, Report):
      do_datatypes(Driver, Report)
