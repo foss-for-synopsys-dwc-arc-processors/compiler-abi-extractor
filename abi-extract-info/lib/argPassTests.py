@@ -46,19 +46,50 @@ class RISCV:
             stack.append(f"sp+({i * 4})")
         return stack
 
+class Datatypes:
+    def __init__(self):
+        self.Datatypes = {}
+        self.set_datatypes()
+
+    def set_datatypes(self):
+        self.Datatypes = {
+            "char": range(81, 98),
+            "int": range(1001, 1018),
+            "short": range(1001, 1018),
+            "long":  range(1001, 1018)
+        }
+
+    def get_datatypes(self, datatype):
+        return self.Datatypes[datatype]
+
+class Parser:
+    def __init__(self):
+        self.Target = RISCV()
+        self.Result = []
+
+    def read_file(self, file_name):
+        with open(file_name, "r") as file:
+            content = file.read().splitlines()
+        return content
+
+    def append(self, W):
+        self.Result.append(W)
+
     # Create a mapping between the register set and
     # stack to the output content
     def mapping(self, content):
         mapp = {}
-        for i in range(len(self.Regs_stack)):
-            mapp[self.Regs_stack[i]] = content[i]
+        for i in range(len(self.Target.Regs_stack)):
+            mapp[self.Target.Regs_stack[i]] = content[i]
         return mapp
 
     # Identify the magic numbers (1001 to 1017)
     # If duplicate magic numbers are found,
     # a warning is issued.
-    def find_magic_number(self, mapp):
-        magic_numbers = range(1001, 1018)
+    def find_magic_number(self, mapp, datatype):
+        # magic_numbers = range(1001, 1018)
+        magic_numbers = Datatypes().get_datatypes(datatype)
+        # magic_numbers = range(1001, 1018)
         found_magic_numbers = []
         number_keys = {num: [] for num in magic_numbers}
         warnings = []
@@ -75,41 +106,28 @@ class RISCV:
 
         return found_magic_numbers, warnings
 
-class Parser:
-    def __init__(self):
-        self.Target = RISCV()
-        self.Result = []
 
-    def read_file(self, file_name):
-        with open(file_name, "r") as file:
-            content = file.read().splitlines()
-        return content
-
-    def append(self, W):
-        self.Result.append(W)
-
-    def run(self, file_name):
+    def run(self, file_name, datatype):
         content = self.read_file(file_name)
-        mapp = self.Target.mapping(content)
-        found_magic_numbers, warnings = self.Target.find_magic_number(mapp)
+        mapp = self.mapping(content)
+        found_magic_numbers, warnings = self.find_magic_number(mapp, datatype)
 
-        self.print_magic_numbers(found_magic_numbers, warnings)
+        self.print_magic_numbers(found_magic_numbers, warnings, datatype)
         return self.Result
 
     # Append the results and return it.
-    def print_magic_numbers(self, found_magic_numbers, warnings):
-        self.append("Argument Passing layout - 17 arguments:\n")
+    def print_magic_numbers(self, found_magic_numbers, warnings, datatype):
+        self.append(f"Argument Passing layout - 17 arguments:\n")
+        self.append(f"{datatype}: ")
         for item in found_magic_numbers:
-            self.append(item + "\n")
-
+            self.append(item+ " ")
 
         if warnings:
             for warning in warnings:
                 self.append(warning + "\n")
 
-def parser(file_name):
-    Parser().run(file_name)
-    return Parser().run(file_name)
+def parser(file_name, datatype):
+    return Parser().run(file_name, datatype)
 
 import sys
 if __name__ == "__main__":
