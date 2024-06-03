@@ -5,6 +5,7 @@
 # This source code is licensed under the GPL-3.0 license found in
 # the LICENSE file in the root directory of this source tree.
 
+import os
 import subprocess
 
 class CompilationDriver:
@@ -36,6 +37,29 @@ class CompilationDriver:
             return subprocess.Popen(c, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
         except OSError as oserror:
             return None
+
+    # Compile, assemble, link and simulate wrapper to reduce extensive code.
+    def run(self, srcFiles, asmFiles, outFile, tmp="tmp/"):
+        for srcFile in srcFiles:
+            asmFile = tmp + os.path.basename(srcFile)
+            asmFile = asmFile.replace(".c", ".s")
+            self.compile(srcFile, asmFile)
+            asmFiles.append(asmFile)
+
+        objFiles = []
+        for asmFile in asmFiles:
+            objFile = tmp + os.path.basename(asmFile)
+            objFile = objFile.replace(".s", ".o")
+            self.assemble(asmFile, objFile)
+            objFiles.append(objFile)
+
+        outputFile = tmp + outFile + ".elf"
+        self.link(objFiles, outputFile)
+
+        stdoutFile = tmp + outFile + ".stdout"
+        self.simulate("", outputFile, stdoutFile)
+
+        return stdoutFile
 
     # Compiler the specified program into an object file
     def compile(self, InputFile, OutputFile):
