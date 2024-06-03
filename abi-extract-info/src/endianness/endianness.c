@@ -14,36 +14,38 @@
  * of the current compiler. It leverages C unions to define
  * a long long integer value and subsequently examines the
  * contents of a char datatype.
- *
- * - It is determined to be little-endian if the first byte
- *   found is "ef".
- *
- * - It is determined to be big-endian if the first byte
- *   found is "01".
- *
- * TODO: mixed-endian.
  */
 
 union Endian {
-    unsigned long long int ll_value;
-    unsigned char c_value;
+  unsigned long long int ll_value;
+  unsigned char c_value[sizeof(unsigned long long)];
 };
 
-int
-main (void)
-{
-  // Define the union
+int main (void) {
+  const unsigned long long ref_value = 0x0123456789abcdef;
+  const unsigned long long le_value  = 0xefcdab8967452301;
+  const unsigned long long be_value  = 0x0123456789abcdef;
+
+    // Define the union
   union Endian test;
-  test.ll_value = 0x0123456789abcdef;
+  test.ll_value = ref_value;
+
+  unsigned long long value = 0;
+  for (int i=0; i<sizeof(unsigned long long); ++i) {
+    value = (value << 8) | test.c_value[i];
+  }
 
   // Check the first byte
-  if (test.c_value == 0xef)
-    printf("This system is little-endian.\n");
-  else if (test.c_value == 0x01)
-    printf("This system is big-endian.\n");
+  printf("Endianess test:\n");
+  printf("- Wrote (as ull):  %016llx\n", ref_value);
+  printf("- Read  (as char): %016llx\n", value);
+  if (value == le_value)
+    printf("- This system is little-endian.\n");
+  else if (value == be_value)
+    printf("- This system is big-endian.\n");
   else
     // TODO: Validate mixed endianness.
-    printf("Endianness cannot be determined.\n");
+    printf("- This system is mixed-endianness.\n");
 
   return 0;
 }
