@@ -24,10 +24,10 @@ class ArgPassGenerator:
         self.Result = []
         # Dictionary mapping data types to lambda functions that generate appropriate values
         self.type_value_generator = {
-            "char": range(81, 98),   # Range of values from 81 to 97
-            "int": range(1001, 1018),  # Range of values from 1001 to 1017
-            "short": range(1001, 1018),  # Range of values from 1001 to 1017
-            "long": range(1001, 1018)   # Range of values from 1001 to 1017
+            "char": range(81, 97),   # Range of values from 81 to 97
+            "int": range(1001, 1017),  # Range of values from 1001 to 1017
+            "short": range(1001, 1017),  # Range of values from 1001 to 1017
+            "long": range(1001, 1017)   # Range of values from 1001 to 1017
         }
 
     def append(self, W):
@@ -69,7 +69,7 @@ int main(void) {{
         files = []
         for type_name in self.type_value_generator.keys():
             # Create a list of 17 identical types
-            types = [type_name for _ in range(17)]
+            types = [type_name for _ in range(16)]
             # Generate the file and store the result
             files.append((type_name, self.generateFile(types)))
         return files

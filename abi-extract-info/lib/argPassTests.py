@@ -53,10 +53,10 @@ class Datatypes:
 
     def set_datatypes(self):
         self.Datatypes = {
-            "char": range(81, 98),
-            "int": range(1001, 1018),
-            "short": range(1001, 1018),
-            "long":  range(1001, 1018)
+            "char": range(81, 97),
+            "int": range(1001, 1017),
+            "short": range(1001, 1017),
+            "long":  range(1001, 1017)
         }
 
     def get_datatypes(self, datatype):
@@ -126,7 +126,7 @@ class Parser:
             for warning in warnings:
                 self.append(warning + "\n")
 def header():
-    return ["17 Argument Passing test:\n"]
+    return ["16 Argument Passing test:\n"]
 
 def parser(file_name, datatype):
     return Parser().run(file_name, datatype)
