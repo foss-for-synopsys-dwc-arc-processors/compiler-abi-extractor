@@ -63,6 +63,7 @@ class Datatypes:
                 1148995011,1149011558,1149028106,1149044654,
                 1149061202,1149077750,1149094298,1149110845
             ],
+            "char,short": [i for pair in zip(range(71, 79), range(1001, 1009)) for i in pair]
         }
 
     def get_datatypes(self, datatype):
