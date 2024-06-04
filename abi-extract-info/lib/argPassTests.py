@@ -53,7 +53,7 @@ class Datatypes:
 
     def set_datatypes(self):
         self.Datatypes = {
-            "char": range(81, 97),
+            "char": range(70, 86),
             "int": range(1001, 1017),
             "short": range(1001, 1017),
             "long":  range(1001, 1017)
