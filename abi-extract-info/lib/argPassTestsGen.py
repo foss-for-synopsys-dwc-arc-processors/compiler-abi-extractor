@@ -69,9 +69,9 @@ int main(void) {{
     # one for each type in the type_value_generator dictionary
     def generate(self):
         files = []
-        for type_name in self.type_value_generator.keys():
-            # Create a list of 17 identical types
-            types = [type_name for _ in range(16)]
+        for type_name, content in self.type_value_generator.items():
+            # Create a list of identical types
+            types = [type_name for _ in range(len(content))]
             # Generate the file and store the result
             files.append((type_name, self.generateFile(types)))
         return files
