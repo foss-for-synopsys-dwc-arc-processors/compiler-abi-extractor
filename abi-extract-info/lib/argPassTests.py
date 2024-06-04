@@ -124,7 +124,7 @@ class Parser:
 
     # Append the results and return it.
     def print_magic_numbers(self, found_magic_numbers, warnings, datatype):
-        self.append(f"{datatype}: ")
+        self.append(f"{datatype}:".ljust(15))
         for item in found_magic_numbers:
             self.append(item+ " ")
 
