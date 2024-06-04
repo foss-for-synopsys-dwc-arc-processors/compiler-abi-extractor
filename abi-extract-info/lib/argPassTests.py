@@ -125,6 +125,8 @@ class Parser:
         if warnings:
             for warning in warnings:
                 self.append(warning + "\n")
+def header():
+    return ["17 Argument Passing test:\n"]
 
 def parser(file_name, datatype):
     return Parser().run(file_name, datatype)
