@@ -21,16 +21,18 @@ def do_datatypes(Driver, Report):
 
 def do_argpass(Driver, Report):
     Content = argPassTestsGen.generate()
+
+    OutputContent = []
     for type_name, content in Content:
         SrcFile = f"tmp/out_caller_{type_name}.c"
         open(SrcFile, "w").write(content)
-        StdoutFile = Driver.run([SrcFile], ["src/argpass/riscv/callee.s"], "out_argpass")
-        OutputContent = argPassTests.parser(StdoutFile, type_name)
-        ParsedFile = f"tmp/out_caller_{type_name}.txt"
-        open(ParsedFile, "w").write("".join(OutputContent))
+        StdoutFile = Driver.run([SrcFile], ["src/argpass/riscv/callee.s"], f"out_argpass_{type_name}")
+        OutputContent += argPassTests.parser(StdoutFile, type_name)
+    ParsedFile = f"tmp/out_argpass.txt"
+    open(ParsedFile, "w").write("".join(OutputContent))
 
-        # Store the generated report file for argument passing test case.
-        Report.append(ParsedFile)
+    # Store the generated report file for argument passing test case.
+    Report.append(ParsedFile)
 
 
 def do_endianness(Driver, Report):
