@@ -25,9 +25,9 @@ class ArgPassGenerator:
         # Dictionary mapping data types to lambda functions that generate appropriate values
         self.type_value_generator = {
             "char":  [f"'{chr(70 + i)}'" for i in range(16)], # Range of chars from 'F' to 'U'
-            "int": range(1001, 1017),  # Range of values from 1001 to 1017
-            "short": range(1001, 1017),  # Range of values from 1001 to 1017
-            "long": range(1001, 1017)   # Range of values from 1001 to 1017
+            "int":   [str(1001 + i) for i in range(16)], # Range of values from 1001 to 1016
+            "short": [str(1001 + i) for i in range(16)], # ""
+            "long":  [str(1001 + i) for i in range(16)], # ""
         }
 
     def append(self, W):
