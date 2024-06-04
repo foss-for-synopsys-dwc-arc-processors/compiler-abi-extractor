@@ -117,11 +117,11 @@ class Parser:
 
     # Append the results and return it.
     def print_magic_numbers(self, found_magic_numbers, warnings, datatype):
-        self.append(f"Argument Passing layout - 17 arguments:\n")
         self.append(f"{datatype}: ")
         for item in found_magic_numbers:
             self.append(item+ " ")
 
+        self.append("\n")
         if warnings:
             for warning in warnings:
                 self.append(warning + "\n")

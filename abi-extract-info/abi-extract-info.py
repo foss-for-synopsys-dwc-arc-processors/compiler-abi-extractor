@@ -22,7 +22,7 @@ def do_datatypes(Driver, Report):
 def do_argpass(Driver, Report):
     Content = argPassTestsGen.generate()
 
-    OutputContent = []
+    OutputContent = argPassTests.header()
     for type_name, content in Content:
         SrcFile = f"tmp/out_caller_{type_name}.c"
         open(SrcFile, "w").write(content)
