@@ -111,13 +111,12 @@ class Parser:
     def append(self, W):
         self.Result.append(W)
 
-    # Create a mapping between the register set and
-    # stack to the output content
     def mapping(self, content):
-        mapp = {}
+    # Create a mapping between the register set and stack to the output content
+        reg_map = {}
         for i in range(len(self.Target.Regs_stack)):
-            mapp[self.Target.Regs_stack[i]] = content[i]
-        return mapp
+            reg_map[self.Target.Regs_stack[i]] = content[i]
+        return reg_map
 
     def find_magic_number(self, mapp, datatype):
         # Retrieve magic numbers for the given datatype
