@@ -21,6 +21,7 @@ conflicts. When duplicates are detected, it issues a warning
 alerting that was unable to distinct.
 """
 
+import struct
 class RISCV:
     def __init__(self):
         self.Regs = self.get_regs()
@@ -69,6 +70,34 @@ class Datatypes:
     def get_datatypes(self, datatype):
         return self.Datatypes[datatype]
 
+class Converter:
+    def __init__(self):
+        self.set_format()
+
+     # Set format strings for struct packing
+    def set_format(self):
+        self.Format = {
+            "char": "c",
+            "signed char": "!i",    #"!b"
+            "unsigned char": "!B",
+            "short": "!i",          # !h
+            "unsigned short": "!I", # !H
+            "int": "!i",
+            "unsigned int": "!I",
+            "long": "!l",
+            "unsigned long": "!L",
+            "long long": "!q",
+            "unsigned long long": "!Q",
+            "float": "!f",
+            "double": "!d"
+        }
+
+    def to_hex(self, datatype, value):
+        # Pack the value based on its datatype format and convert it to hex
+        packed_value = struct.pack(self.Format[datatype], value)
+        hex_value = "0x" + packed_value.hex().lstrip('0')
+        return hex_value
+
 class Parser:
     def __init__(self):
         self.Target = RISCV()
@@ -90,29 +119,72 @@ class Parser:
             mapp[self.Target.Regs_stack[i]] = content[i]
         return mapp
 
-    # Identify the magic numbers (1001 to 1017)
-    # If duplicate magic numbers are found,
-    # a warning is issued.
     def find_magic_number(self, mapp, datatype):
-        # magic_numbers = range(1001, 1018)
+        # Retrieve magic numbers for the given datatype
         magic_numbers = Datatypes().get_datatypes(datatype)
-        # magic_numbers = range(1001, 1018)
+
         found_magic_numbers = []
-        number_keys = {num: [] for num in magic_numbers}
+        number_keys = {}
         warnings = []
 
         for number in magic_numbers:
+            # Convert each magic number to its hexadecimal representation
+            hex_value = Converter().to_hex(datatype, number)
+
+            found = False
             for key, val in mapp.items():
-                if int(val) == number:
-                    number_keys[number].append(key)
+                # Check if the value in the map matches the magic number's hex value
+                if val == hex_value:
+                    if hex_value not in number_keys:
+                        number_keys[hex_value] = []
+                    # Append the current key (register/stack position) to the list of keys for this hex value
+                    number_keys[hex_value].append(key)
+                    # Add the key to the list of found magic numbers
                     found_magic_numbers.append(key)
+                    found = True
 
-        for num, keys in number_keys.items():
-            if len(keys) > 1:
-                warnings.append(f"Warning: Argument value '{num}' duplicated at {keys}. Unable to distinct.")
+             # If the magic number was not found in its entirety
+            if not found:
+                hex_value_int = int(hex_value, 16)
+                # Split the integer hex value into upper and lower parts
+                upper_part, lower_part = self._split_hex_value(hex_value_int)
 
+                # Attempt to find and store keys for the upper part of the hex value
+                self._find_and_store_keys(mapp, upper_part, number_keys, found_magic_numbers)
+                # Attempt to find and store keys for the lower part of the hex value
+                self._find_and_store_keys(mapp, lower_part, number_keys, found_magic_numbers)
+
+        # Generate warnings for any duplicate keys found for the same hex value
+        warnings.extend(self._generate_warnings(number_keys))
+
+        # Return the list of found magic numbers and any warnings generated
         return found_magic_numbers, warnings
 
+    def _find_and_store_keys(self, mapp, hex_str, number_keys, found_magic_numbers):
+        # Find and store keys associated with hexadecimal values in the mapping dictionary.
+        found = False
+        for key, val in mapp.items():
+            if val == hex_str:
+                if hex_str not in number_keys:
+                    number_keys[hex_str] = []
+                number_keys[hex_str].append(key)
+                found_magic_numbers.append(key)
+                found = True
+        return found
+
+    def _split_hex_value(self, hex_value):
+        # Split the hexadecimal value into upper and lower 32-bit parts
+        upper_part = hex(hex_value >> 32)
+        lower_part = hex(hex_value & 0xFFFFFFFF)
+        return upper_part, lower_part
+
+    def _generate_warnings(self, number_keys):
+        # Generate warnings for any duplicated argument values
+        warnings = []
+        for num, keys in number_keys.items():
+            if len(keys) > 1:
+                warnings.append(f"Warning: Argument value '{num}' duplicated at {keys}. Unable to distinguish.")
+        return warnings
 
     def run(self, file_name, datatype):
         content = self.read_file(file_name)
