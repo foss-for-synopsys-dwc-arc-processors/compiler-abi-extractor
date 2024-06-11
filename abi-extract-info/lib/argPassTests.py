@@ -59,6 +59,7 @@ class Datatypes:
             "unsigned char": [i + 21 for i in range(16)],
             "int": [-1001 - i for i in range(16)],
             "unsigned int": [1001 + i for i in range(16)],
+            "short": [-1001 - i for i in range(16)],
         }
 
     def get_datatypes(self, datatype):
