@@ -55,6 +55,7 @@ class Datatypes:
     def set_datatypes(self):
         self.Datatypes = {
             "char": [bytes([70 + i]) for i in range(16)],
+            "signed char": [-i - 21 for i in range(16)],
         }
 
     def get_datatypes(self, datatype):

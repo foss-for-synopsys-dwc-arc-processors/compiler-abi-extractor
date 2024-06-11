@@ -25,6 +25,7 @@ class ArgPassGenerator:
         # Dictionary mapping data types to lambda functions that generate appropriate values
         self.type_value_generator = {
             "char": [f"'{chr(70 + i)}'" for i in range(16)],
+            "signed char": [-i - 21 for i in range(16)],
         }
 
     def append(self, W):
