@@ -54,17 +54,6 @@ class Datatypes:
 
     def set_datatypes(self):
         self.Datatypes = {
-            "char": range(70, 86),
-            "int": range(1001, 1017),
-            "short": range(1001, 1017),
-            "long":  range(1001, 1017),
-            "float": [
-                1148862628,1148879176,1148895724,1148912271,
-                1148928819,1148945367,1148961915,1148978463,
-                1148995011,1149011558,1149028106,1149044654,
-                1149061202,1149077750,1149094298,1149110845
-            ],
-            "char,short": [i for pair in zip(range(71, 79), range(1001, 1009)) for i in pair]
         }
 
     def get_datatypes(self, datatype):
