@@ -28,6 +28,7 @@ class ArgPassGenerator:
             "signed char": [-i - 21 for i in range(16)],
             "unsigned char": [i + 21 for i in range(16)],
             "int": [str(-1001 - i) for i in range(16)],
+            "unsigned int": [str(1001 + i) for i in range(16)],
         }
 
     def append(self, W):
