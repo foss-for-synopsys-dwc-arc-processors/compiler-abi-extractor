@@ -40,7 +40,7 @@ regs:
     .word 0
     .endr
 .LC0:
-    .string "%d\n"
+    .string "0x%x\n"
 
 .text
 .align  1
