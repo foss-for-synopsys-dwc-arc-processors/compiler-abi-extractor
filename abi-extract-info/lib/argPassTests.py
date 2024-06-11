@@ -185,14 +185,6 @@ class Parser:
                 warnings.append(f"Warning: Argument value '{num}' duplicated at {keys}. Unable to distinguish.")
         return warnings
 
-    def run(self, file_name, datatype):
-        content = self.read_file(file_name)
-        mapp = self.mapping(content)
-        found_magic_numbers, warnings = self.find_magic_number(mapp, datatype)
-
-        self.print_magic_numbers(found_magic_numbers, warnings, datatype)
-        return self.Result
-
     def print_magic_numbers(self, found_magic_numbers, warnings, datatype):
         # Append the found magic numbers and any warnings to the result
         self.append(f"- {datatype:25}: ")
@@ -203,6 +195,16 @@ class Parser:
         if warnings:
             for warning in warnings:
                 self.append(warning + "\n")
+
+    def run(self, file_name, datatype):
+        # Run the parsing and analysis process
+        content = self.read_file(file_name)
+        mapp = self.mapping(content)
+        found_magic_numbers, warnings = self.find_magic_number(mapp, datatype)
+
+        self.print_magic_numbers(found_magic_numbers, warnings, datatype)
+        return self.Result
+
 def header():
     return ["16 Argument Passing test:\n"]
 
