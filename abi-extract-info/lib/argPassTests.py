@@ -104,9 +104,9 @@ class Parser:
         self.Result = []
 
     def read_file(self, file_name):
+        # Read the content of the file and split into lines
         with open(file_name, "r") as file:
-            content = file.read().splitlines()
-        return content
+            return file.read().splitlines()
 
     def append(self, W):
         self.Result.append(W)
