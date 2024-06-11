@@ -24,10 +24,13 @@ def do_argpass(Driver, Report):
 
     OutputContent = argPassTests.header()
     for type_name, content in Content:
-        SrcFile = f"tmp/out_caller_{type_name}.c"
+        type_name_replaced = type_name.replace(' ','_')
+
+        SrcFile = f"tmp/out_caller_{type_name_replaced}.c"
         open(SrcFile, "w").write(content)
-        StdoutFile = Driver.run([SrcFile], ["src/argpass/riscv/callee.s"], f"out_argpass_{type_name}")
+        StdoutFile = Driver.run([SrcFile], ["src/argpass/riscv/callee.s"], f"out_argpass_{type_name_replaced}")
         OutputContent += argPassTests.parser(StdoutFile, type_name)
+
     ParsedFile = f"tmp/out_argpass.txt"
     open(ParsedFile, "w").write("".join(OutputContent))
 
