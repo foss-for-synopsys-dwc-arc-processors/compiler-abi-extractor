@@ -193,9 +193,9 @@ class Parser:
         self.print_magic_numbers(found_magic_numbers, warnings, datatype)
         return self.Result
 
-    # Append the results and return it.
     def print_magic_numbers(self, found_magic_numbers, warnings, datatype):
-        self.append(f"{datatype}:".ljust(15))
+        # Append the found magic numbers and any warnings to the result
+        self.append(f"- {datatype:25}: ")
         for item in found_magic_numbers:
             self.append(item+ " ")
 
