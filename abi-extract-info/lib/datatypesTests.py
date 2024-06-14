@@ -22,8 +22,8 @@ class DataTypesGenerator:
 #include <stdio.h>
 #include <stdint.h>
 
-void print_info(const char *datatype, size_t size, uintptr_t theOffset) {
-   printf("%-20s: size: %zu, align: %zu\\n", datatype, size, (size_t)theOffset);
+void print_info(const char *datatype, int signedness, size_t size, uintptr_t theOffset) {
+   printf("%-20s: signedness: %d, size: %zu, align: %zu\\n", datatype, signedness, size, (size_t)theOffset);
 }
 
 """)
@@ -40,7 +40,14 @@ void print_info(const char *datatype, size_t size, uintptr_t theOffset) {
 
         self.append("void analyzeTypesUsingGlobals() {")
         for I, T in enumerate(Types):
-            self.append(f"  print_info(\"{T}\", sizeof({T}), (uintptr_t)&theTypeObject{I}.theType-(uintptr_t)&theTypeObject{I}.dummy);")
+            # Omitting the assignment of "-1" to "void*" because some compilers consider it an error.
+            if T != "void*":
+                self.append(f"  theTypeObject{I}.theType = -1;")
+                self.append(f"  print_info(\"{T}\", theTypeObject{I}.theType == -1, sizeof({T}), (uintptr_t)&theTypeObject{I}.theType-(uintptr_t)&theTypeObject{I}.dummy);")
+            else:
+                self.append(f"  print_info(\"{T}\", 0, sizeof({T}), (uintptr_t)&theTypeObject{I}.theType-(uintptr_t)&theTypeObject{I}.dummy);")
+
+
         self.append("}\n")
 
     def generateMain(self):
