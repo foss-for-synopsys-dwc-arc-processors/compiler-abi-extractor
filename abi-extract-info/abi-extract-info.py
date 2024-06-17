@@ -68,7 +68,8 @@ if __name__ == "__main__":
 
     print(f"Running {cc_option} with {sim_option}...")
 
-    Driver = compilationDriver.CompilationDriver()
+    is_verbose = OptionParser.get('verbose')
+    Driver = compilationDriver.CompilationDriver(is_verbose)
 
     # Run tests and generate summary report
     do_tests(Driver, Report)

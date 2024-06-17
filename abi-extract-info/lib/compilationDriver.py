@@ -9,12 +9,13 @@ import os
 import subprocess
 
 class CompilationDriver:
-    def __init__(self):
+    def __init__(self, is_verbose):
         self.cc = "cc-wrapper"
         self.assembler = "as-wrapper"
         self.linker = "ld-wrapper"
         self.simulator = "sim-wrapper"
         self.cflags = ["-O1"]
+        self.is_verbose = is_verbose
 
     def isWindows(self):
         return False # For now, later on, we can also support windows
@@ -26,14 +27,21 @@ class CompilationDriver:
     def cmd(self, c, stdout=None, stderr=None, env=None):
         if self.isWindows() and c[0]=="bash":
             c=[c[0], "-o", "igncr"]+c[1:]
-        self.info("EXECUTING: %s" % (" ".join(c)))
-        return subprocess.call(c, stdout=stdout, stderr=stderr, env=env)
+        # If the verbose flag (-v) is detected, executed commands will be
+        # displayed along with their stdout and stderr outputs.
+        if self.is_verbose:
+            self.info("EXECUTING: %s" % (" ".join(c)))
+            return subprocess.call(c, stdout=stdout, stderr=stderr, env=env)
+        else:
+            return subprocess.call(c, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
 
     # c: an array of arguments. The first element is the program to execute.
     # Returns the output
     def cmdWithResult(self, c, errorMsg=None, env=None):
         try:
-            self.info("EXECUTING: %s" % (" ".join(c)))
+            # If the verbose flag (-v) is detected, executed commands will be displayed.
+            if self.is_verbose:
+                self.info("EXECUTING: %s" % (" ".join(c)))
             return subprocess.Popen(c, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
         except OSError as oserror:
             return None
