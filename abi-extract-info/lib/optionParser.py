@@ -31,7 +31,7 @@ class OptionParser:
     def set_default(self):
         self.set("verbose", False)
 
-    def option_parser(self, args):
+    def option_parser(self, args = sys.argv):
         self.set_default()
         args.pop(0)
         while args:
