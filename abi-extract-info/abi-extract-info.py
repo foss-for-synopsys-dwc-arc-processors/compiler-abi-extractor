@@ -44,10 +44,15 @@ def do_endianness(Driver, Report):
     stdoutFile = Driver.run(["src/endianness/endianness.c"], [], "out_endianness")
     Report.append(stdoutFile)
 
+def do_stack_dir(Driver, Report):
+    stdoutFile = Driver.run(["src/stack_dir/main.c", "src/stack_dir/A.c", "src/stack_dir/B.c"], [], "out_stackdir")
+    Report.append(stdoutFile)
+
 def do_tests(Driver, Report):
      do_datatypes(Driver, Report)
      do_argpass(Driver, Report)
      do_endianness(Driver, Report)
+     do_stack_dir(Driver, Report)
      # ,, more different kind of tests here
 
 if __name__ == "__main__":
