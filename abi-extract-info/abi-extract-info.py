@@ -10,6 +10,8 @@ from lib import reportDriver
 from lib import datatypesTests
 from lib import argPassTests
 from lib import argPassTestsGen
+from lib import optionParser
+from lib import helper
 
 def do_datatypes(Driver, Report):
     Content = datatypesTests.generate()
@@ -49,9 +51,25 @@ def do_tests(Driver, Report):
      # ,, more different kind of tests here
 
 if __name__ == "__main__":
-    Driver = compilationDriver.CompilationDriver()
-    Report = reportDriver.ReportDriver()
-    do_tests(Driver, Report)
+    # Parse options
+    OptionParser = optionParser.OptionParser().instance()
+    OptionParser.option_parser()
 
-    # Generate summary report.
+    # Construct the report name from options
+    cc_option  = OptionParser.get('cc')
+    sim_option = OptionParser.get('sim')
+    ReportName = f"{cc_option}_{sim_option}.report"
+
+    # Set environment variable
+    helper.set_env(cc_option, sim_option)
+
+    # Initialize the report driver with the report name
+    Report = reportDriver.ReportDriver(ReportName)
+
+    print(f"Running {cc_option} with {sim_option}...")
+
+    Driver = compilationDriver.CompilationDriver()
+
+    # Run tests and generate summary report
+    do_tests(Driver, Report)
     Report.generateReport()
