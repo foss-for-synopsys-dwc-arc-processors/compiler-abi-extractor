@@ -13,9 +13,9 @@ of the `abi-extract-info` tool.
 """
 
 class ReportDriver:
-    def __init__(self):
+    def __init__(self, ReportFile):
         self.Files = []
-        self.ReportFile = "report.txt"
+        self.ReportFile = ReportFile
 
     def append(self, W):
         self.Files.append(W)
