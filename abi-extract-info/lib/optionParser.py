@@ -23,7 +23,7 @@ class OptionParser:
         self.flags[name] = default_value
 
     def get(self, name):
-        return self.flags[name]
+        return self.flags.get(name, False)
 
     def helper(self):
         return
