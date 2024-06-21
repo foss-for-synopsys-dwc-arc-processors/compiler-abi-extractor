@@ -46,3 +46,5 @@ class OptionParser:
                 self.set("sim", simulator)
             elif arg == "-v" or arg == "--verbose":
                 self.set("verbose")
+            elif arg == "--print-report":
+                self.set("print-report")
