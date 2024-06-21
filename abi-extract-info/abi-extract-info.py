@@ -82,7 +82,7 @@ if __name__ == "__main__":
     helper.set_env(cc_option, sim_option)
 
     # Initialize the report driver with the report name
-    Report = reportDriver.ReportDriver(ReportName)
+    Report = reportDriver.ReportDriver(ReportName, OptionParser)
 
     print(f"Running {cc_option} with {sim_option}...")
 

@@ -13,9 +13,10 @@ of the `abi-extract-info` tool.
 """
 
 class ReportDriver:
-    def __init__(self, ReportFile):
+    def __init__(self, ReportFile, OptionParser):
         self.Files = []
         self.ReportFile = ReportFile
+        self.OptionParser = OptionParser
 
     def append(self, W):
         self.Files.append(W)
@@ -36,6 +37,10 @@ class ReportDriver:
             for filePath in self.Files:
                 content = self.readFile(filePath)
                 outFile.writelines(content + "\n")
+
+        print(f"Report file generated at {reportFile}")
+        if self.OptionParser.get("print-report"):
+            print(self.readFile(reportFile))
 
 import sys
 if __name__ == "__main__":
