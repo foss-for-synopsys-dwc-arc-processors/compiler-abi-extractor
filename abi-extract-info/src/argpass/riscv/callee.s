@@ -45,6 +45,7 @@ regs:
 .text
 .align  1
 .globl  callee
+.globl  get_stack_pointer
 .type   callee, @function
 callee:
     # Save t6 to the stack
@@ -109,3 +110,7 @@ callee:
     ecall
 
     .size callee, .-callee
+
+get_stack_pointer:
+    mv a0, sp
+    ret
