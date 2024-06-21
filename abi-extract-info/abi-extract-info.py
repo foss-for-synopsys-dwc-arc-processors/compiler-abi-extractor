@@ -8,6 +8,7 @@
 from lib import compilationDriver
 from lib import reportDriver
 from lib import datatypesTests
+from lib import stackAlignTests
 from lib import argPassTests
 from lib import argPassTestsGen
 from lib import optionParser
@@ -48,11 +49,23 @@ def do_stack_dir(Driver, Report):
     stdoutFile = Driver.run(["src/stack_dir/main.c", "src/stack_dir/A.c", "src/stack_dir/B.c"], [], "out_stackdir")
     Report.append(stdoutFile)
 
+def do_stack_align(Driver, Report):
+    Content = stackAlignTests.generateDriver()
+    open("tmp/out_driver.c", "w").write(Content)
+    Content = stackAlignTests.generateFunctions()
+    open("tmp/out_functions.c", "w").write(Content)
+    Content = stackAlignTests.generateFunctionsHeader()
+    open("tmp/out_functions.h", "w").write(Content)
+
+    stdoutFile = Driver.run(["tmp/out_functions.c", "tmp/out_driver.c"], ["src/argpass/riscv/callee.s"], "out_stackalign")
+    Report.append(stdoutFile)
+
 def do_tests(Driver, Report):
      do_datatypes(Driver, Report)
      do_argpass(Driver, Report)
      do_endianness(Driver, Report)
      do_stack_dir(Driver, Report)
+     do_stack_align(Driver, Report)
      # ,, more different kind of tests here
 
 if __name__ == "__main__":
