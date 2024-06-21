@@ -31,7 +31,7 @@ def do_argpass(Driver, Report):
 
         SrcFile = f"tmp/out_caller_{type_name_replaced}.c"
         open(SrcFile, "w").write(content)
-        StdoutFile = Driver.run([SrcFile], ["src/argpass/riscv/callee.s"], f"out_argpass_{type_name_replaced}")
+        StdoutFile = Driver.run([SrcFile], ["src/arch/riscv.s"], f"out_argpass_{type_name_replaced}")
         OutputContent += argPassTests.parser(StdoutFile, type_name)
 
     ParsedFile = f"tmp/out_argpass.txt"
@@ -57,7 +57,7 @@ def do_stack_align(Driver, Report):
     Content = stackAlignTests.generateFunctionsHeader()
     open("tmp/out_functions.h", "w").write(Content)
 
-    stdoutFile = Driver.run(["tmp/out_functions.c", "tmp/out_driver.c"], ["src/argpass/riscv/callee.s"], "out_stackalign")
+    stdoutFile = Driver.run(["tmp/out_functions.c", "tmp/out_driver.c"], ["src/arch/riscv.s"], "out_stackalign")
     Report.append(stdoutFile)
 
 def do_tests(Driver, Report):
