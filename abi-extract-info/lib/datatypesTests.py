@@ -9,6 +9,8 @@ Types = [ "char", "signed char", "unsigned char", "short", "int", "long", "long 
           "void*", "float", "double", "long double",
         ]
 
+Structs = ["char_short_int", "char_short_double"]
+
 class DataTypesGenerator:
     def __init__(self):
         self.Result = []
@@ -30,6 +32,20 @@ void print_info(const char *datatype, int signedness, size_t size, uintptr_t the
 
     # Generate global variabels for each type and print runtime information about them
     def generateTypeChecksUsingStructs(self):
+        for I, S in enumerate(Structs):
+            # Generate Struct definition for the struct argument passing
+            arr = S.split("_")
+            self.append("struct " + S + " {")
+            for index, datatype in enumerate(arr):
+                self.append(f"{datatype} theType{index};")
+            self.append("};")
+
+            self.append("""struct StructType%d {
+char dummy;
+struct %s theType;
+} theStructTypeObject%d;
+""" % (I, S, I))
+
         for I, T in enumerate(Types):
             # Ensure we always start with an odd address (as far as C standard guarantees this)
             self.append("""struct Type%d {
@@ -47,6 +63,8 @@ void print_info(const char *datatype, int signedness, size_t size, uintptr_t the
             else:
                 self.append(f"  print_info(\"{T}\", 0, sizeof({T}), (uintptr_t)&theTypeObject{I}.theType-(uintptr_t)&theTypeObject{I}.dummy);")
 
+        for I, T in enumerate(Structs):
+            self.append(f"  print_info(\"{T}\", 0, sizeof(struct {T}), (uintptr_t)&theStructTypeObject{I}.theType-(uintptr_t)&theStructTypeObject{I}.dummy);")
 
         self.append("}\n")
 
