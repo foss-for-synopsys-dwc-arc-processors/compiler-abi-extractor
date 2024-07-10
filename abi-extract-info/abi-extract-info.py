@@ -11,6 +11,7 @@ from lib import datatypesTests
 from lib import stackAlignTests
 from lib import argPassTests
 from lib import argPassTestsGen
+from lib import argPassTestsGenStructs
 from lib import optionParser
 from lib import helper
 
@@ -32,6 +33,27 @@ def do_argpass(Driver, Report):
         SrcFile = f"tmp/out_caller_{type_name_replaced}.c"
         open(SrcFile, "w").write(content)
         StdoutFile = Driver.run([SrcFile], ["src/arch/riscv.s"], f"out_argpass_{type_name_replaced}")
+        OutputContent += argPassTests.parser(StdoutFile, type_name)
+
+    ParsedFile = f"tmp/out_argpass.txt"
+    open(ParsedFile, "w").write("".join(OutputContent))
+
+    # Store the generated report file for argument passing test case.
+    Report.append(ParsedFile)
+
+def do_argpass_struct(Driver, Report):
+    Content = argPassTestsGenStructs.generate()
+
+    OutputContent = argPassTests.header()
+    for type_name, content in Content:
+        type_name_replaced = type_name.replace(' ','_')
+
+        if type_name_replaced != "double":
+            continue
+
+        SrcFile = f"tmp/out_caller_{type_name_replaced}.c"
+        open(SrcFile, "w").write(content)
+        StdoutFile = Driver.run([SrcFile, "src/helper.c"], ["src/arch/riscv.s"], f"out_argpass_{type_name_replaced}")
         OutputContent += argPassTests.parser(StdoutFile, type_name)
 
     ParsedFile = f"tmp/out_argpass.txt"
