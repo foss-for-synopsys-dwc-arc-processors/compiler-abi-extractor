@@ -28,6 +28,12 @@ class RISCV:
         self.Stack = self.get_stack()
         self.Regs_stack = self.Regs + self.Stack
 
+        # self.Stack_pointer
+        # self.Pointer_Size
+        # self.Banks
+        self.Header_info = tuple()
+
+
     # Return RISCV Register Set
     def get_regs(self):
         return [
@@ -54,81 +60,20 @@ class Datatypes:
 
     def set_datatypes(self):
         self.Datatypes = {
-            "char": [bytes([70 + i]) for i in range(16)],
-            "signed char": [-i - 21 for i in range(16)],
-            "unsigned char": [i + 21 for i in range(16)],
-            "int": [-1001 - i for i in range(16)],
-            "unsigned int": [1001 + i for i in range(16)],
-            "short": [-1001 - i for i in range(16)],
-            "unsigned short": [1001 + i for i in range(16)],
-            "long": [-1142773077, -1159710506, -1172818702, -1175020290,
-                     -1230727382, -1379698938, -1407617162, -1419251393,
-                     -1472002004, -1472881177, -1640139052, -1735560817,
-                     -1802321509, -1869587600, -1898404909, -1914130792],
-            "unsigned long": [1142773077, 1159710506, 1172818702,
-                              1175020290, 1230727382, 1379698938,
-                              1407617162, 1419251393, 1472002004,
-                              1472881177, 1640139052, 1735560817,
-                              1802321509, 1869587600, 1898404909,
-                              1914130792],
-            "long long": [-2137669863270891229, -2522397642985803419,
-                          -3706416192938149415, -4458567212862610246,
-                          -4953996811516743886, -5008791413612552904,
-                          -5263960921296054470, -5659179722960875904,
-                          -6666311942245141952, -6632755221326625823,
-                          -6912806153521086601, -7120938963231193120,
-                          -7468639571267450817, -7939933891726071822,
-                          -8608066631949685570, -8957140373517805385],
-            "unsigned long long": [2137669863270891229, 2522397642985803419,
-                                   3706416192938149415, 4458567212862610246,
-                                   4953996811516743886, 5008791413612552904,
-                                   5263960921296054470, 5659179722960875904,
-                                   6666311942245141952, 6632755221326625823,
-                                   6912806153521086601, 7120938963231193120,
-                                   7468639571267450817, 7939933891726071822,
-                                   8608066631949685570, 8957140373517805385],
-            "float": [0.57, 0.69, 0.78, 1.20,
-                      1.41, 1.44, 1.57, 1.62,
-                      1.73, 2.23, 2.30, 2.50,
-                      2.64, 2.71, 3.14, 3.16],
-            "double": [0.5772156649, 0.6931471805, 0.7853981634,
-                       1.2020569032, 1.4142135623, 1.4426950408,
-                       1.5707964268, 1.6180339887, 1.7320508075,
-                       2.2360679775, 2.3025850929, 2.5029078750,
-                       2.6457513111, 2.7182818284, 3.1415926535,
-                       3.1622776601],
+            "char": ["46", "47", "48", "49", "4a", "4b", "4c", "4d",
+                     "4e", "4f", "50", "51", "52", "53", "54", "55"],
+            "int": ["3e9", "3ea", "3eb", "3ec", "3ed", "3ee", "3ef", "3f0",
+                    "3f1", "3f2", "3f3", "3f4", "3f5", "3f6", "3f7", "3f8"],
+            "double": ["3fe2788cfc6f802a", "3fe62e42fef1fccc", "3fe921fb544486e0",
+                       "3ff33ba004f2ccf4", "3ff6a09e667a35e6", "3ff71547652565ef",
+                       "3ff921fb6f1c797b", "3ff9e3779b9486e5", "3ffbb67ae85390f7",
+                       "4001e3779b97f681", "40026bb1bbb219d9", "400405f4906034f4",
+                       "40052a7fa9d43061", "4005bf0a8b12500b", "400921fb54411744",
+                       "40094c583ad801da"],
         }
 
     def get_datatypes(self, datatype):
         return self.Datatypes[datatype]
-
-class Converter:
-    def __init__(self):
-        self.set_format()
-
-     # Set format strings for struct packing
-    def set_format(self):
-        self.Format = {
-            "char": "c",
-            "signed char": "!i",    #"!b"
-            "unsigned char": "!B",
-            "short": "!i",          # !h
-            "unsigned short": "!I", # !H
-            "int": "!i",
-            "unsigned int": "!I",
-            "long": "!l",
-            "unsigned long": "!L",
-            "long long": "!q",
-            "unsigned long long": "!Q",
-            "float": "!f",
-            "double": "!d"
-        }
-
-    def to_hex(self, datatype, value):
-        # Pack the value based on its datatype format and convert it to hex
-        packed_value = struct.pack(self.Format[datatype], value)
-        hex_value = "0x" + packed_value.hex().lstrip('0')
-        return hex_value
 
 class Parser:
     def __init__(self):
@@ -142,6 +87,24 @@ class Parser:
 
     def append(self, W):
         self.Result.append(W)
+
+    import sys
+    def remove_comments(self, content):
+        # Remove the comments from the content
+        arr = list()
+        for entry in content:
+            if "//" not in entry:
+                arr.append(entry)
+
+        return arr
+
+
+    def read_header(self, content):
+        header_number = 6
+        self.Target.Header_info = content[:header_number]
+        del content[:header_number]
+
+        return content
 
     def mapping(self, content):
     # Create a mapping between the register set and stack to the output content
@@ -160,12 +123,13 @@ class Parser:
 
         for number in magic_numbers:
             # Convert each magic number to its hexadecimal representation
-            hex_value = Converter().to_hex(datatype, number)
-
+            # hex_value = Converter().to_hex(datatype, number)
+            hex_value = number
             found = False
             for key, val in mapp.items():
                 # Check if the value in the map matches the magic number's hex value
-                if val == hex_value:
+                # if val == hex_value:
+                if hex_value in val:
                     if hex_value not in number_keys:
                         number_keys[hex_value] = []
                     # Append the current key (register/stack position) to the list of keys for this hex value
@@ -176,10 +140,10 @@ class Parser:
 
              # If the magic number was not found in its entirety
             if not found:
-                hex_value_int = int(hex_value, 16)
+                # hex_value_int = int(hex_value, 16)
+                hex_value_int = hex_value
                 # Split the integer hex value into upper and lower parts
                 upper_part, lower_part = self._split_hex_value(hex_value_int)
-
                 # Attempt to find and store keys for the upper part of the hex value
                 self._find_and_store_keys(mapp, upper_part, number_keys, found_magic_numbers)
                 # Attempt to find and store keys for the lower part of the hex value
@@ -195,7 +159,7 @@ class Parser:
         # Find and store keys associated with hexadecimal values in the mapping dictionary.
         found = False
         for key, val in mapp.items():
-            if val == hex_str:
+            if hex_str in val:
                 if hex_str not in number_keys:
                     number_keys[hex_str] = []
                 number_keys[hex_str].append(key)
@@ -205,9 +169,9 @@ class Parser:
 
     def _split_hex_value(self, hex_value):
         # Split the hexadecimal value into upper and lower 32-bit parts
-        upper_part = hex(hex_value >> 32)
-        lower_part = hex(hex_value & 0xFFFFFFFF)
-        return upper_part, lower_part
+        first_half  = hex_value[:len(hex_value)//2]
+        second_half = hex_value[len(hex_value)//2:]
+        return first_half, second_half
 
     def _generate_warnings(self, number_keys):
         # Generate warnings for any duplicated argument values
@@ -231,6 +195,10 @@ class Parser:
     def run(self, file_name, datatype):
         # Run the parsing and analysis process
         content = self.read_file(file_name)
+
+        content = self.remove_comments(content)
+        contnet = self.read_header(content)
+
         mapp = self.mapping(content)
         found_magic_numbers, warnings = self.find_magic_number(mapp, datatype)
 
