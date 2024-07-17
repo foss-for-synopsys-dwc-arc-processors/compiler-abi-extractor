@@ -44,6 +44,19 @@ void print_info(const char *datatype, int signedness, size_t size, uintptr_t the
 } theStructTypeObject%d;
 """ % (I, T.replace(' ', '_').replace('*', ''), I))
 
+        # Generate Unions for each type and print runtime information about them
+        for I, T in enumerate(Types):
+            self.append("""union union_%s {
+  char dummy;
+  %s theType;
+};""" % (T.replace(' ', '_').replace('*', ''), T))
+
+            self.append("""struct UnionType%d {
+  char dummy;
+  union union_%s theType;
+} theUnionTypeObject%d;
+""" % (I, T.replace(' ', '_').replace('*', ''), I))
+
         for I, T in enumerate(Types):
             # Ensure we always start with an odd address (as far as C standard guarantees this)
             self.append("""struct Type%d {
@@ -64,6 +77,10 @@ void print_info(const char *datatype, int signedness, size_t size, uintptr_t the
         for I, T in enumerate(Types):
             Struct = T.replace(' ', '_').replace('*', '')
             self.append(f"  print_info(\"struct {Struct}\", 0, sizeof(struct struct_{Struct}), (uintptr_t)&theStructTypeObject{I}.theType-(uintptr_t)&theStructTypeObject{I}.dummy);")
+
+        for I, T in enumerate(Types):
+            Union = T.replace(' ', '_').replace('*', '')
+            self.append(f"  print_info(\"union {Union}\", 0, sizeof(union union_{Union}), (uintptr_t)&theUnionTypeObject{I}.theType-(uintptr_t)&theUnionTypeObject{I}.dummy);")
 
 
         self.append("}\n")
