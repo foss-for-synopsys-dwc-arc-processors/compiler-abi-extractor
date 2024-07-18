@@ -56,6 +56,24 @@ class DumpInformation:
 
         return content
 
+    # Read Stack dump from "dump_information" provided by "src/helper.c"
+    def read_stack(self, content):
+        if "// Start of stack dump" not in content[0]:
+            return content
+
+        # This is currently being discarded, but shouldnt. FIXME
+        content.pop(0)
+
+        while content:
+            Content = content[0]
+            if "//" in Content:
+                break
+
+            Content = content.pop(0)
+            self.Stack.append(Content)
+
+        return Content
+
 def parse(Content, to_read = False):
     dump = DumpInformation()
     if to_read:
