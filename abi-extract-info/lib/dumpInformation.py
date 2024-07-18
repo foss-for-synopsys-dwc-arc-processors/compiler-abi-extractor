@@ -33,6 +33,29 @@ class DumpInformation:
 
         return content
 
+    # Read Register Banks from the "dump_information" provided by "src/helper.c"
+    def read_reg_banks(self, content):
+        if "// regs_bank" not in content[0]:
+            return content
+
+        # Delete comment - "// regs_bank"
+        reg_bank = content.pop(0)
+        self.RegBanks[reg_bank] = list()
+
+        while content:
+            Content = content[0]
+            if "//" in Content:
+                if "// regs_bank" in Content:
+                    self.read_reg_banks(content)
+                    break
+                else:
+                    break
+
+            Content = content.pop(0)
+            self.RegBanks[reg_bank].append(Content)
+
+        return content
+
 def parse(Content, to_read = False):
     dump = DumpInformation()
     if to_read:
