@@ -15,6 +15,24 @@ class DumpInformation:
         with open(file_name, "r") as file:
             return file.read().splitlines()
 
+    # Read Header from the "dump_information" provided by "src/helper.c"
+    def read_header(self, content):
+        if "// Header info" not in content[0]:
+            return content
+
+        # Delete comment - "// Header info"
+        content.pop(0)
+
+        while content:
+            Content = content[0]
+            if "//" in Content:
+                break
+
+            Content = content.pop(0)
+            self.HeaderInfo.append(Content)
+
+        return content
+
 def parse(Content, to_read = False):
     dump = DumpInformation()
     if to_read:
