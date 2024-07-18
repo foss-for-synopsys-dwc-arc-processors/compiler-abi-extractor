@@ -10,8 +10,6 @@ regs_bank0:
     .rept 32
     .word 0
     .endr
-.LC0:
-    .string "0x%x\n"
 
 .text
 .align  1
