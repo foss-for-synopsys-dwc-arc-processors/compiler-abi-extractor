@@ -60,9 +60,16 @@ callee:
     lw x30, 120(t6)
     # Note: t6 register itself (x31) is not stored to regs_bank0 array
 
+    # save the return address
+    mv t0, ra
+
     # call to dump_information
     mv x10, sp
     call dump_information
+
+    # restore the return address
+    mv ra, t0
+    ret
 
     .size callee, .-callee
 
