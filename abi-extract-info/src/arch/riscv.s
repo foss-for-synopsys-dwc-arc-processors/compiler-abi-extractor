@@ -64,11 +64,6 @@ callee:
     mv x10, sp
     call dump_information
 
-    # Exit
-    addi a0, x0, 0
-    addi a7, x0, 93
-    ecall
-
     .size callee, .-callee
 
 get_stack_pointer:
