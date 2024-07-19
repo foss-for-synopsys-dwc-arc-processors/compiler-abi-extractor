@@ -54,6 +54,11 @@ class EmptyStructValidator:
 
         return is_ignored
 
+    # This function needs to be moved to a "lib/helper" as a module
+    # to be access globaly. FIXME
+    def read_file(self, file_name):
+        with open(file_name, "r") as file:
+            return file.read().splitlines()
 
     def split_sections(self, StdoutFile):
         Content = DumpInformation().read_file(StdoutFile)
