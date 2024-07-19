@@ -32,20 +32,20 @@ confirms that the empty struct is indeed being ignored by the C compiler.
 import sys
 
 class EmptyStructValidator:
-    def __init__(self):
+    def __init__(self, Target):
         self.Result = list()
         self.Mapping = dict()
+        self.Target = Target
         self.Keyword = "0xdead"
 
     def validate_if_ignored(self, regs_bank, count):
-        target = RISCV()
-
-        for i, r in enumerate(target.Registers):
+        target = self.Target
+        for i, r in enumerate(target.get_registers()):
             self.Mapping[r] = regs_bank[i]
 
         is_ignored = False
         for i in range(count):
-            a = target.ArgumentRegisters[i]
+            a = target.get_argument_registers()[i]
             if self.Mapping[a] == self.Keyword:
                 is_ignored = True
             else:
