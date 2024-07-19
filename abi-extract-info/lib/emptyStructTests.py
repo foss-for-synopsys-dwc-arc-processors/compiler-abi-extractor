@@ -61,6 +61,7 @@ class EmptyStructValidator:
         with open(file_name, "r") as file:
             return file.read().splitlines()
 
+    # This function should be in the "dumpInformation" class. FIXME
     def split_sections(self, StdoutFile):
         Content = self.read_file(StdoutFile)
 
