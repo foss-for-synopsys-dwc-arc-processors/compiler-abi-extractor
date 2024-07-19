@@ -15,6 +15,8 @@ from lib import argPassTestsGenStructs
 from lib import optionParser
 from lib import helper
 
+from lib import emptyStructGen
+from lib import emptyStructTests
 from lib import targetArch
 
 def do_datatypes(Driver, Report):
@@ -65,6 +67,16 @@ def do_argpass_struct(Driver, Report):
     Report.append(ParsedFile)
 
 
+def do_empty_struct(Driver, Report, Target):
+    # This value is to be defined according to number for
+    # argument passing in registers from "do_argpass" test case.
+    MaxCallCount = 8 # Current static value. FIXME
+    Content = emptyStructGen.generate(MaxCallCount)
+    open("tmp/out_emptyStruct.c", "w").write(Content)
+
+    StdoutFile = Driver.run(["tmp/out_emptyStruct.c", "src/helper.c"], ["src/arch/riscv.s"], "out_emptyStruct")
+    emptyStructTests.split_sections(StdoutFile, Target)
+
 def do_endianness(Driver, Report):
     stdoutFile = Driver.run(["src/endianness/endianness.c"], [], "out_endianness")
     Report.append(stdoutFile)
@@ -85,6 +97,7 @@ def do_stack_align(Driver, Report):
     Report.append(stdoutFile)
 
 def do_tests(Driver, Report, Target):
+     do_empty_struct(Driver, Report, Target)
      do_datatypes(Driver, Report)
      do_argpass(Driver, Report)
      do_endianness(Driver, Report)
