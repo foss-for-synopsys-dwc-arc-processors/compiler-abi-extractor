@@ -30,6 +30,7 @@ confirms that the empty struct is indeed being ignored by the C compiler.
 """
 
 import sys
+from lib import dumpInformation
 
 class EmptyStructValidator:
     def __init__(self, Target):
@@ -61,7 +62,7 @@ class EmptyStructValidator:
             return file.read().splitlines()
 
     def split_sections(self, StdoutFile):
-        Content = DumpInformation().read_file(StdoutFile)
+        Content = self.read_file(StdoutFile)
 
         result = []
         current_sublist = []
@@ -73,7 +74,7 @@ class EmptyStructValidator:
             else:
                 current_sublist.append(c)
 
-        dump_information = DumpInformation()
+        dump_information = dumpInformation.DumpInformation()
         for count, sublist in enumerate(result):
             dump_information.parse(sublist)
 
