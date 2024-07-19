@@ -94,5 +94,4 @@ def split_sections(StdoutFile, Target):
 
 if __name__ == "__main__":
     StdoutFile = sys.argv[1]
-    EmptyStructValidator().plit_sections(StdoutFile)
-    print(Content)
+    EmptyStructValidator().split_sections(StdoutFile)
