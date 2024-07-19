@@ -61,7 +61,7 @@ class DumpInformation:
         if "// Start of stack dump" not in content[0]:
             return content
 
-        # This is currently being discarded, but shouldnt. FIXME
+        # This is currently being discarded, should it?. FIXME
         content.pop(0)
 
         while content:
