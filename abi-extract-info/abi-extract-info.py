@@ -15,6 +15,8 @@ from lib import argPassTestsGenStructs
 from lib import optionParser
 from lib import helper
 
+from lib import targetArch
+
 def do_datatypes(Driver, Report):
     Content = datatypesTests.generate()
     open("tmp/out_datatypes.c", "w").write(Content)
@@ -82,7 +84,7 @@ def do_stack_align(Driver, Report):
     stdoutFile = Driver.run(["tmp/out_functions.c", "tmp/out_driver.c"], ["src/arch/riscv.s"], "out_stackalign")
     Report.append(stdoutFile)
 
-def do_tests(Driver, Report):
+def do_tests(Driver, Report, Target):
      do_datatypes(Driver, Report)
      do_argpass(Driver, Report)
      do_endianness(Driver, Report)
@@ -100,6 +102,10 @@ if __name__ == "__main__":
     sim_option = OptionParser.get('sim')
     ReportName = f"{cc_option}_{sim_option}.report"
 
+    # Select Target.
+    # Hardcoded to RISCV FIXME
+    Target = targetArch.RISCV()
+
     # Set environment variable
     helper.set_env(cc_option, sim_option)
 
@@ -112,5 +118,5 @@ if __name__ == "__main__":
     Driver = compilationDriver.CompilationDriver(is_verbose)
 
     # Run tests and generate summary report
-    do_tests(Driver, Report)
+    do_tests(Driver, Report, Target)
     Report.generateReport()
