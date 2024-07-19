@@ -11,6 +11,15 @@ class DumpInformation:
         self.RegBanks = dict()
         self.Stack = list()
 
+    def get_header_info(self, index):
+        return self.HeaderInfo[index]
+
+    def get_reg_banks(self):
+        return self.RegBanks
+
+    def get_stack(self):
+        return self.Stack
+
     def read_file(self, file_name):
         with open(file_name, "r") as file:
             return file.read().splitlines()
@@ -82,6 +91,18 @@ class DumpInformation:
         Content = self.read_stack(Content)
 
         return Content
+
+def get_header_info(index):
+    return DumpInformation().get_header_info(index)
+
+def get_reg_banks():
+    return DumpInformation().get_reg_banks()
+
+def get_stack(self):
+    return DumpInformation().get_stack()
+
+def split_dump_sections(Content):
+    return DumpInformation().split_dump_sections(Content)
 
 def parse(Content, to_read = False):
     return DumpInformation().parse(Content, to_read)
