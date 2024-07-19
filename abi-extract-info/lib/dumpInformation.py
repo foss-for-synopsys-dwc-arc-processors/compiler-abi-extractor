@@ -74,12 +74,14 @@ class DumpInformation:
 
         return Content
 
-def parse(Content, to_read = False):
-    dump = DumpInformation()
-    if to_read:
-        Content = dump.read_file(Content)
-    Content = dump.read_header(Content)
-    Content = dump.read_reg_banks(Content)
-    Content = dump.read_stack(Content)
+    def parse(self, Content, to_read = False):
+        if to_read:
+            Content = self.read_file(Content)
+        Content = self.read_header(Content)
+        Content = self.read_reg_banks(Content)
+        Content = self.read_stack(Content)
 
-    return Content
+        return Content
+
+def parse(Content, to_read = False):
+    return DumpInformation().parse(Content, to_read)
