@@ -89,6 +89,9 @@ class EmptyStructValidator:
         else:
             print("    Empty Struct is not ignored by C compiler.")
 
+def split_sections(StdoutFile, Target):
+    EmptyStructValidator(Target).split_sections(StdoutFile)
+
 if __name__ == "__main__":
     StdoutFile = sys.argv[1]
     EmptyStructValidator().plit_sections(StdoutFile)
