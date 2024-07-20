@@ -83,6 +83,23 @@ class DumpInformation:
 
         return Content
 
+    # Split dump information from multiple dumps within a single C file.
+    # This occurs when there are multiple calls to the extern callee()
+    # function in a test case.
+    def split_dump_sections(self, StdoutFile):
+        Content = self.read_file(StdoutFile)
+        result = []
+        current_sublist = []
+
+        for c in Content:
+            if "// Done" in c:
+                result.append(current_sublist)
+                current_sublist = []
+            else:
+                current_sublist.append(c)
+
+        return result
+
     def parse(self, Content, to_read = False):
         if to_read:
             Content = self.read_file(Content)
