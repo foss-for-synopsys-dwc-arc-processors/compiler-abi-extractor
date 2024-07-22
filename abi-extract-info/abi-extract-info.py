@@ -17,7 +17,10 @@ from lib import helper
 
 from lib import emptyStructGen
 from lib import emptyStructTests
+from lib import dumpInformation
 from lib import targetArch
+from lib import structGen
+from lib import structTests
 
 def do_datatypes(Driver, Report):
     Content = datatypesTests.generate()
@@ -77,6 +80,58 @@ def do_empty_struct(Driver, Report, Target):
     StdoutFile = Driver.run(["tmp/out_emptyStruct.c", "src/helper.c"], ["src/arch/riscv.s"], "out_emptyStruct")
     emptyStructTests.split_sections(StdoutFile, Target)
 
+def do_struct_boundaries(Driver, Report, Target):
+    types = ["char", "int", "double"]
+
+    # This value is to be defined according to the sizeof(int) (XLEN).
+    # According to the RISCV ABI document, the limits are 2 * XLEN
+    # 2 * XLEN; (XLEN==sizeof(int)) Hardcoded to 4. FIXME
+    # OR this logic is to be changed as the "max_boundary" value must be defined
+    # the first char iteration (?).
+    max_boundary = 2*4
+    boundary_limit_count = 0
+    for dataType in types:
+        if dataType == "char":
+            datatype_size = 1 # sizeof(char) FIXME
+        elif dataType == "int":
+            datatype_size = 4 # sizeof(int) FIXME
+        elif dataType == "double":
+            datatype_size = 8 # sizeof(double) FIXME
+
+        boundary_limit_count = max_boundary // datatype_size
+        Content = structGen.generate(boundary_limit_count, dataType)
+        open(f"tmp/out_struct_boundaries_{dataType}.c", "w").write(Content)
+
+        StdoutFile = Driver.run(
+            [f"tmp/out_struct_boundaries_{dataType}.c", "src/helper.c"],
+            ["src/arch/riscv.s"], f"out_struct_boundaries_{dataType}"
+        )
+
+        # As multiple calls are made to the "callee()" external function,
+        #   we need to split the information in multiple dumps and for over
+        #   each one of them.
+        dump_sections = dumpInformation.split_dump_sections(StdoutFile)
+        boundary_limit_count = 0
+        for dump in dump_sections:
+            boundary_limit_count += 1
+            dump_information = dumpInformation.DumpInformation()
+            dump_information.parse(dump)
+
+            # Retrive the stack address from the dump.
+            stack_address = dump_information.get_header_info(0)
+
+            reg_banks = dump_information.get_reg_banks()
+            reg_bank = reg_banks[next(iter(dump_information.get_reg_banks()))]
+            if structTests.if_stack_address_found(stack_address, reg_bank, Target):
+                break
+
+        # Removing 1 value as the limit count its being it actually used the stack.
+        boundary_limit_count -= 1
+        if ((boundary_limit_count) * datatype_size) != max_boundary:
+            print(f"    {dataType} not expected boundary limits: {boundary_limit_count}")
+        else:
+            print(f"    {dataType} expected boundary limits: {boundary_limit_count}")
+
 def do_endianness(Driver, Report):
     stdoutFile = Driver.run(["src/endianness/endianness.c"], [], "out_endianness")
     Report.append(stdoutFile)
@@ -98,6 +153,7 @@ def do_stack_align(Driver, Report):
 
 def do_tests(Driver, Report, Target):
      do_empty_struct(Driver, Report, Target)
+     do_struct_boundaries(Driver, Report, Target)
      do_datatypes(Driver, Report)
      do_argpass(Driver, Report)
      do_endianness(Driver, Report)
