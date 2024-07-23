@@ -86,7 +86,8 @@ def do_empty_struct(Driver, Report, Target):
     emptyStructTests.split_sections(StdoutFile, Target)
 
 def do_struct_boundaries(Driver, Report, Target):
-    types = ["char", "int", "double"]
+    types = [ "char", "signed char", "unsigned char", "short", "int", "long",
+              "long long", "void*", "float", "double", "long double"]
 
     # For RISCV 32-bit, if a struct exceeds 16 bytes in size for argument
     #  passing, the reference address in `a0` will not correspond to the
