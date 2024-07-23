@@ -152,9 +152,9 @@ def do_stack_align(Driver, Report):
     Report.append(stdoutFile)
 
 def do_tests(Driver, Report, Target):
+     do_datatypes(Driver, Report)
      do_empty_struct(Driver, Report, Target)
      do_struct_boundaries(Driver, Report, Target)
-     do_datatypes(Driver, Report)
      do_argpass(Driver, Report)
      do_endianness(Driver, Report)
      do_stack_dir(Driver, Report)
