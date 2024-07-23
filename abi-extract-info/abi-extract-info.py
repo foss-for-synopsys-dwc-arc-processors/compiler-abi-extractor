@@ -96,12 +96,8 @@ def do_struct_boundaries(Driver, Report, Target):
     max_boundary = 2*4
     boundary_limit_count = 0
     for dataType in types:
-        if dataType == "char":
-            datatype_size = 1 # sizeof(char) FIXME
-        elif dataType == "int":
-            datatype_size = 4 # sizeof(int) FIXME
-        elif dataType == "double":
-            datatype_size = 8 # sizeof(double) FIXME
+        # Get datatype size from stored information from previous test case.
+        datatype_size = Target.get_type_details(dataType)["size"]
 
         boundary_limit_count = max_boundary // datatype_size
         Content = structGen.generate(boundary_limit_count, dataType)
