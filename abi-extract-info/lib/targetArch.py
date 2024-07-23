@@ -6,6 +6,15 @@
 # the LICENSE file in the root directory of this source tree.
 
 class TargetArch:
+    def __init__(self):
+        self.type_details = dict()
+
+    def set_type_details(self, type_details):
+        self.type_details = type_details
+
+    def get_type_details(self, datatype):
+        return self.type_details[datatype]
+
     def get_registers(self):
         raise NotImplementedError("Subclasses should implement this!")
 
