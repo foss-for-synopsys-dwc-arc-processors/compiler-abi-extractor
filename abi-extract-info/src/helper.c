@@ -18,7 +18,7 @@ void dump_information(unsigned* Stack) {
     // current stack
     // sizeof pointer (aka register)
     printf("// Header info\n");
-    printf("0x%p\n0x0x%08x\n", Stack, sizeof(Stack));
+    printf("%p\n0x%08x\n", Stack, sizeof(Stack));
     // Number of register bancks
     printf("0x1\n");
     // bank0:  ID, size, number of regs
