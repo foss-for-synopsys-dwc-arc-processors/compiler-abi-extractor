@@ -88,13 +88,26 @@ def do_empty_struct(Driver, Report, Target):
 def do_struct_boundaries(Driver, Report, Target):
     types = ["char", "int", "double"]
 
-    # This value is to be defined according to the sizeof(int) (XLEN).
-    # According to the RISCV ABI document, the limits are 2 * XLEN
-    # 2 * XLEN; (XLEN==sizeof(int)) Hardcoded to 4. FIXME
-    # OR this logic is to be changed as the "max_boundary" value must be defined
-    # the first char iteration (?).
-    max_boundary = 2*4
+    # For RISCV 32-bit, if a struct exceeds 16 bytes in size for argument
+    #  passing, the reference address in `a0` will not correspond to the
+    #  stack pointer but will include an offset, causing issues with the
+    #  current logic.
+    # TODO: Test for 64-bit scenarios.
+
+    int_size = Target.get_type_details("int")["size"]
+
+    # Initially, the `max_boundary` was set to twice the size of an `int`,
+    #  based on the RISCV ABI document. However, this approach is adjusted
+    #  to use the size of a `char` to define the limits, as the previous
+    #  assumption may not apply to other architectures. The size of an `int`
+    #  is still used to finalize the `max_boundary` value.
+
+    # Note: The `-1` adjustment accounts for the fact that `structGen` adds
+    #  a `char` after the `max_boundary` limit. Given the issue described above,
+    #  the total size for 32-bit should not exceed 16 bytes.
+    max_boundary = 2 * int_size * 2 - 1
     boundary_limit_count = 0
+
     for dataType in types:
         # Get datatype size from stored information from previous test case.
         datatype_size = Target.get_type_details(dataType)["size"]
@@ -126,8 +139,11 @@ def do_struct_boundaries(Driver, Report, Target):
             if structTests.if_stack_address_found(stack_address, reg_bank, Target):
                 break
 
-        # Removing 1 value as the limit count its being it actually used the stack.
+        # Removing '1' as the current value for 'boundary_limit_count'
+        #   is already off the limit boundaries.
         boundary_limit_count -= 1
+        if dataType == 'char':
+            max_boundary = boundary_limit_count
         if ((boundary_limit_count) * datatype_size) != max_boundary:
             print(f"    {dataType} not expected boundary limits: {boundary_limit_count}")
         else:
