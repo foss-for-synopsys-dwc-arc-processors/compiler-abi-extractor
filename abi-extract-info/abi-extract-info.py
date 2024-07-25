@@ -35,23 +35,36 @@ def do_datatypes(Driver, Report, Target):
     # Store the generated report file for datatypes test case.
     Report.append(stdoutFile)
 
-def do_argpass(Driver, Report):
-    Content = argPassTestsGen.generate()
+def do_argpass(Driver, Report, Target):
+    types = [ "char", "signed char", "unsigned char", "short", "int", "long",
+              "long long", "float", "double", "long double"]
 
-    OutputContent = argPassTests.header()
-    for type_name, content in Content:
-        type_name_replaced = type_name.replace(' ','_')
+    # short has issues.
+    for T in types:
+        for count in range(1, 17):
+            # Skipping for now. FIXME
+            # The value of the 'long double' datatype is too big to fiy in a variable.
+            if T == "long double":
+                continue
 
-        SrcFile = f"tmp/out_caller_{type_name_replaced}.c"
-        open(SrcFile, "w").write(content)
-        StdoutFile = Driver.run([SrcFile], ["src/arch/riscv.s"], f"out_argpass_{type_name_replaced}")
-        OutputContent += argPassTests.parser(StdoutFile, type_name)
+            print(f"T: {T}")
+            value_list = helper.generate_hexa_values(Target, T, count)
+            Content = argPassTestsGen.generate(Target, T, value_list)
 
-    ParsedFile = f"tmp/out_argpass.txt"
-    open(ParsedFile, "w").write("".join(OutputContent))
+            T_file = T.replace(' ','_')
+            open(f"tmp/{T_file}.c", "w").write(Content)
+            StdoutFile = Driver.run([f"tmp/{T_file}.c", "src/helper.c"], ["src/arch/riscv.s"], f"{T_file}")
 
-    # Store the generated report file for argument passing test case.
-    Report.append(ParsedFile)
+            dump_information = dumpInformation.DumpInformation()
+            dump_information.parse(StdoutFile, True)
+
+            stack = dump_information.get_stack()
+            reg_banks = dump_information.get_reg_banks()
+            result = argPassTestsGen.if_value_found_in_stack(Target, stack, reg_banks, value_list)
+
+            if result == True:
+                print(f"count: {count}")
+                break
 
 def do_argpass_struct(Driver, Report):
     Content = argPassTestsGenStructs.generate()
@@ -171,12 +184,13 @@ def do_stack_align(Driver, Report):
 
 def do_tests(Driver, Report, Target):
      do_datatypes(Driver, Report, Target)
-     do_empty_struct(Driver, Report, Target)
-     do_struct_boundaries(Driver, Report, Target)
-     do_argpass(Driver, Report)
-     do_endianness(Driver, Report)
-     do_stack_dir(Driver, Report)
-     do_stack_align(Driver, Report)
+     do_argpass(Driver, Report, Target)
+    #  do_empty_struct(Driver, Report, Target)
+    #  do_struct_boundaries(Driver, Report, Target)
+    #  do_argpass(Driver, Report)
+    #  do_endianness(Driver, Report)
+    #  do_stack_dir(Driver, Report)
+    #  do_stack_align(Driver, Report)
      # ,, more different kind of tests here
 
 if __name__ == "__main__":
