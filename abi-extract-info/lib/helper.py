@@ -43,6 +43,13 @@ def parse_type_info(text):
 
     return type_details
 
+# Create a mapping between the register set and their values.
+def make_mapping(regs, values):
+    reg_values = dict()
+    for index, reg in enumerate(regs):
+        reg_values[reg] = values[index]
+    return reg_values
+
 # Create a list of hexadecimal values according to the datatype size.
 # Give the following example:
 # | Datatype |  Size   | hexadecimal value  |
