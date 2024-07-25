@@ -18,6 +18,12 @@ def set_env(cc, sim):
     os.environ["PATH"] = wrapper_path + f"/cc/{cc}:" + os.environ["PATH"]
     os.environ["PATH"] = wrapper_path + f"/sim/{sim}:" + os.environ["PATH"]
 
+# Responsible for reading a file and returning its contents.
+# This is used by multiple classes.
+def read_file(file_name):
+    with open(file_name, "r") as file:
+        return file.read()
+
 import re
 # Responsible for parsing the standard output from the datatype
 #  signedness/size/align test case for use in other test cases.
