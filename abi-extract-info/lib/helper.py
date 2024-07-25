@@ -42,3 +42,33 @@ def parse_type_info(text):
         }
 
     return type_details
+
+# Create a list of hexadecimal values according to the datatype size.
+# Give the following example:
+# | Datatype |  Size   | hexadecimal value  |
+# +----------+---------+--------------------+
+# | Char     | 1 byte  | 0x12               |
+# | Short    | 2 byte  | 0x1234             |
+# | Int      | 4 bytes | 0x12345678         |
+# | Double   | 8 bytes | 0x1234567890abcdef |
+def generate_hexa_values(Target, datatype, count):
+    size = Target.get_type_details(datatype)["size"]
+    values_list = []
+    hex_digits = "1234567890abcdef"  # Hexadecimal digits
+
+    # This was being used for the 'long double'..
+    # Result: '0x0123456789abcdeffedcba9876543210'
+    if size == 16:
+        # Reverse the hex digits
+        reversed_hex_digits = hex_digits[::-1]
+        # Append the reversed hex digits
+        hex_digits = hex_digits + reversed_hex_digits
+
+    # Create a hexadecimal string with size*2 digits
+    value = hex_digits[:(size * 2)]
+    value = "0x" + value
+
+    # Generate the list of hexadecimal string values
+    values_list = [value] * count
+
+    return values_list
