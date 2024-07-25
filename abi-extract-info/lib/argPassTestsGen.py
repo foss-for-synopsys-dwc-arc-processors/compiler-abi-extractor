@@ -6,124 +6,134 @@
 # the LICENSE file in the root directory of this source tree.
 
 """
-The purpose of this script is to produce a range of
-C test cases utilizing various fundamental C types
-for the callee function.
+The purpose of this class is to generate a variety of C test cases using
+different fundamental C types for argument passing.
 
-The output will comprise a list detailing the datatypes
-alongside their respective C test cases.
+Given a specified argument count value, several hexadecimal values will be
+passed to a `callee` function written in assembly, which saves all register
+values and prints them to stdout at the end.
 
-TODO: Expand the range of supported data types.
+For instance, using `int` as the datatype and 4 as argument count,
+we have the following example:
+```c
+    extern void callee(int, int, int, int);
+
+    int main(void) {
+        callee(0x12345678, 0x12345678, 0x12345678, 0x12345678);
+    }
+```
+
+Note that for certain datatypes, an auxiliary function is created to convert
+the value of one datatype to another. For example, for the `double` datatype,
+the test case is as follows:
+```c
+    #include <string.h>
+
+    inline static double ull_as_double(unsigned long long lhs) {
+        double result;
+        memcpy(&result, &lhs, sizeof(result));
+        return result;
+    }
+
+    extern void callee(double, double, double, double);
+
+    int main(void) {
+        callee(ull_as_double(0x1234567890abcdef), ull_as_double(0x1234567890abcdef),
+            ull_as_double(0x1234567890abcdef), ull_as_double(0x1234567890abcdef));
+    }
+```
+Hexadecimal values like `0x1234567890abcdef` are typically interpreted as
+integer types in C, such as `unsigned long long`.
+
+When dealing with different datatypes like `double`, we need to be aware that
+although both `unsigned long long` and `double` may occupy the same number
+of bits (64 bits), their bit-level representations are different.
+
+The convertion function `ull_as_double` uses `memcpy` to directly copy the
+bit pattern of the `unsigned long long` into a `double`. This does not change
+the bit values themselves but reinterprets them according to the
+IEEE 754 standard for a `double`.
+
+Without this convertion function, the compiler would not know to correctly
+interpret the 64-bit pattern as a `double` and will likely change the
+hexadecimal value.
 """
 
-# Class to generate C code files with functions
-# taking multiple arguments of different types
+from lib import helper
+
 class ArgPassGenerator:
-    def __init__(self):
-        # List to store the generated code for the current file
+    def __init__(self, Target):
+        self.Target = Target
         self.Result = []
-        # Dictionary mapping data types to lambda functions that generate appropriate values
-        self.type_value_generator = {
-            "char": [f"'{chr(70 + i)}'" for i in range(16)],
-            "signed char": [-i - 21 for i in range(16)],
-            "unsigned char": [i + 21 for i in range(16)],
-            "int": [str(-1001 - i) for i in range(16)],
-            "unsigned int": [str(1001 + i) for i in range(16)],
-            "short": [str(-1001 - i) for i in range(16)],
-            "unsigned short": [str(1001 + i) for i in range(16)],
-            "long": ["-1142773077", "-1159710506", "-1172818702", "-1175020290",
-                     "-1230727382", "-1379698938", "-1407617162", "-1419251393",
-                     "-1472002004", "-1472881177", "-1640139052", "-1735560817",
-                     "-1802321509", "-1869587600", "-1898404909", "-1914130792"],
-            "unsigned long": ["1142773077", "1159710506", "1172818702",
-                              "1175020290", "1230727382", "1379698938",
-                              "1407617162", "1419251393", "1472002004",
-                              "1472881177", "1640139052", "1735560817",
-                              "1802321509", "1869587600", "1898404909",
-                              "1914130792"],
-            "long long": ["-2137669863270891229", "-2522397642985803419",
-                          "-3706416192938149415", "-4458567212862610246",
-                          "-4953996811516743886", "-5008791413612552904",
-                          "-5263960921296054470", "-5659179722960875904",
-                          "-6666311942245141952", "-6632755221326625823",
-                          "-6912806153521086601", "-7120938963231193120",
-                          "-7468639571267450817", "-7939933891726071822",
-                          "-8608066631949685570", "-8957140373517805385"],
-            "unsigned long long": ["2137669863270891229", "2522397642985803419",
-                                   "3706416192938149415", "4458567212862610246",
-                                   "4953996811516743886", "5008791413612552904",
-                                   "5263960921296054470", "5659179722960875904",
-                                   "6666311942245141952", "6632755221326625823",
-                                   "6912806153521086601", "7120938963231193120",
-                                   "7468639571267450817", "7939933891726071822",
-                                   "8608066631949685570", "8957140373517805385"],
-            "float": ["0.57f", "0.69f", "0.78f", "1.20f",
-                      "1.41f", "1.44f", "1.57f", "1.62f",
-                      "1.73f", "2.23f", "2.30f", "2.50f",
-                      "2.64f", "2.71f", "3.14f", "3.16f"],
-            "double": ["0.5772156649", "0.6931471805", "0.7853981634",
-                       "1.2020569032", "1.4142135623", "1.4426950408",
-                       "1.5707964268", "1.6180339887", "1.7320508075",
-                       "2.2360679775", "2.3025850929", "2.5029078750",
-                       "2.6457513111", "2.7182818284", "3.1415926535",
-                       "3.1622776601"],
-        }
 
     def append(self, W):
         self.Result.append(W)
 
-    def reset(self):
-        self.Result = []
-
-    # Generate the base structure of the C file,
-    # including the function prototype and main function
-    def generateBase(self, types):
-        prototype_params = ", ".join(types)
-        # Generate corresponding values for the types using the type_value_generator dictionary
-        call_params = ", ".join(str(val) for val in self.type_value_generator[types[0]])
-
-        self.append(f"""
-extern void callee({prototype_params});
-
-int main(void) {{
-    callee({call_params});
-}}
-""")
-
-    def getResult(self):
+    def get_result(self):
         return "\n".join(self.Result)
 
-    # Generate a single C file with the specified types
-    def generateFile(self, types):
-        # Reset the result list
-        self.reset()
-        # Generate the base structure
-        self.generateBase(types)
+    def generate_include(self):
+        self.append("#include <string.h>")
 
-        return self.getResult()
+    def generate_as_double(self):
+        self.append("""
+inline static double ull_as_double(unsigned long long lhs) {
+    double result;
+    memcpy(&result, &lhs, sizeof(result));
+    return result;
+}
+""")
 
-    # Generate multiple C files,
-    # one for each type in the type_value_generator dictionary
-    def generate(self):
-        files = []
-        for type_name, content in self.type_value_generator.items():
-            # Create a list of identical types
-            types = [type_name for _ in range(len(content))]
-            # Generate the file and store the result
-            files.append((type_name, self.generateFile(types)))
-        return files
+    def generate_as_float(self):
+        self.append("""
+inline static float int_as_float(unsigned int lhs) {
+    float result;
+    memcpy(&result, &lhs, sizeof(result));
+    return result;
+}
+""")
+
+    def generate_converter(self, datatype):
+        if datatype == "double":
+            self.new_generate_include()
+            self.generate_as_double()
+        elif datatype == "float":
+            self.new_generate_include()
+            self.generate_as_float()
+
+    def generate_main(self, datatype, values_list):
+        types_list = [datatype] * len(values_list)
+        types_str = ", ".join(types_list)
+
+        if datatype == "double":
+            values_str = ", ".join(f"ull_as_double({value})" for value in values_list)
+        elif datatype == "float":
+            values_str = ", ".join(f"int_as_float({value})" for value in values_list)
+        else:
+            values_str = ", ".join(values_list)
+
+        self.append("""
+extern void callee(%s);
+
+int main(void) {
+    callee(%s);
+}
+""" % (types_str, values_str))
+
+    def generate(self, datatype, values_list):
+        self.generate_converter(datatype)
+        self.generate_main(datatype, values_list)
+
+        return self.get_result()
 
 # Function to initiate the generation process
-def generate():
-    return ArgPassGenerator().generate()
+def generate(Target, datatype, count):
+    return ArgPassGenerator(Target).new_generate(datatype, count)
 
 import sys
 if __name__ == "__main__":
     # Generating the files content
-    files_content = generate()
-
-    # Writing the generated files content to separate files
-    for type_name, content in files_content:
-        with open(f"caller_{type_name}.c", "w") as file:
-            file.write(content)
-
+    datatype = "int"
+    count = 8
+    content = generate(datatype, count)
+    open(f"{datatype}.c", "w").write(content)
