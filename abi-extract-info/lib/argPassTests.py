@@ -48,7 +48,7 @@ class ArgPassTests:
         return registers
 
     # Retrieve the list of registers that hold the given value from the register banks.
-    def get_registers_for_value(self, value, register_banks):
+    def find_registers_for_value(self, value, register_banks):
         indexes = [
             i for register_bank in register_banks.values()
             for i, v in enumerate(register_bank) if v == value
