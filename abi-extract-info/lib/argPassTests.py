@@ -37,9 +37,9 @@ class ArgPassTests:
             registers = [self.Target.get_registers()[i] for i in indexes]
             print(f"Registers used with value '{value}':", registers)
 
+    # Split a hexadecimal value into two halves.
     def _split_hex_value(self, value):
-        # Remove '0x' prefix and split the value into two halves.
-        value = value[2:]
+        value = value[2:]  # Remove '0x' prefix
         midpoint = len(value) // 2
         first_half = f"0x{value[:midpoint]}"
         second_half = f"0x{value[midpoint:]}"
