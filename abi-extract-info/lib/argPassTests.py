@@ -72,24 +72,14 @@ class ArgPassTests:
             registers = self.find_registers_for_split_value(first_half, second_half, register_banks)
         return registers
 
-    def if_value_found_in_stack(self, stack, reg_banks, values_list):
-        target_value = values_list[0]
-        stack_value = stack[0]
-
-        # Check if the target value matches the stack value.
-        if target_value == stack_value:
-            self._print_registers_for_value(target_value, reg_banks)
+    # Check if the value or its split halves are present in the stack.
+    def is_value_in_stack(self, value, stack_values):
+        if value == stack_values[0]:
             return True
 
-        # Split target value if it doesnt match the stack value.
-        first_half, second_half = self._split_hex_value(target_value)
+        first_half, second_half = self._split_hex_value(value)
+        return first_half == stack_values[0] or second_half == stack_values[0]
 
-        if first_half == stack_value or second_half == stack_value:
-            self._print_registers_for_value(first_half, reg_banks)
-            self._print_registers_for_value(second_half, reg_banks)
-            return True
-
-        return False
 
 def if_value_found_in_stack(Target, stack, reg_banks, value_list):
     return ArgPassTests(Target).if_value_found_in_stack(stack, reg_banks, value_list)
