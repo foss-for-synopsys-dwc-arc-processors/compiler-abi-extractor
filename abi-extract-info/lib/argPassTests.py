@@ -158,6 +158,35 @@ class ArgPassTests:
         first_half, second_half = self._split_hex_value(value)
         return first_half == stack_values[0] or second_half == stack_values[0]
 
+    # Run the test to check if the value is in registers or the stack.
+    def run_test(self, stack_values, register_banks, values_list):
+        # Argument count value
+        argc = len(values_list)
+        # Target value to be checked
+        argv = values_list[0]
+
+        # Initialize current test details
+        self.current_test = {
+            "argc": argc,               # Argument count
+            "argv": argv,               # Value checked
+            "value_split_order": None,  # Order of split values (if any)
+            "registers": None,          # Registers containing the value
+            "value_in_stack": None      # Wether the value is in the stack
+        }
+
+        # Check if the value is in the registers and update current test
+        self.current_test["registers"] = self.find_value_in_registers(argv, register_banks)
+        # Check if the value is in the stack and update current test
+        self.current_test["value_in_stack"] = self.is_value_in_stack(argv, stack_values)
+
+        # Append current test results to the results list
+        self.results.append(self.current_test)
+
+        value_in_stack = self.current_test["value_in_stack"]
+        self.current_test = {}
+
+        return value_in_stack
+
 import sys
 if __name__ == "__main__":
     pass
