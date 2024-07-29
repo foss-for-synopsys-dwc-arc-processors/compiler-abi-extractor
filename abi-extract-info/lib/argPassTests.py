@@ -30,13 +30,6 @@ class ArgPassTests:
     def __init__(self, Target):
         self.Target = Target
 
-    def _print_registers_for_value(self, value, reg_banks):
-        # Find and print registers for the given value.
-        for reg_bank, values in reg_banks.items():
-            indexes = [i for i, v in enumerate(values) if v == value]
-            registers = [self.Target.get_registers()[i] for i in indexes]
-            print(f"Registers used with value '{value}':", registers)
-
     # Find registers that hold the split halves of a value.
     def find_registers_for_split_value(self, first_half, second_half, register_banks):
         indexes = [
