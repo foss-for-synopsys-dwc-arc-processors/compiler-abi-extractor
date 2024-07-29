@@ -54,6 +54,14 @@ class ArgPassTests:
         second_half = f"0x{value[midpoint:]}"
         return first_half, second_half
 
+    # Find the registers holding the value or its split halves.
+    def find_value_in_registers(self, value, register_banks):
+        registers = self.find_registers_for_value(value, register_banks)
+        if not registers:
+            first_half, second_half = self._split_hex_value(value)
+            registers = self.find_registers_for_split_value(first_half, second_half, register_banks)
+        return registers
+
     def if_value_found_in_stack(self, stack, reg_banks, values_list):
         target_value = values_list[0]
         stack_value = stack[0]
