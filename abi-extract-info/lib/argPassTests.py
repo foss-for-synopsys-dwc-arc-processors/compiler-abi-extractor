@@ -29,6 +29,8 @@ from lib import helper
 class ArgPassTests:
     def __init__(self, Target):
         self.Target = Target
+        self.results = []
+        self.current_test = {}
 
     # Extracts the common registers in a list of list registers.
     def extract_common_regs(self, list_of_regs):
