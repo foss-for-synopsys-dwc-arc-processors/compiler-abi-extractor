@@ -36,35 +36,78 @@ def do_datatypes(Driver, Report, Target):
     Report.append(stdoutFile)
 
 def do_argpass(Driver, Report, Target):
-    types = [ "char", "signed char", "unsigned char", "short", "int", "long",
-              "long long", "float", "double", "long double"]
+    # List of datatypes to be tested.
+    types = [ "char", "short", "int", "long", "long long",
+              "float", "double", "long double"]
 
-    # short has issues.
+    results = {}
     for T in types:
-        for count in range(1, 17):
-            # Skipping for now. FIXME
-            # The value of the 'long double' datatype is too big to fiy in a variable.
-            if T == "long double":
-                continue
+        # Skip `long double` due to its size limitations. FIXME
+        if T == "long double":
+            continue
 
-            print(f"T: {T}")
+        # Create an instance of `ArgPassTests` for the current Target
+        arg_pass_tests = argPassTests.ArgPassTests(Target)
+
+
+        for count in range(1, 17):
+            # Generate hexadecimal values for the current datatype and count
             value_list = helper.generate_hexa_values(Target, T, count)
+            # Generate the content of the test file.
             Content = argPassTestsGen.generate(Target, T, value_list)
 
+            # Create and write the test file.
             T_file = T.replace(' ','_')
             open(f"tmp/{T_file}.c", "w").write(Content)
+            # Compile and run the test file, and capture the stdout.
             StdoutFile = Driver.run([f"tmp/{T_file}.c", "src/helper.c"], ["src/arch/riscv.s"], f"{T_file}")
 
+            # Parse the stdout to extract stack and register bank information.
             dump_information = dumpInformation.DumpInformation()
             dump_information.parse(StdoutFile, True)
 
+            # Get the stack and register bank information
             stack = dump_information.get_stack()
             reg_banks = dump_information.get_reg_banks()
-            result = argPassTestsGen.if_value_found_in_stack(Target, stack, reg_banks, value_list)
+            # Run the test to check if the value is in the stack
+            is_value_in_stack = arg_pass_tests.run_test(stack, reg_banks, value_list)
 
-            if result == True:
-                print(f"count: {count}")
+            # If the value is found in the stack, stop further test iterations
+            # for this datatype.
+            if is_value_in_stack == True:
                 break
+
+        # Get the last iteration results
+        last_iteration = arg_pass_tests.results[-1]
+        argc = last_iteration["argc"] - 1
+        argr = last_iteration["registers"]
+        are_values_on_stack = last_iteration["value_in_stack"]
+        are_values_splitted = last_iteration["value_split_order"]
+
+        # Initialize the results dictionary for the current argument count,
+        # if not already present.
+        if argc not in results:
+            results[argc] = { "type": [], "regs": [],
+                              "common_regs": [], "noncommon_regs": [],
+                              "are_values_on_stack": False,
+                              "are_values_splitted": [] }
+
+        # Append the current datatype and register information to the results
+        results[argc]["type"].append(T)
+        results[argc]["regs"].append(argr)
+        results[argc]["are_values_on_stack"] = are_values_on_stack
+        results[argc]["are_values_splitted"] = are_values_splitted
+
+    # Process the results to extract common and non-common registers used.
+    for rkey, rvalue in results.items():
+        common_regs, noncommon_regs = arg_pass_tests.extract_common_regs(rvalue["regs"])
+        rvalue["common_regs"] = common_regs
+        rvalue["noncommon_regs"] = noncommon_regs
+
+    # Write a summary report from the results.
+    Content = arg_pass_tests.create_summary_string(results)
+    open("tmp/out_argPassTests.sum", "w").write(Content)
+    Report.append("tmp/out_argPassTests.sum")
 
 def do_argpass_struct(Driver, Report):
     Content = argPassTestsGenStructs.generate()
