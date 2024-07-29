@@ -37,6 +37,23 @@ class ArgPassTests:
             registers = [self.Target.get_registers()[i] for i in indexes]
             print(f"Registers used with value '{value}':", registers)
 
+    # Find registers that hold the split halves of a value.
+    def find_registers_for_split_value(self, first_half, second_half, register_banks):
+        indexes = [
+            i for register_bank in register_banks.values()
+            for i, v in enumerate(register_bank) if v == first_half or v == second_half
+        ]
+        indexes.sort()
+
+        # Determine the order of the split values
+        first_index_value = list(register_banks.values())[0][indexes[0]]
+        if first_index_value == first_half:
+            self.current_test["value_split_order"] = ["[High]", "[Low]"]
+        else:
+            self.current_test["value_split_order"] = ["[Low]", "[High]"]
+        registers = [self.Target.get_registers()[i] for i in indexes]
+        return registers
+
     # Retrieve the list of registers that hold the given value from the register banks.
     def get_registers_for_value(self, value, register_banks):
         indexes = [
