@@ -158,10 +158,6 @@ class ArgPassTests:
         first_half, second_half = self._split_hex_value(value)
         return first_half == stack_values[0] or second_half == stack_values[0]
 
-
-def if_value_found_in_stack(Target, stack, reg_banks, value_list):
-    return ArgPassTests(Target).if_value_found_in_stack(stack, reg_banks, value_list)
-
 import sys
 if __name__ == "__main__":
     pass
