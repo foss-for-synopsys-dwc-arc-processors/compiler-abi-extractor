@@ -30,6 +30,33 @@ class ArgPassTests:
     def __init__(self, Target):
         self.Target = Target
 
+    # Extracts the common registers in a list of list registers.
+    def extract_common_regs(self, list_of_regs):
+        # Convert each sublist to a set
+        sets = [set(lst) for lst in list_of_regs]
+
+        # Find common elements by intersecting all sets
+        common_elements = set.intersection(*sets)
+
+        # Find all unique elements by taking the union of all sets
+        all_elements = set.union(*sets)
+
+        # Find non-common elements by subtracting common elements from all unique elements
+        non_common_elements = all_elements - common_elements
+
+        ordered_common = []
+        ordered_non_common = []
+
+        # Preserving the order from the original lists
+        for lst in list_of_regs:
+            for elem in lst:
+                if elem in common_elements and elem not in ordered_common:
+                    ordered_common.append(elem)
+                elif elem in non_common_elements and elem not in ordered_non_common:
+                    ordered_non_common.append(elem)
+
+        return ordered_common, ordered_non_common
+
     # Find registers that hold the split halves of a value.
     def find_registers_for_split_value(self, first_half, second_half, register_banks):
         indexes = [
