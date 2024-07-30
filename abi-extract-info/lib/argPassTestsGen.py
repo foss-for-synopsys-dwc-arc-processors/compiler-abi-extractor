@@ -95,10 +95,10 @@ inline static float int_as_float(unsigned int lhs) {
 
     def generate_converter(self, datatype):
         if datatype == "double":
-            self.new_generate_include()
+            self.generate_include()
             self.generate_as_double()
         elif datatype == "float":
-            self.new_generate_include()
+            self.generate_include()
             self.generate_as_float()
 
     def generate_main(self, datatype, values_list):
@@ -128,7 +128,7 @@ int main(void) {
 
 # Function to initiate the generation process
 def generate(Target, datatype, count):
-    return ArgPassGenerator(Target).new_generate(datatype, count)
+    return ArgPassGenerator(Target).generate(datatype, count)
 
 import sys
 if __name__ == "__main__":
