@@ -34,7 +34,6 @@ void print_info(const char *datatype, int signedness, size_t size, uintptr_t the
         # Generate Structs  for each type and print runtime information about them
         for I, T in enumerate(Types):
             self.append("""struct struct_%s {
-  char dummy;
   %s theType;
 };""" % (T.replace(' ', '_').replace('*', ''), T))
 
