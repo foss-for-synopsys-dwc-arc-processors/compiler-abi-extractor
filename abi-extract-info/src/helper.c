@@ -30,7 +30,7 @@ void dump_information(unsigned* Stack) {
        printf("0x%x\n", regs_bank0[i]);
 
     // stack: 32 entries (128 bytes on 32bit system)
-    printf("// Start of stack dump: 0x%p\n", Stack);
+    printf("// Start of stack dump: %p\n", Stack);
     for(unsigned i=0; i<32; ++i)
         printf("0x%x\n", Stack[i]);
     printf("// Done\n");
