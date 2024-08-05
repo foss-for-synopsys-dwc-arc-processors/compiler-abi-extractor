@@ -33,3 +33,11 @@ class HexUtils:
         # Calculate the number of bytes (2 hex digits per byte)
         num_bytes = (hex_length + 1) // 2
         return num_bytes
+
+    # Split a hexadecimal value into two halves.
+    def _split_hex_value(self, value):
+        value = self._remove_identifier(value) # Remove '0x' prefix
+        midpoint = len(value) // 2
+        first_half = f"0x{value[:midpoint]}"
+        second_half = f"0x{value[midpoint:]}"
+        return first_half, second_half
