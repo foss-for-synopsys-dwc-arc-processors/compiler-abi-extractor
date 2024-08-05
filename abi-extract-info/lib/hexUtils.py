@@ -54,3 +54,22 @@ class HexUtils:
     # Retrieve the list of registers corresponding to the given indices.
     def _get_registers_by_indices(self, indices):
         return [self.Target.get_registers()[i] for i in indices]
+
+    # Find registers that hold the split halves of a value.
+    def _find_registers_for_split_value(self, first_half, second_half, register_banks):
+        indices = self._find_register_indices(first_half, register_banks) + \
+                  self._find_register_indices(second_half, register_banks)
+
+        if not indices:
+            return None
+
+        indices = sorted(set(indices))  # Remove duplicates and sort
+
+        # Determine the order of the split values
+        first_index_value = list(register_banks.values())[0][indices[0]]
+        if first_index_value == first_half:
+            self.current_test["value_split_order"] = ["[High]", "[Low]"]
+        else:
+            self.current_test["value_split_order"] = ["[Low]", "[High]"]
+
+        return self._get_registers_by_indices(indices)
