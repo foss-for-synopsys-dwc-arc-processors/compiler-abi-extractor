@@ -142,3 +142,13 @@ class HexUtils:
             registers += self.find_registers_for_value(v, register_banks)
 
         return registers
+
+    # Check if the value or its split halves are present in the stack.
+    def is_value_in_stack(self, value, stack_values):
+        # Currently only validating the first address of the stack.
+        # Please update this. FIXME
+        if value == stack_values[0]:
+            return True
+
+        first_half, second_half = self._split_hex_value(value)
+        return first_half == stack_values[0] or second_half == stack_values[0]
