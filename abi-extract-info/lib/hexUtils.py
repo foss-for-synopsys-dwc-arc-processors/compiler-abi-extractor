@@ -113,3 +113,8 @@ class HexUtils:
         extended_value.append(value)
 
         return extended_value
+
+  # Retrieve the list of registers that hold the given value from the register banks.
+    def find_registers_for_value(self, value, register_banks):
+        indices = self._find_register_indices(value, register_banks)
+        return self._get_registers_by_indices(indices)
