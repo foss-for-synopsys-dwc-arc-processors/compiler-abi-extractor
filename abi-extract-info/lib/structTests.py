@@ -121,7 +121,7 @@ class StructTests:
             "passed_by_ref": None       # Wether passed by reference
         }
 
-        hutils = hexUtils.RegisterUtils(self.Target, self.current_test)
+        hutils = hexUtils.HexUtils(self.Target, self.current_test)
 
         # Check if the value is in the registers and update current test
         self.current_test["registers"] = hutils.find_value_in_registers(argv, register_banks, argc)
