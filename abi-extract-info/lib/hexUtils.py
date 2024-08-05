@@ -118,3 +118,27 @@ class HexUtils:
     def find_registers_for_value(self, value, register_banks):
         indices = self._find_register_indices(value, register_banks)
         return self._get_registers_by_indices(indices)
+
+    # Find the registers holding the value or its split halves.
+    def find_value_in_registers(self, value, register_banks, argc):
+        # First, try to find the exact value.
+        registers = self.find_registers_for_value(value, register_banks)
+        if registers:
+            return registers
+
+        # If not found, check for split halves
+        first_half, second_half = self._split_hex_value(value)
+        registers = self._find_registers_for_split_value(first_half, second_half, register_banks)
+        if registers:
+            return registers
+
+        # if neither the exact value nor its split halves are found,
+        # extend the value to accomodate the specified number of
+        # argument (argc)
+        registers = []
+        values = self._extend_value_to_argc(value, argc)
+        # For each extended value, attemp to locate it in the register banks
+        for v in values:
+            registers += self.find_registers_for_value(v, register_banks)
+
+        return registers
