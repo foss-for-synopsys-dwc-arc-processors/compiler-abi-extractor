@@ -165,6 +165,7 @@ def do_struct_boundaries(Driver, Report, Target):
     max_boundary = 2 * int_size * 2 - 1
     boundary_limit_count = 0
 
+    results = {}
     for dataType in types:
         # Get datatype size from stored information from previous test case.
         datatype_size = Target.get_type_details(dataType)["size"]
