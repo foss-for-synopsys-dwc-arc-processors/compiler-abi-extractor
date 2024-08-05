@@ -24,11 +24,12 @@ to validate the boundaries.
 import sys
 
 class StructGenerator:
-    def __init__(self, MaxCount, Type):
+    def __init__(self, MaxCount, Type, values_list):
         self.Result = []
         self.Strings = []
         self.MaxCount = MaxCount
         self.Type = Type
+        self.values_list = values_list
 
     def append(self, W):
         self.Result.append(W)
@@ -41,10 +42,14 @@ class StructGenerator:
 
     def generateDefinitionString(self, count):
         definition_string = ""
-        for i in range(1, count + 1):
-            definition_string += f"    struct structType{i} structTypeObject{i};\n"
 
-        definition_string += f"    struct structType{self.MaxCount + 1} structTypeObject{self.MaxCount + 1};\n"
+        for i in range(1, count + 1):
+            tmp = self.values_list[:i]
+            tmp = ", ".join(tmp)
+            definition_string += f"    struct structType{i} structTypeObject{i} = {{ {tmp} }};\n"
+
+        tmp = ", ".join(self.values_list)
+        definition_string += f"    struct structType{self.MaxCount + 1} structTypeObject{self.MaxCount + 1} = {{ {tmp} }} ;\n"
 
         return definition_string
 
@@ -99,8 +104,8 @@ int main (void) {
 
         return self.getResult()
 
-def generate(MaxCount, Type):
-    return StructGenerator(MaxCount, Type).generate()
+def generate(MaxCount, Type, values_list):
+    return StructGenerator(MaxCount, Type, values_list).generate()
 
 import sys
 if __name__ == "__main__":
@@ -111,5 +116,5 @@ if __name__ == "__main__":
     #  double value of sizeof(int), or a static larger value (e.i 17)
     MaxCount = 2*4
     Type = "int"
-    Content = generate(MaxCount, Type)
+    Content = generate(MaxCount, Type, MaxCount)
     print(Content)
