@@ -16,6 +16,8 @@ from lib import hexUtils
 class StructTests:
     def __init__(self, Target):
         self.Target = Target
+        self.results = []
+        self.current_test = {}
 
     def remove_none_from_nested_list(self, list_of_regs):
         return [item for item in list_of_regs if item is not None]
