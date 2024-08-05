@@ -17,6 +17,40 @@ class StructTests:
     def __init__(self, Target):
         self.Target = Target
 
+    def remove_none_from_nested_list(self, list_of_regs):
+        return [item for item in list_of_regs if item is not None]
+
+    # Extracts the common registers in a list of list registers.
+    def extract_common_regs(self, list_of_regs):
+        list_of_regs = self.remove_none_from_nested_list(list_of_regs)
+        if list_of_regs == []:
+            return None, None
+
+        # Convert each sublist to a set
+        sets = [set(lst) for lst in list_of_regs]
+
+        # Find common elements by intersecting all sets
+        common_elements = set.intersection(*sets)
+
+        # Find all unique elements by taking the union of all sets
+        all_elements = set.union(*sets)
+
+        # Find non-common elements by subtracting common elements from all unique elements
+        non_common_elements = all_elements - common_elements
+
+        ordered_common = []
+        ordered_non_common = []
+
+        # Preserving the order from the original lists
+        for lst in list_of_regs:
+            for elem in lst:
+                if elem in common_elements and elem not in ordered_common:
+                    ordered_common.append(elem)
+                elif elem in non_common_elements and elem not in ordered_non_common:
+                    ordered_non_common.append(elem)
+
+        return ordered_common, ordered_non_common
+
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, stack_address, stack_values, register_banks, values_list):
         # Argument count value
