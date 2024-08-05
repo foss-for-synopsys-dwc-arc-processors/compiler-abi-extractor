@@ -41,3 +41,12 @@ class HexUtils:
         first_half = f"0x{value[:midpoint]}"
         second_half = f"0x{value[midpoint:]}"
         return first_half, second_half
+
+    # Retrieve the list of register indices holding a specific value from the register banks.
+    def _find_register_indices(self, value, register_banks):
+        indices = [
+            i for register_bank in register_banks.values()
+            for i, v in enumerate(register_bank)
+            if v == value
+        ]
+        return sorted(indices)
