@@ -50,3 +50,7 @@ class HexUtils:
             if v == value
         ]
         return sorted(indices)
+
+    # Retrieve the list of registers corresponding to the given indices.
+    def _get_registers_by_indices(self, indices):
+        return [self.Target.get_registers()[i] for i in indices]
