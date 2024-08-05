@@ -170,7 +170,8 @@ def do_struct_boundaries(Driver, Report, Target):
         datatype_size = Target.get_type_details(dataType)["size"]
 
         boundary_limit_count = max_boundary // datatype_size
-        Content = structGen.generate(boundary_limit_count, dataType)
+        values_list = helper.generate_hexa_values(Target, dataType, boundary_limit_count + 1)
+        Content = structGen.generate(boundary_limit_count, dataType, values_list)
         open(f"tmp/out_struct_boundaries_{dataType}.c", "w").write(Content)
 
         StdoutFile = Driver.run(
