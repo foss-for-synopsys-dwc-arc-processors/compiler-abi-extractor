@@ -152,3 +152,11 @@ class HexUtils:
 
         first_half, second_half = self._split_hex_value(value)
         return first_half == stack_values[0] or second_half == stack_values[0]
+
+    # Validate if the stack address has been found in the argument registers.
+    def is_passed_by_ref(self, stack_address, register_banks):
+        registers = set(self.find_registers_for_value(stack_address, register_banks))
+        arg_registers = set(self.Target.get_argument_registers())
+
+        # Check if there is any overlap between the found registers and argument registers
+        return not registers.isdisjoint(arg_registers)
