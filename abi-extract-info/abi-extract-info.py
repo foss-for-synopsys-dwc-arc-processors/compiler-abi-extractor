@@ -33,7 +33,7 @@ def do_datatypes(Driver, Report, Target):
     Target.set_type_details(helper.parse_type_info(Stdout))
 
     # Store the generated report file for datatypes test case.
-    Report.append(stdoutFile)
+    #Report.append(stdoutFile)
 
 def do_argpass(Driver, Report, Target):
     # List of datatypes to be tested.
@@ -179,33 +179,64 @@ def do_struct_boundaries(Driver, Report, Target):
             ["src/arch/riscv.s"], f"out_struct_boundaries_{dataType}"
         )
 
+        struct_tests = structTests.StructTests(Target)
+
         # As multiple calls are made to the "callee()" external function,
         #   we need to split the information in multiple dumps and for over
         #   each one of them.
         dump_sections = dumpInformation.split_dump_sections(StdoutFile)
         boundary_limit_count = 0
-        for dump in dump_sections:
+        for index, dump in enumerate(dump_sections):
+            count = index + 1
+            # Generate hexadecimal values for the current datatype and count
+            value_list = helper.generate_hexa_values(Target, dataType, count)
             boundary_limit_count += 1
             dump_information = dumpInformation.DumpInformation()
             dump_information.parse(dump)
 
+            # Get stack and register bank information
+            stack = dump_information.get_stack()
+            reg_banks = dump_information.get_reg_banks()
+
             # Retrive the stack address from the dump.
             stack_address = dump_information.get_header_info(0)
 
-            reg_banks = dump_information.get_reg_banks()
-            reg_bank = reg_banks[next(iter(dump_information.get_reg_banks()))]
-            if structTests.if_stack_address_found(stack_address, reg_bank, Target):
+            is_passed_by_ref = struct_tests.run_test(stack_address, stack, reg_banks, value_list)
+            if is_passed_by_ref == True:
                 break
 
-        # Removing '1' as the current value for 'boundary_limit_count'
-        #   is already off the limit boundaries.
-        boundary_limit_count -= 1
-        if dataType == 'char':
-            max_boundary = boundary_limit_count
-        if ((boundary_limit_count) * datatype_size) != max_boundary:
-            print(f"    {dataType} not expected boundary limits: {boundary_limit_count}")
-        else:
-            print(f"    {dataType} expected boundary limits: {boundary_limit_count}")
+        # Get the last iteration results
+        last_iteration = struct_tests.results[-1]
+        argc = last_iteration["argc"] - 1
+        argr = last_iteration["registers"]
+        are_values_on_stack = last_iteration["value_in_stack"]
+        are_values_splitted = last_iteration["value_split_order"]
+
+        # Initialize the results dictionary for the current argument count,
+        # if not already present.
+        if argc not in results:
+            results[argc] = { "type": [], "regs": [],
+                              "common_regs": [], "noncommon_regs": [],
+                              "are_values_on_stack": False,
+                              "are_values_splitted": [] }
+
+        # Append the current datatype and register information to the results
+        results[argc]["type"].append(dataType)
+        results[argc]["regs"].append(argr)
+        results[argc]["are_values_on_stack"] = are_values_on_stack
+        results[argc]["are_values_splitted"] = are_values_splitted
+
+    # Process the results to extract common and non-common registers used.
+    for rkey, rvalue in results.items():
+        common_regs, noncommon_regs = struct_tests.extract_common_regs(rvalue["regs"])
+        rvalue["common_regs"] = common_regs
+        rvalue["noncommon_regs"] = noncommon_regs
+
+    # Write a summary report from the results.
+    Content = struct_tests.create_summary_string(results)
+    open("tmp/out_struct_boundaries.sum", "w").write(Content)
+    Report.append("tmp/out_struct_boundaries.sum")
+
 
 def do_endianness(Driver, Report):
     stdoutFile = Driver.run(["src/endianness/endianness.c"], [], "out_endianness")
