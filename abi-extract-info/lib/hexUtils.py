@@ -73,3 +73,43 @@ class HexUtils:
             self.current_test["value_split_order"] = ["[Low]", "[High]"]
 
         return self._get_registers_by_indices(indices)
+
+# Extend the given hex value to the specified `argc` and return list of hex values.
+    def _extend_value_to_argc(self, value, argc):
+        # Retrieve the size of an `int` in bytes to know the size of a register.
+        int_byte_count = self.Target.get_type_details("int")["size"]
+
+        # Remove hexa identifier.
+        _value = self._remove_identifier(value)
+        extended_value = []
+
+        # Extend the value by repeating it `argc` times.
+        _value = _value * argc
+
+        # Calculate the total number of bytes in the extended value.
+        total_byte_count = self._get_byte_count(_value)
+        remains = []
+
+        # Split the extended value into chunks of `int_byte_count` bytes.
+        while total_byte_count > int_byte_count:
+            # Update the total by count.
+            total_byte_count -= int_byte_count
+            # Extract the remaining portion of the value.
+            # e.i: If we have a register size of 4 bytes, and the extended
+            # value is greater, we need to split the values into two (or more) chunks and search them in the register banks.
+            #   Value        : `0x1212121212``
+            #   First chunk  : `0x12121212`
+            #   Second chunk : `0x12`
+            remains = _value[total_byte_count*2:]
+
+            # Update the value to exclude the extracted portion.
+            _value = _value[:total_byte_count*2]
+
+        if remains:
+            remains = self._add_identifier(remains)
+            extended_value.append(remains)
+
+        value = self._add_identifier(_value)
+        extended_value.append(value)
+
+        return extended_value
