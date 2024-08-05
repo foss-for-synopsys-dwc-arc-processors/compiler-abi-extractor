@@ -51,6 +51,57 @@ class StructTests:
 
         return ordered_common, ordered_non_common
 
+    # Generate a summary string from the extracted information.
+    def create_summary_string(self, results):
+        summary = []
+
+        for argument_count, value in results.items():
+            # Join the types into a single string separated by ' : '
+            types = " : ".join(value["type"])
+
+            description = ""
+
+            # Check if values are passed in registers and not on stack
+            if value["common_regs"] and not value["are_values_on_stack"]:
+                common_regs = " ".join(value["common_regs"])
+                description = f"passed in registers: {common_regs}"
+
+            # Check if values are passed on stack and not in registers
+            elif not value["common_regs"] and value["are_values_on_stack"]:
+                description = f"passed in stack: sp ..."
+
+            # Check if values are split and passed in registers
+            elif value["common_regs"] and value["are_values_splitted"] and not value["are_values_on_stack"]:
+                common_regs = " ".join(value["common_regs"])
+                values_splitted = ", ".join(value["are_values_splitted"])
+                description = f"passed in registers {values_splitted}: {common_regs}"
+
+            # Check if values are split and passed on stack
+            elif not value["common_regs"] and value["are_values_splitted"] and value["are_values_on_stack"]:
+                values_splitted = ", ".join(value["are_values_splitted"])
+                description = f"passed in stack {values_splitted}: sp ..."
+
+            # Check if values are passed in both registers and stack
+            elif value["common_regs"] and value["are_values_on_stack"] and not value["are_values_splitted"]:
+                common_regs = " ".join(value["common_regs"])
+                description = f"passed in registers/stack: {common_regs} sp ..."
+
+            # Check if values are split and passed in both registers and stack
+            elif value["common_regs"] and value["are_values_on_stack"] and value["are_values_splitted"]:
+                common_regs = " ".join(value["common_regs"])
+                values_splitted = ", ".join(value["are_values_splitted"])
+                description = f"passed in registers/stack {values_splitted}: {common_regs} sp ..."
+
+            # Build the summary string for each argument
+            summary.append(f"- {types}\n")
+            summary.append(f" - argc > {argument_count} : {description}\n")
+
+            # Add a warning message if there are non-common registers
+            if value["noncommon_regs"]:
+                summary.append(" - WARNING: some inconsistencies were detected, for details see ......\n")
+
+        return "".join(summary)
+
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, stack_address, stack_values, register_banks, values_list):
         # Argument count value
