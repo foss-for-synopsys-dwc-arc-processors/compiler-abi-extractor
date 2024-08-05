@@ -6,37 +6,51 @@
 # the LICENSE file in the root directory of this source tree.
 
 """
-The logic relies on validating the presence of the stack address in the
-argument passing registers to ensure that we have found the boundary limits
-for struct argument passing.
+This class validates how arguments are passed within structs by checking
+if a value appears in registers, the stack, or if its passed by reference.
 """
 
 import sys
+from lib import hexUtils
 
-class StructValidator:
+class StructTests:
     def __init__(self, Target):
         self.Target = Target
 
-    # Validate if the stack address has been found in the first argument register.
-    # If so, then we have reached our limits.
-    def if_stack_address_found(self, stack_address, regs_bank):
+    # Run the test to check if the value is in registers or the stack.
+    def run_test(self, stack_address, stack_values, register_banks, values_list):
+        # Argument count value
+        argc = len(values_list)
+        # Target value to be checked
+        argv = values_list[0]
 
-        mapping = dict()
-        target_argument_registers = self.Target.get_argument_registers()
-        for i, r in enumerate(self.Target.get_registers()):
-            mapping[r] = regs_bank[i]
+        # Initialize current test details
+        self.current_test = {
+            "argc": argc,               # Argument count
+            "argv": argv,               # Value checked
+            "value_split_order": None,  # Order of split values (if any)
+            "registers": None,          # Registers containing the value
+            "value_in_stack": None,     # Wether the value is in the stack
+            "passed_by_ref": None       # Wether passed by reference
+        }
 
-        argument_register_value = mapping[target_argument_registers[0]]
-        if stack_address.rstrip() in argument_register_value.rstrip():
-            return True
+        hutils = hexUtils.RegisterUtils(self.Target, self.current_test)
 
-        return False
+        # Check if the value is in the registers and update current test
+        self.current_test["registers"] = hutils.find_value_in_registers(argv, register_banks, argc)
+        # Check if the value is in the stack and update current test
+        self.current_test["value_in_stack"] = hutils.is_value_in_stack(argv, stack_values)
+        # Check if the values are being passed by reference and update current test
+        self.current_test["passed_by_ref"] = hutils.is_passed_by_ref(stack_address, register_banks)
 
+        # Append current test results to the results list
+        self.results.append(self.current_test)
 
-def if_stack_address_found(stack_address, regs_bank, Target):
-    return StructValidator(Target).if_stack_address_found(stack_address, regs_bank)
+        passed_by_ref = self.current_test["passed_by_ref"]
+        self.current_test = {}
+
+        return passed_by_ref
+
 
 if __name__ == "__main__":
-    # TODO: Update this outdated logic.
-    StdoutFile = sys.argv[1]
-    StructValidator().split_sections(StdoutFile)
+    pass
