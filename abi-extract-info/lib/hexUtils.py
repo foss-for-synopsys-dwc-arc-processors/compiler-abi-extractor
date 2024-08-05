@@ -21,3 +21,15 @@ class HexUtils:
     # Add '0x' prefix.
     def _add_identifier(self, value):
         return f"0x{value}"
+
+   # Calculate the number of bytes of `value`
+    def _get_byte_count(self, value):
+        hex_clean = value
+        if "0x" in value:
+            # Remove the '0x' prefix
+            hex_clean = self._remove_identifier(value)
+        # Count the number of hexadecimal digits
+        hex_length = len(hex_clean)
+        # Calculate the number of bytes (2 hex digits per byte)
+        num_bytes = (hex_length + 1) // 2
+        return num_bytes
