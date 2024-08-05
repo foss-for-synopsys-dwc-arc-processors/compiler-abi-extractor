@@ -13,6 +13,7 @@ functions for handling hexadecimal values.
 class HexUtils:
     def __init__(self, target, current_test):
         self.Target = target
+        self.current_test = current_test
 
     # Remove '0x' prefix.
     def _remove_identifier(self, value):
