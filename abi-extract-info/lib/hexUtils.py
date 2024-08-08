@@ -22,6 +22,17 @@ class HexUtils:
     def _add_identifier(self, value):
         return f"0x{value}"
 
+    # Calculate the difference between two hexadecimal strings.
+    def _hex_difference(self, hex1: str, hex2: str) -> int: # Shall I adapt to this?
+        # Convert hexadecimal strings to integers.
+        num1 = int(hex1, 16)
+        num2 = int(hex2, 16)
+
+        # Compute the difference.
+        difference = abs(num1 - num2)
+
+        return difference
+
    # Calculate the number of bytes of `value`
     def _sizeof(self, value):
         hex_clean = value
