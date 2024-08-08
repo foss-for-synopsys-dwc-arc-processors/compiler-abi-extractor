@@ -145,27 +145,64 @@ def do_struct_boundaries(Driver, Report, Target):
     types = [ "char", "signed char", "unsigned char", "short", "int", "long",
               "long long", "void*", "float", "double", "long double"]
 
-    # For RISCV 32-bit, if a struct exceeds 16 bytes in size for argument
-    #  passing, the reference address in `a0` will not correspond to the
-    #  stack pointer but will include an offset, causing issues with the
-    #  current logic.
     # TODO: Test for 64-bit scenarios.
 
     int_size = Target.get_type_details("int")["size"]
 
-    # Initially, the `max_boundary` was set to twice the size of an `int`,
-    #  based on the RISCV ABI document. However, this approach is adjusted
-    #  to use the size of a `char` to define the limits, as the previous
-    #  assumption may not apply to other architectures. The size of an `int`
-    #  is still used to finalize the `max_boundary` value.
-
-    # Note: The `-1` adjustment accounts for the fact that `structGen` adds
-    #  a `char` after the `max_boundary` limit. Given the issue described above,
-    #  the total size for 32-bit should not exceed 16 bytes.
-    max_boundary = 2 * int_size * 2 - 1
-    boundary_limit_count = 0
+    # The max_boundary is calculated with the `char` datatype.
+    # The test case will generate multiple C files to test the struct
+    # boundaries, char by char. Once it reaches the stack as reference,
+    # the max_boundary is defined.
+    max_boundary = 0
 
     results = {}
+
+    # CHAR
+    dtype = "char"
+    results = {}
+    results[dtype] = []
+    sizeof = Target.get_type_details(dtype)["size"]
+
+    count = 0
+    while (True):
+        Content = structGen.generate_single_call(Target, count, dtype, sizeof)
+        open(f"tmp/out_struct_boundaries_{dtype}_{count}.c", "w").write(Content)
+
+        stdout_file = Driver.run(
+            [f"tmp/out_struct_boundaries_{dtype}_{count}.c", "src/helper.c"],
+            ["src/arch/riscv.s"], f"out_struct_boundaries_{dtype}_{count}"
+        )
+
+        struct_tests = structTests.StructTests(Target)
+
+        res = count + 1 # +1 to generate extra char at the end.
+        argv = helper.generate_hexa_list(res, sizeof, count)
+
+        dump_information = dumpInformation.DumpInformation()
+        dump_information.parse(stdout_file, True)
+
+        # Get stack and register bank information
+        stack = dump_information.get_stack()
+        reg_banks = dump_information.get_reg_banks()
+
+        # Retrive the stack addresses from the dump.
+        #stack_address = dump_information.get_header_info(0)
+        stack_address = None
+
+        citeration = {}
+        struct_tests.run_test(citeration, stack, reg_banks, argv)
+        results[dtype].append(citeration)
+        if citeration["passed_by_ref"] != None:
+            break
+
+        count += 1
+
+        print(results)
+
+
+    print(f"LIMIT: {count}")
+    max_boundary = count
+
     for dataType in types:
         # Get datatype size from stored information from previous test case.
         datatype_size = Target.get_type_details(dataType)["size"]
