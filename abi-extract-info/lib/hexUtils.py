@@ -24,7 +24,7 @@ class HexUtils:
         return f"0x{value}"
 
    # Calculate the number of bytes of `value`
-    def _get_byte_count(self, value):
+    def _sizeof(self, value):
         hex_clean = value
         if "0x" in value:
             # Remove the '0x' prefix
@@ -88,7 +88,7 @@ class HexUtils:
         _value = _value * argc
 
         # Calculate the total number of bytes in the extended value.
-        total_byte_count = self._get_byte_count(_value)
+        total_byte_count = self._sizeof(_value)
         remains = []
 
         # Split the extended value into chunks of `int_byte_count` bytes.
