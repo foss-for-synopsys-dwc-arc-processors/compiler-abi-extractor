@@ -79,6 +79,8 @@ class DumpInformation:
                 break
 
             Content = content.pop(0)
+            Content = Content.split(" : ")
+
             self.Stack.append(Content)
 
         return Content
