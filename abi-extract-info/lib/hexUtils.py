@@ -333,3 +333,59 @@ class HexUtils:
                         return citeration
 
         return citeration
+
+    def find_ref_in_stack_combined(self, citeration, argv, register_banks, stack):
+        citeration["passed_by_ref"] = None
+        # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
+        sizeof_int = 4
+
+        # Build a dictionary of register-values from the register banks.
+        registers = self.Target.get_registers()
+        register_values_dict = dict()
+        for bank_name, register_values in register_banks.items():
+            for index, reg in enumerate(registers):
+                register_values_dict[reg] = register_values[index]
+
+        # Process argv to combine values.
+        while (argv):
+            # Peek the value from argv
+            value = argv[0]
+            res = []
+            # Aggregate values until the combined size reaches or exceeds sizeof_int.
+            while argv and self._sizeof(self._combine_hex_values(res)) < sizeof_int:
+                res.append(argv.pop(0))
+
+                # Check if adding the next would still fit within `sizeof_int`.
+                if argv:
+                    next_value = argv[0]
+                    if self._sizeof(self._combine_hex_values(res)) + self._sizeof(next_value) <= sizeof_int:
+                        res.append(argv.pop(0))
+                    else:
+                        break
+
+            # Special case for combining values - `char`, `short`
+            # When we are passing a `struct {char, short}`, the char value will be extended
+            # to align with short.
+            if len(res) == 2 and self._sizeof(res[0]) == 1 and self._sizeof(res[1]) == 2:
+                res[0] = f"0x00{res[0][2:]}"  # Adjust representation for short exception.
+
+            # Combine the aggregated values into a single hexadecimal value.
+            combined_hex = self._combine_hex_values(res)
+
+            # Iterate over the stack to find a matching reference.
+            for index in range(len(stack)):
+                if index > len(stack) - 1:
+                    break
+
+                # Here instead of checking all positions in the stack,
+                # we only care about the first one.
+                stack_address, stack_value = stack[index]
+                if register_values_dict["x10"] == stack_address:
+                    if stack_value == combined_hex:
+                        citeration["passed_by_ref_register"] = ["x10"]
+                        diff = self._hex_difference(stack[0][0], stack[index][0])
+                        citeration["passed_by_ref"] = f"sp + {diff}"
+
+                        return citeration
+
+        return citeration
