@@ -161,3 +161,20 @@ class HexUtils:
 
         # Check if there is any overlap between the found registers and argument registers
         return not registers.isdisjoint(arg_registers)
+
+    # Finds the complete argument values in the register banks.
+    def find_registers_fill(self, argv, register_banks):
+        indexes = []
+
+        # Iterate through each value in argv.
+        while (argv):
+            value = argv.pop(0)
+
+            # Search for the value in each register bank.
+            for bank_name, bank_register in register_banks.items():
+                for index, register_value in enumerate(bank_register):
+                    if register_value == value:
+                        # Append the index of the value in the register bank.
+                        indexes.append(index)
+
+        return indexes
