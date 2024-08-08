@@ -31,7 +31,8 @@ void dump_information(unsigned* Stack) {
 
     // stack: 32 entries (128 bytes on 32bit system)
     printf("// Start of stack dump: %p\n", Stack);
-    for(unsigned i=0; i<32; ++i)
-        printf("0x%x\n", Stack[i]);
+    for(unsigned i=0; i<32; ++i){
+        printf("%p : 0x%x\n", &Stack[i], Stack[i]);
+    }
     printf("// Done\n");
 }
