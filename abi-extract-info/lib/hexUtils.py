@@ -254,3 +254,35 @@ class HexUtils:
 
 
         return indexes
+
+    # Finds a reference pointer of the stack in the argument registers with complete value.
+    def find_ref_in_stack_fill(self, citeration, argv, register_banks, stack):
+        citeration["passed_by_ref"] = None
+
+        # Build a dictionary of register-values from the register banks.
+        registers = self.Target.get_registers()
+        register_values_dict = dict()
+        for bank_name, register_values in register_banks.items():
+            for index, reg in enumerate(registers):
+                register_values_dict[reg] = register_values[index]
+
+        # Iterate over stack to find matching pairs.
+        for index, stack_tuple in enumerate(stack):
+            # Get the index's stack address and correspoding value.
+            stack_address, stack_value = stack_tuple
+
+            # If the current stack address is in the first argument register. (FIXME Cant be hardcoded.)
+            # We only taking into account the first register, because it has been observed that the
+            # compiler might use another of the argument registers to store a stack address to load
+            # the values into the first argument register before the actual function call.
+            # i.e it first stores the values into the stack, then loads it to register.
+            if register_values_dict["x10"] == stack_address:
+                # FIXME Here it would make sense to validate the next stack value,
+                # but has been observe that the next value is not always in the next stack address.
+                if stack_value == argv[0]:
+                    citeration["passed_by_ref_register"] = ["x10"] # FIXME hardcoded..
+                    diff = self._hex_difference(stack[0][0], stack[index][0])
+                    citeration["passed_by_ref"] = f"sp + {diff}"
+
+                    return citeration
+        return citeration
