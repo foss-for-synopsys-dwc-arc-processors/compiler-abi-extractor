@@ -178,3 +178,31 @@ class HexUtils:
                         indexes.append(index)
 
         return indexes
+
+    # Finds registers that match either half of a value in `argv`.
+    def find_registers_pairs(self, argv, register_banks):
+        indexes = []
+
+        # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
+        sizeof_int = 4
+
+        # Process `argv` to find matching register values.
+        while argv:
+            value = argv.pop(0)
+            sizeof_value = self._sizeof(value)
+
+            # Split the value if its size exceeds `sizeof_int`
+            if sizeof_value > sizeof_int:
+                first_half, second_half = self._split_hex_value(value)
+
+                # Search for each half in each register bank.
+                for bank_name, bank_register in register_banks.items():
+                    for index, register_value in enumerate(bank_register):
+                        # TODO Get the order of [low] and [high]
+                        if register_value == first_half:
+                            indexes.append(index)
+                        elif register_value == second_half:
+                            indexes.append(index)
+                continue
+
+        return indexes
