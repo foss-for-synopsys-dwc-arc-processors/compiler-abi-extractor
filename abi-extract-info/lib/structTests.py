@@ -17,7 +17,6 @@ class StructTests:
     def __init__(self, Target):
         self.Target = Target
         self.results = []
-        self.current_test = {}
 
     def remove_none_from_nested_list(self, list_of_regs):
         return [item for item in list_of_regs if item is not None]
@@ -105,38 +104,34 @@ class StructTests:
         return "".join(summary)
 
     # Run the test to check if the value is in registers or the stack.
-    def run_test(self, stack_address, stack_values, register_banks, values_list):
+    def run_test(self, citeration, stack, register_banks, argv):
         # Argument count value
-        argc = len(values_list)
-        # Target value to be checked
-        argv = values_list[0]
+        argc = len(argv)
 
-        # Initialize current test details
-        self.current_test = {
-            "argc": argc,               # Argument count
-            "argv": argv,               # Value checked
-            "value_split_order": None,  # Order of split values (if any)
-            "registers": None,          # Registers containing the value
-            "value_in_stack": None,     # Wether the value is in the stack
-            "passed_by_ref": None       # Wether passed by reference
-        }
-
-        hutils = hexUtils.HexUtils(self.Target, self.current_test)
+        hutils = hexUtils.HexUtils(self.Target)
 
         # Check if the value is in the registers and update current test
-        self.current_test["registers"] = hutils.find_value_in_registers(argv, register_banks, argc)
-        # Check if the value is in the stack and update current test
-        self.current_test["value_in_stack"] = hutils.is_value_in_stack(argv, stack_values)
-        # Check if the values are being passed by reference and update current test
-        self.current_test["passed_by_ref"] = hutils.is_passed_by_ref(stack_address, register_banks)
+        citeration = hutils.find_ref_in_stack_fill(citeration, argv.copy(), register_banks, stack)
+        if citeration["passed_by_ref"]:
+            print(citeration)
+            return citeration
+        citeration = hutils.find_ref_in_stack_pairs(citeration, argv.copy(), register_banks, stack)
+        if citeration["passed_by_ref"]:
+            print(citeration)
+            return citeration
+        citeration = hutils.find_ref_in_stack_combined(citeration, argv.copy(), register_banks, stack)
+        if citeration["passed_by_ref"]:
+            print(citeration)
+            return citeration
 
-        # Append current test results to the results list
-        self.results.append(self.current_test)
+        citeration["registers_fill"] = hutils.find_registers_fill(argv.copy(), register_banks)
+        citeration["registers_pairs"] = hutils.find_registers_pairs(argv.copy(), register_banks)
+        citeration["registers_combined"] = hutils.find_registers_combined(argv.copy(), register_banks)
 
-        passed_by_ref = self.current_test["passed_by_ref"]
-        self.current_test = {}
+        #print(f"register_banks {register_banks}")
+        #print(f"stack {stack}")
 
-        return passed_by_ref
+        return citeration
 
 
 if __name__ == "__main__":
