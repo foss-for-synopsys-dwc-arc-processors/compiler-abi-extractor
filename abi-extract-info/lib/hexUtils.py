@@ -286,3 +286,50 @@ class HexUtils:
 
                     return citeration
         return citeration
+
+    # Finds a reference pointer of the stack in the argument registers with the expected argv.
+    def find_ref_in_stack_pairs(self, citeration, argv, register_banks, stack):
+        citeration["passed_by_ref"] = None
+        # FIXME Assume sizeof(int) is 4  bytes; this should be dynamic if the size can change (i.e 64bits).
+        sizeof_int = 4
+
+        # Build a dictionary of register-values from the register banks.
+        registers = self.Target.get_registers()
+        register_values_dict = dict()
+        for bank_name, register_values in register_banks.items():
+            for index, reg in enumerate(registers):
+                register_values_dict[reg] = register_values[index]
+
+        while (argv):
+            value = argv.pop(0)
+
+            # Get the size of the current value.
+            sizeof_value = self._sizeof(value)
+
+            # Check if makes sense to split the value.
+            if sizeof_value <= sizeof_int:
+                continue
+            # Split the value into two parts.
+            first_half, second_half = self._split_hex_value(value)
+
+            # Iterate over stack to find matching pairs.
+            for index in range(len(stack) - 1): # Use len(stack) -1 to prevent out-of-range error
+                # Get the index's stack address and correspoding value.
+                stack_address, stack_value = stack[index]
+
+                # If the current stack address is in the first argument register. (FIXME Cant be hardcoded.)
+                # We only taking into account the first register, because it has been observed that the
+                # compiler might use another of the argument registers to store a stack address to load
+                # the values into the first argument register before the actual function call.
+                # i.e it first stores the values into the stack, then loads it to register.
+                if register_values_dict["x10"] == stack_address:
+                    # FIXME Here it would make sense to validate the next stack value,
+                    # but has been observe that the next value is not always in the next stack address.
+                    if stack_value == first_half or stack_value == second_half:
+                        citeration["passed_by_ref_register"] = ["x10"] # FIXME harcoded..
+                        diff = self._hex_difference(stack[0][0], stack[index][0])
+                        citeration["passed_by_ref"] = f"sp + {diff}"
+
+                        return citeration
+
+        return citeration
