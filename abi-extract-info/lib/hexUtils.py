@@ -45,6 +45,16 @@ class HexUtils:
         num_bytes = (hex_length + 1) // 2
         return num_bytes
 
+    # Combine hexadecimal values i.e 0x1234 + 0x5678 = 0x56781234
+    def _combine_hex_values(self, hex_values, endianness="little_endian"):
+        if endianness == "little_endian":
+            concatenated = "".join(h[2:] for h in reversed(hex_values))
+        elif endianness == "big_endian":
+            concatenated = "".join(h[2:] for h in hex_values)
+
+        combined_hex = "0x" + concatenated
+        return combined_hex
+
     # Split a hexadecimal value into two halves.
     def _split_hex_value(self, value):
         value = self._remove_identifier(value) # Remove '0x' prefix
