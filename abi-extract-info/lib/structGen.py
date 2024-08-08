@@ -12,7 +12,7 @@ The purpose of this generator is to create a test case
 that will validate the boundaries before a struct with
 values goes to the stack.
 
-For a given datatype, will generate multiple
+For a given datatype, will generate single or multiple
 structs being passed to an extern callee() function
 responsible for dumping the registger and stack values.
 """
@@ -61,6 +61,39 @@ inline static double ull_as_double(unsigned long long lhs)
         elif self._dtype == "double":
             self.generate_include()
             self.generate_as_double()
+
+    def generate_single_call_declare(self):
+        declare_str = [f"char a{c};" for c in range(self._count)]
+        declare_str.append(f"char a{self._count};")
+        declare_str = "\n".join(declare_str)
+        self.append("""
+struct structType {
+%s
+};
+""" % (declare_str))
+
+    def generate_single_call_prototypes(self):
+        self.append("extern void callee(struct structType);")
+        self.append("extern void reset_registers();")
+
+    def generate_single_call_main(self):
+        dtypes = [self._dtype] * self._count + ["char"]
+        argv = helper.generate_hexa_list_from_datatypes(dtypes, self.Target, self._count)
+        self.append("""
+int main (void) {
+    reset_registers();
+    struct structType structTypeObject = { %s };
+    callee(structTypeObject);
+}
+""" % (", ".join(argv)))
+
+    def generate_single_call(self):
+        self.generate_single_call_declare()
+        self.generate_single_call_prototypes()
+        self.generate_single_call_main()
+
+        return self.get_result()
+
 
     def generate_multiple_call_declare(self):
         for c in range(self._count + 1):
@@ -115,6 +148,8 @@ struct structType%d {
 
         return self.get_result()
 
+def generate_single_call(Target, count, dtype, sizeof):
+    return StructGenerator(Target, count, dtype, sizeof).generate_single_call()
 
 def generate_multiple_call(Target, count, dtype, sizeof):
     return StructGenerator(Target, count, dtype, sizeof).generate_multiple_call()
