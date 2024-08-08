@@ -153,3 +153,12 @@ def generate_hexa_values_2(sizeof, reset = None):
     result = f"0x{result}"
 
     return result
+
+# Generate a list of unique hexadecimal values.
+def generate_hexa_list(length, sizeof, reset = None):
+    values = []
+    for i in range(length):
+        values.append(generate_hexa_values_2(sizeof, reset))
+        reset = None
+
+    return values
