@@ -206,3 +206,51 @@ class HexUtils:
                 continue
 
         return indexes
+
+    # Finds registers that match combined values in `argv`.
+    def find_registers_combined(self, argv, register_banks):
+        # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
+        sizeof_int = 4
+
+        indexes = []
+
+        # Process `argv` to combine values.
+        while (argv):
+            # Peek the value from `argv`
+            value = argv[0]
+            res = []
+
+            # Check if the current value is already of the expected size.
+            if self._sizeof(value) == sizeof_int:
+                argv.pop(0)
+                continue
+
+            # Aggregate values until the combined size reaches or exceeds sizeof_int
+            while argv and self._sizeof(self._combine_hex_values(res)) < sizeof_int:
+                res.append(argv.pop(0))
+
+                if argv:
+                    next_value = argv[0]
+                    # Check if combining with the next value fits within `sizeof_int`
+                    if self._sizeof(self._combine_hex_values(res)) + self._sizeof(next_value) <= sizeof_int:
+                        res.append(argv.pop(0))
+                    else:
+                        break
+
+            # Special case for combining values - `char`, `short`
+            # When we are passing a `struct {char, short}`, the char value will be extended
+            # to align with short.
+            if len(res) == 2 and self._sizeof(res[0]) == 1 and self._sizeof(res[1]) == 2:
+                res[0] = f"0x00{res[0][2:]}"  # Adjust representation for short exception.
+
+            # Combine the aggregated values into a single hexadecimal value.
+            combined_hex = self._combine_hex_values(res)
+
+            # Search for the combined hexadecimal value in each register bank.
+            for bank_name, bank_register in register_banks.items():
+                for index, register_value in enumerate(bank_register):
+                    if register_value == combined_hex:
+                        indexes.append(index)
+
+
+        return indexes
