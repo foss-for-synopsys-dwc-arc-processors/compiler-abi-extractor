@@ -9,112 +9,116 @@ from lib import helper
 
 """
 The purpose of this generator is to create a test case
-that will validate the boundaries before a struct
-containing values goes to the stack.
+that will validate the boundaries before a struct with
+values goes to the stack.
 
-It will generate a test case for a given datatype with
-multiple structs being passed to a extern callee() function
-responsible for dumping the register and stack values.
-
-These structs are created from 1 to a given MaxCount, where
-the last MaxCount will always contain one last "char" element
-to validate the boundaries.
+For a given datatype, will generate multiple
+structs being passed to an extern callee() function
+responsible for dumping the registger and stack values.
 """
 
-import sys
-
 class StructGenerator:
-    def __init__(self, MaxCount, Type, values_list):
-        self.Result = []
-        self.Strings = []
-        self.MaxCount = MaxCount
-        self.Type = Type
-        self.values_list = values_list
+    def __init__(self, Target, count, dtype, sizeof):
+        self._result = []
+        self.Target = Target
+        self._count = count
+        self._dtype = dtype
+        self._sizeof = sizeof
 
     def append(self, W):
-        self.Result.append(W)
+        self._result.append(W)
 
-    def generateDeclarationString(self, count):
-        return "".join(f"{self.Type} a{i};\n" for i in range(count))
+    def get_result(self):
+        return "\n".join(self._result)
 
-    def generateDeclarationStringLastChar(self, count):
-        return f"char a{count};\n"
+    def generate_include(self):
+        self.append("#include <string.h>")
 
-    def generateDefinitionString(self, count):
-        definition_string = ""
+    def generate_as_float(self):
+        self.append("""
+inline static float ul_as_float(unsigned long lhs)
+{
+    float result;
+    memcpy(&result, &lhs, sizeof(float));
+    return result;
+}
+""")
 
-        for i in range(1, count + 1):
-            tmp = self.values_list[:i]
-            tmp = ", ".join(tmp)
-            definition_string += f"    struct structType{i} structTypeObject{i} = {{ {tmp} }};\n"
+    def generate_as_double(self):
+        self.append("""
+inline static double ull_as_double(unsigned long long lhs)
+{
+    double result;
+    memcpy(&result, &lhs, sizeof(double));
+    return result;
+}
+""")
 
-        tmp = ", ".join(self.values_list)
-        definition_string += f"    struct structType{self.MaxCount + 1} structTypeObject{self.MaxCount + 1} = {{ {tmp} }} ;\n"
+    def generate_converter(self):
+        if self._dtype == "float":
+            self.generate_include()
+            self.generate_as_float()
+        elif self._dtype == "double":
+            self.generate_include()
+            self.generate_as_double()
 
-        return definition_string
+    def generate_multiple_call_declare(self):
+        for c in range(self._count + 1):
+            declare_str = [f"{self._dtype} a{j};" for j in range(c+1)]
+            if c == self._count:
+                declare_str.append(f"char a{self._count + 1};")
 
-    def generateCallString(self, count):
-        return "".join(f"    callee(structTypeObject{i});\n" for i in range(1, count + 1 + 1))
-
-    def generateStructDefinitions(self):
-        for count in range(1, self.MaxCount + 1):
-            declaration_string = self.generateDeclarationString(count)
+            declare_str = "\n".join(declare_str)
             self.append("""
 struct structType%d {
-    %s
+%s
 };
-""" % (count, declaration_string))
+""" % (c, declare_str))
 
-        # Always another one with a single char.
-        declaration_string = self.generateDeclarationString(self.MaxCount)
-        declaration_string += self.generateDeclarationStringLastChar(self.MaxCount)
-        self.append("""
-struct structType%d {
-    %s
-};
-""" % (self.MaxCount + 1, declaration_string))
-
-    def generateStringInformation(self):
-        definition_string = self.generateDefinitionString(self.MaxCount)
-        call_string = self.generateCallString(self.MaxCount)
-
-        self.Strings.append(definition_string)
-        self.Strings.append(call_string)
-
-
-    def generateMain(self):
+    def generate_multiple_call_prototypes(self):
         self.append("extern void callee();")
-        self.append("""
-int main (void) {
-%s
-%s
-}
-""" % (self.Strings[0], self.Strings[1]))
+        self.append("extern void reset_registers(void);")
 
-    def Reset(self):
-        self.Result = []
+    def generate_multiple_call_main(self):
+        self.append("int main (void) {")
+        for c in range(self._count + 1): # +1 for the extra char call.
+            dtypes = [self._dtype] * (c+1)
+            reset = 10 if c == 0 else None
+            argv   = helper.generate_hexa_list_from_datatypes(dtypes, self.Target, reset)
 
-    def getResult(self):
-        return "\n".join(self.Result)
+            if self._dtype == "float":
+                argv = [f"ul_as_float({x})" for x in argv]
+            elif self._dtype == "double":
+                argv = [f"ull_as_double({x})" for x in argv]
 
-    def generate(self):
-        self.generateStructDefinitions()
-        self.generateStringInformation()
-        self.generateMain()
+            if c == self._count:
+                sizeof_char = self.Target.get_type_details("char")["size"]
+                char_value = helper.generate_hexa_values_2(sizeof_char)
+                argv_str = f"{', '.join(argv)}, {char_value}"
+            else:
+                argv_str = ", ".join(argv)
 
-        return self.getResult()
+            self.append("""
+    reset_registers();
+    struct structType%d structTypeObject%d = { %s };
+    callee(structTypeObject%d);
+""" % (c, c, argv_str, c))
 
-def generate(MaxCount, Type, values_list):
-    return StructGenerator(MaxCount, Type, values_list).generate()
+        self.append("}")
+
+    def generate_multiple_call(self):
+        self.generate_converter()
+
+        self.generate_multiple_call_declare()
+        self.generate_multiple_call_prototypes()
+        self.generate_multiple_call_main()
+
+        return self.get_result()
+
+
+def generate_multiple_call(Target, count, dtype, sizeof):
+    return StructGenerator(Target, count, dtype, sizeof).generate_multiple_call()
 
 import sys
 if __name__ == "__main__":
-    # Testing purposes.
-    #  According to RISCV ABI (2x XLEN), if we take into account the int size
-    #  from preivous tests, for 32bit we have 2x4=8 and 64bit, 2x8=16
-    #  We will hardcore 4bytes for now, but it must be either changed to the
-    #  double value of sizeof(int), or a static larger value (e.i 17)
-    MaxCount = 2*4
-    Type = "int"
-    Content = generate(MaxCount, Type, MaxCount)
-    print(Content)
+    pass
