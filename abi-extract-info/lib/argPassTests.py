@@ -154,11 +154,11 @@ class ArgPassTests:
 
     # Check if the value or its split halves are present in the stack.
     def is_value_in_stack(self, value, stack_values):
-        if value == stack_values[0]:
+        if value == stack_values[0][1]:
             return True
 
         first_half, second_half = self._split_hex_value(value)
-        return first_half == stack_values[0] or second_half == stack_values[0]
+        return first_half == stack_values[0][1] or second_half == stack_values[0][1]
 
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, stack_values, register_banks, values_list):
