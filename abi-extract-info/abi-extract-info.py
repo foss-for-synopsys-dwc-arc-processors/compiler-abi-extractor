@@ -49,8 +49,8 @@ def do_argpass(Driver, Report, Target):
         # Create an instance of `ArgPassTests` for the current Target
         arg_pass_tests = argPassTests.ArgPassTests(Target)
 
-
-        for count in range(1, 17):
+        count = 1
+        while (True):
             # Generate hexadecimal values for the current datatype and count
             value_list = helper.generate_hexa_values(Target, T, count)
             # Generate the content of the test file.
@@ -76,6 +76,12 @@ def do_argpass(Driver, Report, Target):
             # for this datatype.
             if is_value_in_stack == True:
                 break
+
+            if count == 15:
+                print("DEBUG: Exitting for save purposes. [do_argpas]")
+                break
+
+            count += 1
 
         # Get the last iteration results
         last_iteration = arg_pass_tests.results[-1]
