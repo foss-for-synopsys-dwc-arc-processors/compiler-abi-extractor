@@ -72,6 +72,17 @@ class HexUtils:
         ]
         return sorted(indices)
 
+    # Extend a value as zero or sign extended.
+    def _zero_or_sign_extend(self, value, sizeof_int, is_zero):
+        value = self._remove_identifier(value)
+        type_extend = "00" if is_zero else "ff"
+
+        while (self.sizeof(value) < sizeof_int):
+            value = f"{type_extend}{value}"
+
+        value = self._add_identifier(value)
+        return value
+
     # Retrieve the list of registers corresponding to the given indices.
     def _get_registers_by_indices(self, indices):
         return [self.Target.get_registers()[i] for i in indices]
@@ -189,6 +200,33 @@ class HexUtils:
         # Iterate through each value in argv.
         while (argv):
             value = argv.pop(0)
+
+            # Search for the value in each register bank.
+            for bank_name, bank_register in register_banks.items():
+                for index, register_value in enumerate(bank_register):
+                    if register_value == value:
+                        # Append the index of the value in the register bank.
+                        indexes.append(index)
+
+        return indexes
+
+    # Finds the zero or sign extended  argument values in the register banks.
+    def find_registers_extended(self, argv, register_banks, is_zero):
+        indexes = []
+
+        # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
+        sizeof_int = 4
+
+        # Iterate through each value in argv.
+        while (argv):
+
+            value = argv.pop(0)
+
+            # If the value is greater or equal to the register sizeof, continue.
+            if self.sizeof(value) >= sizeof_int:
+                continue
+
+            value = self._zero_or_sign_extend(value, is_zero)
 
             # Search for the value in each register bank.
             for bank_name, bank_register in register_banks.items():
