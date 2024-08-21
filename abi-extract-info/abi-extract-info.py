@@ -21,6 +21,7 @@ from lib import dumpInformation
 from lib import targetArch
 from lib import structGen
 from lib import structTests
+from lib import bitFieldGen
 
 def do_datatypes(Driver, Report, Target):
     Content = datatypesTests.generate()
@@ -34,6 +35,13 @@ def do_datatypes(Driver, Report, Target):
 
     # Store the generated report file for datatypes test case.
     #Report.append(stdoutFile)
+
+def do_bitfield(Driver, Report, Target):
+    content = bitFieldGen.generate()
+    open("tmp/out_bitfield.c", "w").write(content)
+    stdout_file = Driver.run(["tmp/out_bitfield.c"], [], "out_bitfield")
+
+    Report.append(stdout_file)
 
 def do_argpass(Driver, Report, Target):
     # List of datatypes to be tested.
@@ -290,6 +298,7 @@ def do_tests(Driver, Report, Target):
     #  do_endianness(Driver, Report)
     #  do_stack_dir(Driver, Report)
     #  do_stack_align(Driver, Report)
+     do_bitfield(Driver, Report, Target)
      # ,, more different kind of tests here
 
 if __name__ == "__main__":
