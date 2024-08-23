@@ -28,6 +28,8 @@ from lib import savedGen
 from lib import savedTests
 from lib import bitFieldGen
 
+import sys
+
 def do_datatypes(Driver, Report, Target):
     Content = datatypesGen.generate()
     open("tmp/out_datatypes.c", "w").write(Content)
@@ -233,9 +235,6 @@ def do_empty_struct(Driver, Report, Target):
     Report.append("tmp/out_emptyStruct.sum")
 
 def do_struct_boundaries(Driver, Report, Target):
-    types = [ "char", "signed char", "unsigned char", "short", "int", "long",
-              "long long", "void*", "float", "double", "long double"]
-
     # TODO: Test for 64-bit scenarios.
 
     int_size = Target.get_type_details("int")["size"]
