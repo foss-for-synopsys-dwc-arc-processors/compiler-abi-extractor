@@ -7,6 +7,7 @@
 
 from lib import compilationDriver
 from lib import reportDriver
+from lib import datatypesGen
 from lib import datatypesTests
 from lib import stackAlignTests
 from lib import argPassTests
@@ -24,7 +25,7 @@ from lib import structTests
 from lib import bitFieldGen
 
 def do_datatypes(Driver, Report, Target):
-    Content = datatypesTests.generate()
+    Content = datatypesGen.generate()
     open("tmp/out_datatypes.c", "w").write(Content)
     stdoutFile = Driver.run(["tmp/out_datatypes.c"], [], "out_datatypes")
 
@@ -33,8 +34,11 @@ def do_datatypes(Driver, Report, Target):
     # Parsing the type details (signedness/size/align) into the 'targetArch' class.
     Target.set_type_details(helper.parse_type_info(Stdout))
 
+    content = datatypesTests.generate(Stdout)
+    open("tmp/out_datatypes.sum", "w").write(content)
+
     # Store the generated report file for datatypes test case.
-    #Report.append(stdoutFile)
+    Report.append("tmp/out_datatypes.sum")
 
 def do_bitfield(Driver, Report, Target):
     content = bitFieldGen.generate()
