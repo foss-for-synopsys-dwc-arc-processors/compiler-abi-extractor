@@ -345,6 +345,11 @@ def do_struct_boundaries(Driver, Report, Target):
         print(f"boundary : {_boundary}")
         print(f"results  : {results[dtype]}")
 
+    content = struct_tests.prepare_summary(results)
+    open("tmp/out_structs.sum", "w").write(content)
+
+    # Store the generated report file for struct argumnet passing test case.
+    Report.append("tmp/out_structs.sum")
 
 def do_endianness(Driver, Report):
     stdoutFile = Driver.run(["src/endianness/endianness.c"], [], "out_endianness")
