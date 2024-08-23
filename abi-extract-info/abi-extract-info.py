@@ -360,7 +360,10 @@ def do_stack_align(Driver, Report):
     Content = stackAlignTests.generateFunctionsHeader()
     open("tmp/out_functions.h", "w").write(Content)
 
-    stdoutFile = Driver.run(["tmp/out_functions.c", "tmp/out_driver.c"], ["src/arch/riscv.s"], "out_stackalign")
+    # `src/heler.c` has been added as a placeholder for the dump_information function
+    # as it is called within the `callee` function in `src/arch/riscv.s`.
+    # Although this function is not used, it is present in the riscv.s file.
+    stdoutFile = Driver.run(["tmp/out_functions.c", "tmp/out_driver.c", "src/helper.c"], ["src/arch/riscv.s"], "out_stackalign")
     Report.append(stdoutFile)
 
 def do_tests(Driver, Report, Target):
