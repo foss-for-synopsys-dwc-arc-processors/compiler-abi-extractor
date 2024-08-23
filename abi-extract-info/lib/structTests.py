@@ -102,7 +102,7 @@ class StructTests:
 
         # Summarize and output the results
         summary = self.summary_results(types, boundary_value, passed_by_ref_value)
-        print("\n".join(summary))
+        return "\n".join(summary)
 
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, citeration, stack, register_banks, argv):
