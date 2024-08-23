@@ -105,8 +105,11 @@ class StructTests:
 
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, citeration, stack, register_banks, argv):
-
         hutils = hexUtils.HexUtils(self.Target)
+
+        # Get sizeof() of current iteration's struct.
+        sizeofs = [hutils.sizeof(value) for value in argv]
+        citeration["sizeof(S)"] = sum(sizeofs)
 
         # Check if the value is in the registers and update current test
         citeration = hutils.find_ref_in_stack_fill(citeration, argv.copy(), register_banks, stack)
