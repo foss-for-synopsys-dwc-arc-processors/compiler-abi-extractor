@@ -103,6 +103,40 @@ class StructTests:
 
         return "".join(summary)
 
+    # Process the results to categorize data types based on how
+    # they are passed (in registers or by reference), and determines boundary values.
+    def process_results(self, results):
+        types = { "fill": {}, "combined": {}, "pairs": {}}
+        passed_by_ref = {}
+        boundary = {}
+
+        # Determine the register size.
+        register_size = self.Target.get_type_details("int")["size"]
+        for dtype, iterations in results.items():
+            for iteration in iterations:
+                sizeof_s = iteration["sizeof(S)"]
+
+                # Get the size of the current data type.
+                sizeof_dtype = self.Target.get_type_details(dtype)["size"]
+
+                # Categorize based on the size comparison with register sizeof.
+                if sizeof_dtype == register_size:
+                    self.handle_registers_fill(iteration, dtype, types, passed_by_ref)
+                elif sizeof_dtype < register_size:
+                    self.handle_registers_combined(iteration, dtype, types)
+                elif sizeof_dtype > register_size:
+                    self.handle_registers_pairs(iteration, dtype, types)
+
+            # Track the boundary vakyes based on the sizeof(S) for the second last iteration.
+            if len(iterations) >= 2:
+                boundary[iterations[-2]["sizeof(S)"]] = ""
+
+        # Get the voundary value and the pass-by-ref value.
+        boundary_value = next(iter(boundary.keys()), None)
+        passed_by_ref_value = next(iter(passed_by_ref.keys()), None)
+
+        return types, boundary_value, passed_by_ref_value
+
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, citeration, stack, register_banks, argv):
         hutils = hexUtils.HexUtils(self.Target)
