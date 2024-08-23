@@ -16,6 +16,7 @@ regs_bank0:
 .globl  callee
 .globl  get_stack_pointer
 .globl  reset_registers
+.globl  set_registers
 .type   callee, @function
 callee:
     # Save t6 to the stack
@@ -102,4 +103,34 @@ reset_registers:
 
 get_stack_pointer:
     mv a0, sp
+    ret
+
+set_registers:
+    addi x5, a0, 0
+    addi x6, a0, 0
+    addi x7, a0, 0
+    addi x8, a0, 0
+    addi x9, a0, 0
+    addi x10, a0, 0
+    addi x11, a0, 0
+    addi x12, a0, 0
+    addi x13, a0, 0
+    addi x14, a0, 0
+    addi x15, a0, 0
+    addi x16, a0, 0
+    addi x17, a0, 0
+    addi x18, a0, 0
+    addi x19, a0, 0
+    addi x20, a0, 0
+    addi x21, a0, 0
+    addi x22, a0, 0
+    addi x23, a0, 0
+    addi x24, a0, 0
+    addi x25, a0, 0
+    addi x26, a0, 0
+    addi x27, a0, 0
+    addi x28, a0, 0
+    addi x29, a0, 0
+    addi x30, a0, 0
+    addi x31, a0, 0
     ret
