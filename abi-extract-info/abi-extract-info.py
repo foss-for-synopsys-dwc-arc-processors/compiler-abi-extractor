@@ -294,8 +294,12 @@ def do_struct_boundaries(Driver, Report, Target):
     max_boundary = count
 
     struct_tests = structTests.StructTests(Target)
+    # `long double` needs a different treating because its size
+    # can be 16 bytes in a 32-bit architecture. That means that
+    # the values are splitten in 4, and so that implementation
+    # is yet to be added. FIXME
     types = ["short", "int", "long",
-             "long long", "float", "double", "long double"]
+             "long long", "float", "double"]
     for dtype in types:
         results[dtype] = []
 
