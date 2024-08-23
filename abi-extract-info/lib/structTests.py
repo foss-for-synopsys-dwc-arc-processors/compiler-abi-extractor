@@ -103,6 +103,24 @@ class StructTests:
 
         return "".join(summary)
 
+    # Populate the "fill" type register entries for a given data type.
+    def handle_registers_fill(self, iteration, dtype, types, passed_by_ref):
+        for reg in iteration.get("registers_fill", []):
+            types["fill"].setdefault(reg, []).append(dtype)
+        # If the iteration is marked as passed by reference, store it.
+        if iteration.get("passed_by_ref"):
+            passed_by_ref[iteration["passed_by_ref"]] = ""
+
+    # Polupate the "combined" type register entries for a given data type.
+    def handle_registers_combined(self, iteration, dtype, types):
+        for reg in iteration.get("registers_combined", []):
+            types["combined"].setdefault(reg, []).append(dtype)
+
+    # Polupate the "pairs" type register entries for a given data type.
+    def handle_registers_pairs(self, iteration, dtype, types):
+        for reg in iteration.get("registers_pairs", []):
+            types["pairs"].setdefault(reg, []).append(dtype)
+
     # Process the results to categorize data types based on how
     # they are passed (in registers or by reference), and determines boundary values.
     def process_results(self, results):
