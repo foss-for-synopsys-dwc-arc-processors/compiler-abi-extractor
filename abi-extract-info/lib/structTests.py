@@ -155,6 +155,32 @@ class StructTests:
 
         return types, boundary_value, passed_by_ref_value
 
+    # Create a summary of how different data types structs are passed,
+    # categorizing them as "fill", "combined", "pairs".
+    def summary_results(self, types, boundary_value, passed_by_ref_value):
+        # Collect all unique registers.
+        registers = list(set(types["fill"]) | set(types["combined"]) | set(types["pairs"]))
+        summary = [
+            "struct pasing:",
+            f"- sizeof(S) <= {boundary_value} : passed in registers: {', '.join(map(str, registers))}",
+            f"- sizeof(S) >  {boundary_value} : passed by ref: {passed_by_ref_value}"
+        ]
+
+        # Organize the data types under each category.
+        dtypes = {
+            key: list({dtype for values in dtype_list.values() for dtype in values})
+            for key, dtype_list in types.items()
+        }
+
+        # Append the categorized data types to the summary.
+        summary.extend([
+            f"  - {', '.join(dtypes['fill'])} : as fill",
+            f"  - {', '.join(dtypes['combined'])} : as combined",
+            f"  - {', '.join(dtypes['pairs'])} : as pairs"
+        ])
+
+        return summary
+
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, citeration, stack, register_banks, argv):
         hutils = hexUtils.HexUtils(self.Target)
