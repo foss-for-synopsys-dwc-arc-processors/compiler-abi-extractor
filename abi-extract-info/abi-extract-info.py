@@ -22,6 +22,8 @@ from lib import dumpInformation
 from lib import targetArch
 from lib import structGen
 from lib import structTests
+from lib import returnGen
+from lib import returnTests
 from lib import savedGen
 from lib import savedTests
 from lib import bitFieldGen
@@ -62,6 +64,50 @@ def do_saved(Driver, Report, Target):
     open(summary_file, "w").write(summary_content)
 
     # Store the generated report file for argument passing test case.
+    Report.append(summary_file)
+
+def do_return(Driver, Report, Target):
+    dtypes = ["char", "short", "int", "long",
+             "long long", "float", "double", "long double"]
+
+    # TODO You need to handle `long double` differently if its
+    # 16 bytes in a 32 bit machine.
+
+    return_tests = returnTests.ReturnTests(Target)
+    results = {}
+    for dtype in dtypes:
+        print("============================")
+        print(dtype)
+        results[dtype] = []
+
+        sizeof = Target.get_type_details(dtype)["size"]
+        content = returnGen.generate_single_call(Target, None, dtype, sizeof)
+        open(f"tmp/out_return_{dtype}.c", "w").write(content)
+
+        stdout_file = Driver.run(
+            [f"tmp/out_return_{dtype}.c", "src/helper.c"],
+            ["src/arch/riscv.s", "src/arch/riscv2.s"], f"out_return_{dtype}"
+        )
+
+        argv = helper.generate_hexa_values_2(sizeof, 20)
+
+        dump_information = dumpInformation.DumpInformation()
+        dump_information.parse(stdout_file, True)
+
+        # Get stack and register bank information
+        stack = dump_information.get_stack()
+        register_banks = dump_information.get_reg_banks()
+
+        citeration = {}
+        return_tests.run_test(citeration, stack, register_banks, argv)
+        results[dtype].append(citeration)
+
+    print(results)
+    summary_content = return_tests.generate_summary(results)
+    summary_file = "tmp/out_return.sum"
+    open(summary_file, "w").write(summary_content)
+
+    # Store the generated report file for return test case.
     Report.append(summary_file)
 
 def do_bitfield(Driver, Report, Target):
@@ -327,6 +373,7 @@ def do_tests(Driver, Report, Target):
     #  do_stack_dir(Driver, Report)
     #  do_stack_align(Driver, Report)
      do_saved(Driver, Report, Target)
+     do_return(Driver, Report, Target)
      do_bitfield(Driver, Report, Target)
      # ,, more different kind of tests here
 
