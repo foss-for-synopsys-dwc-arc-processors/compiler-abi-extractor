@@ -105,8 +105,6 @@ class StructTests:
 
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, citeration, stack, register_banks, argv):
-        # Argument count value
-        argc = len(argv)
 
         hutils = hexUtils.HexUtils(self.Target)
 
