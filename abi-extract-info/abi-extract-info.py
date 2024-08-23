@@ -294,6 +294,7 @@ def do_struct_boundaries(Driver, Report, Target):
     print(f"LIMIT: {count}")
     max_boundary = count
 
+    struct_tests = structTests.StructTests(Target)
     types = ["short", "int", "long",
              "long long", "float", "double", "long double"]
     for dtype in types:
@@ -311,8 +312,6 @@ def do_struct_boundaries(Driver, Report, Target):
             [f"tmp/out_struct_boundaries_{dtype}.c", "src/helper.c"],
             ["src/arch/riscv.s"], f"out_struct_boundaries_{dtype}"
         )
-
-        struct_tests = structTests.StructTests(Target)
 
         # As multiple calls are made to the "callee()" external function,
         # we need to split the information in multiple dumps and for over
