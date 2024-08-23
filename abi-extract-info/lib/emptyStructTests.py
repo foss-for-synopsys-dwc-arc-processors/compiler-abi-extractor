@@ -85,12 +85,12 @@ class EmptyStructValidator:
                     break
 
         if is_ignored:
-            print("    Empty Struct is ignored by C compiler.")
+            return "Empty Struct is ignored by C compiler."
         else:
-            print("    Empty Struct is not ignored by C compiler.")
+            return "Empty Struct is not ignored by C compiler."
 
 def split_sections(StdoutFile, Target):
-    EmptyStructValidator(Target).split_sections(StdoutFile)
+    return EmptyStructValidator(Target).split_sections(StdoutFile)
 
 if __name__ == "__main__":
     StdoutFile = sys.argv[1]
