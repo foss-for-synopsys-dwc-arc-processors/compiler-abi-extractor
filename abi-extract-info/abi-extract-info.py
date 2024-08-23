@@ -227,7 +227,10 @@ def do_empty_struct(Driver, Report, Target):
     open("tmp/out_emptyStruct.c", "w").write(Content)
 
     StdoutFile = Driver.run(["tmp/out_emptyStruct.c", "src/helper.c"], ["src/arch/riscv.s"], "out_emptyStruct")
-    emptyStructTests.split_sections(StdoutFile, Target)
+    content = emptyStructTests.split_sections(StdoutFile, Target)
+    open("tmp/out_emptyStruct.sum", "w").write(content)
+
+    Report.append("tmp/out_emptyStruct.sum")
 
 def do_struct_boundaries(Driver, Report, Target):
     types = [ "char", "signed char", "unsigned char", "short", "int", "long",
