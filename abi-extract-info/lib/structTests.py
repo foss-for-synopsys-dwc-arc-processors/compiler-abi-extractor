@@ -10,7 +10,6 @@ This class validates how arguments are passed within structs by checking
 if a value appears in registers, the stack, or if its passed by reference.
 """
 
-import sys
 from lib import hexUtils
 
 class StructTests:
