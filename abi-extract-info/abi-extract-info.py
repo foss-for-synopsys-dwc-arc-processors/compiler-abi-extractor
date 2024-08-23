@@ -22,6 +22,8 @@ from lib import dumpInformation
 from lib import targetArch
 from lib import structGen
 from lib import structTests
+from lib import savedGen
+from lib import savedTests
 from lib import bitFieldGen
 
 def do_datatypes(Driver, Report, Target):
@@ -39,6 +41,28 @@ def do_datatypes(Driver, Report, Target):
 
     # Store the generated report file for datatypes test case.
     Report.append("tmp/out_datatypes.sum")
+
+def do_saved(Driver, Report, Target):
+    sizeof = Target.get_type_details("int")["size"]
+    content = savedGen.generate(Target, sizeof)
+    open("tmp/out_saved.c", "w").write(content)
+    stdout_file = Driver.run(
+        ["tmp/out_saved.c", "src/helper.c"],
+        ["src/arch/riscv.s"], "out_saved"
+    )
+
+    dump_information = dumpInformation.DumpInformation()
+    dump_information.parse(stdout_file, True)
+    register_banks = dump_information.get_reg_banks()
+
+    saved_tests = savedTests.SavedTests(Target)
+    summary_content = saved_tests.run_test(register_banks, sizeof)
+
+    summary_file = "tmp/out_saved.sum"
+    open(summary_file, "w").write(summary_content)
+
+    # Store the generated report file for argument passing test case.
+    Report.append(summary_file)
 
 def do_bitfield(Driver, Report, Target):
     content = bitFieldGen.generate()
@@ -302,6 +326,7 @@ def do_tests(Driver, Report, Target):
     #  do_endianness(Driver, Report)
     #  do_stack_dir(Driver, Report)
     #  do_stack_align(Driver, Report)
+     do_saved(Driver, Report, Target)
      do_bitfield(Driver, Report, Target)
      # ,, more different kind of tests here
 
