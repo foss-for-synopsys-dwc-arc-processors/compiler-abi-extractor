@@ -63,15 +63,6 @@ class HexUtils:
         second_half = f"0x{value[midpoint:]}"
         return first_half, second_half
 
-    # Retrieve the list of register indices holding a specific value from the register banks.
-    def _find_register_indices(self, value, register_banks):
-        indices = [
-            i for register_bank in register_banks.values()
-            for i, v in enumerate(register_bank)
-            if v == value
-        ]
-        return sorted(indices)
-
     # Extend a value as zero or sign extended.
     def _zero_or_sign_extend(self, value, sizeof_int, is_zero):
         value = self._remove_identifier(value)
@@ -82,116 +73,6 @@ class HexUtils:
 
         value = self._add_identifier(value)
         return value
-
-    # Retrieve the list of registers corresponding to the given indices.
-    def _get_registers_by_indices(self, indices):
-        return [self.Target.get_registers()[i] for i in indices]
-
-    # Find registers that hold the split halves of a value.
-    def _find_registers_for_split_value(self, first_half, second_half, register_banks):
-        indices = self._find_register_indices(first_half, register_banks) + \
-                  self._find_register_indices(second_half, register_banks)
-
-        if not indices:
-            return None
-
-        indices = sorted(set(indices))  # Remove duplicates and sort
-
-        # Determine the order of the split values
-        first_index_value = list(register_banks.values())[0][indices[0]]
-        if first_index_value == first_half:
-            self.current_test["value_split_order"] = ["[High]", "[Low]"]
-        else:
-            self.current_test["value_split_order"] = ["[Low]", "[High]"]
-
-        return self._get_registers_by_indices(indices)
-
-# Extend the given hex value to the specified `argc` and return list of hex values.
-    def _extend_value_to_argc(self, value, argc):
-        # Retrieve the size of an `int` in bytes to know the size of a register.
-        int_byte_count = self.Target.get_type_details("int")["size"]
-
-        # Remove hexa identifier.
-        _value = self._remove_identifier(value)
-        extended_value = []
-
-        # Extend the value by repeating it `argc` times.
-        _value = _value * argc
-
-        # Calculate the total number of bytes in the extended value.
-        total_byte_count = self.sizeof(_value)
-        remains = []
-
-        # Split the extended value into chunks of `int_byte_count` bytes.
-        while total_byte_count > int_byte_count:
-            # Update the total by count.
-            total_byte_count -= int_byte_count
-            # Extract the remaining portion of the value.
-            # e.i: If we have a register size of 4 bytes, and the extended
-            # value is greater, we need to split the values into two (or more) chunks and search them in the register banks.
-            #   Value        : `0x1212121212``
-            #   First chunk  : `0x12121212`
-            #   Second chunk : `0x12`
-            remains = _value[total_byte_count*2:]
-
-            # Update the value to exclude the extracted portion.
-            _value = _value[:total_byte_count*2]
-
-        if remains:
-            remains = self._add_identifier(remains)
-            extended_value.append(remains)
-
-        value = self._add_identifier(_value)
-        extended_value.append(value)
-
-        return extended_value
-
-  # Retrieve the list of registers that hold the given value from the register banks.
-    def find_registers_for_value(self, value, register_banks):
-        indices = self._find_register_indices(value, register_banks)
-        return self._get_registers_by_indices(indices)
-
-    # Find the registers holding the value or its split halves.
-    def find_value_in_registers(self, value, register_banks, argc):
-        # First, try to find the exact value.
-        registers = self.find_registers_for_value(value, register_banks)
-        if registers:
-            return registers
-
-        # If not found, check for split halves
-        first_half, second_half = self._split_hex_value(value)
-        registers = self._find_registers_for_split_value(first_half, second_half, register_banks)
-        if registers:
-            return registers
-
-        # if neither the exact value nor its split halves are found,
-        # extend the value to accomodate the specified number of
-        # argument (argc)
-        registers = []
-        values = self._extend_value_to_argc(value, argc)
-        # For each extended value, attemp to locate it in the register banks
-        for v in values:
-            registers += self.find_registers_for_value(v, register_banks)
-
-        return registers
-
-    # Check if the value or its split halves are present in the stack.
-    def is_value_in_stack(self, value, stack_values):
-        # Currently only validating the first address of the stack.
-        # Please update this. FIXME
-        if value == stack_values[0]:
-            return True
-
-        first_half, second_half = self._split_hex_value(value)
-        return first_half == stack_values[0] or second_half == stack_values[0]
-
-    # Validate if the stack address has been found in the argument registers.
-    def is_passed_by_ref(self, stack_address, register_banks):
-        registers = set(self.find_registers_for_value(stack_address, register_banks))
-        arg_registers = set(self.Target.get_argument_registers())
-
-        # Check if there is any overlap between the found registers and argument registers
-        return not registers.isdisjoint(arg_registers)
 
     # Finds the complete argument values in the register banks.
     def find_registers_fill(self, argv, register_banks):
