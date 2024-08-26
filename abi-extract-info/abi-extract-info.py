@@ -12,7 +12,6 @@ from lib import datatypesTests
 from lib import stackAlignTests
 from lib import argPassTests
 from lib import argPassTestsGen
-from lib import argPassTestsGenStructs
 from lib import optionParser
 from lib import helper
 
