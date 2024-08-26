@@ -199,28 +199,6 @@ def do_argpass(Driver, Report, Target):
     open("tmp/out_argPassTests.sum", "w").write(Content)
     Report.append("tmp/out_argPassTests.sum")
 
-def do_argpass_struct(Driver, Report):
-    Content = argPassTestsGenStructs.generate()
-
-    OutputContent = argPassTests.header()
-    for type_name, content in Content:
-        type_name_replaced = type_name.replace(' ','_')
-
-        if type_name_replaced != "double":
-            continue
-
-        SrcFile = f"tmp/out_caller_{type_name_replaced}.c"
-        open(SrcFile, "w").write(content)
-        StdoutFile = Driver.run([SrcFile, "src/helper.c"], ["src/arch/riscv.s"], f"out_argpass_{type_name_replaced}")
-        OutputContent += argPassTests.parser(StdoutFile, type_name)
-
-    ParsedFile = f"tmp/out_argpass.txt"
-    open(ParsedFile, "w").write("".join(OutputContent))
-
-    # Store the generated report file for argument passing test case.
-    Report.append(ParsedFile)
-
-
 def do_empty_struct(Driver, Report, Target):
     # This value is to be defined according to number for
     # argument passing in registers from "do_argpass" test case.
