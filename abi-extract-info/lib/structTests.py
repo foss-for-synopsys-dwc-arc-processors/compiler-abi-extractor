@@ -98,7 +98,7 @@ class StructTests:
     # Prepare the summary based on the test case results.
     def prepare_summary(self, results):
         # process the results
-        types, boundary_value, passed_by_ref_value = self.process_data(results)
+        types, boundary_value, passed_by_ref_value = self.process_results(results)
 
         # Summarize and output the results
         summary = self.summary_results(types, boundary_value, passed_by_ref_value)
