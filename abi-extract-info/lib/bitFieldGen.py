@@ -13,7 +13,7 @@ RISC-V ABIs Specification v1.1
  * Chapter 4. C/C++ type details
  ** 4.4 Bit-Fields
 "Bit-fields are packed in little-endian fashion.
-A bit-fiend that would span the alignment boundary of its integer type
+A bit-field that would span the alignment boundary of its integer type
 is padded to begin at the next alignment boundary. For example,
 `struct { int x : 10; int y : 12; }` is a 32-bit type with `x` in bits 9-0,
 `y` in bits 21-10, and bits 31-22 undefined. By contrast,
@@ -54,7 +54,7 @@ For short example:
         - `y = 0xFFF` (binary: `1111 1111 1111`)
 
 
-    Since 10 bits + 12 bits > sizeof(short) = 32 bits,
+    Since 10 bits + 12 bits > sizeof(short) = 16 bits,
     each `x` and `y` needs to be stored in seperated shorts.
 
     With this in mind, the combined bit pattern would be:
@@ -139,7 +139,7 @@ void print_bytes(void *ptr, size_t size) {
     def generate_main(self):
         self.append("int main (void) {")
 
-        self.append("    printf(\"bit-field test case:\\n\");")
+        self.append("    printf(\"Bit-field test case:\\n\");")
         for struct in self.structs:
             struct_name = self.generate_struct_name(struct)
             field_type_name = "_".join([value[0] for value in struct.values()])
