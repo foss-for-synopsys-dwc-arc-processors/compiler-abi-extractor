@@ -97,7 +97,7 @@ class ArgPassTests:
             # Check if values are split and passed in both registers and stack
             elif value["common_regs"] and value["are_values_on_stack"] and value["are_values_splitted"]:
                 common_regs = " ".join(value["common_regs"])
-                values_splitted = ", ".join(value["are_values_splitted"])
+                values_splitted = value["are_values_splitted"]
                 description = f"passed in registers/stack {values_splitted}: {common_regs} sp ..."
 
             # Build the summary string for each argument
