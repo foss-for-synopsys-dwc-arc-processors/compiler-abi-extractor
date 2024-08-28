@@ -25,12 +25,12 @@ registers, as each 8-byte value will occupy two registers.
 """
 
 from lib import helper
+from lib import hexUtils
 
 class ArgPassTests:
     def __init__(self, Target):
         self.Target = Target
         self.results = []
-        self.current_test = {}
 
     # Extracts the common registers in a list of list registers.
     def extract_common_regs(self, list_of_regs):
@@ -161,14 +161,14 @@ class ArgPassTests:
         return first_half == stack_values[0][1] or second_half == stack_values[0][1]
 
     # Run the test to check if the value is in registers or the stack.
-    def run_test(self, stack_values, register_banks, values_list):
+    def run_test(self, stack, register_banks, argv):
+        hutils = hexUtils.HexUtils(self.Target)
+
         # Argument count value
-        argc = len(values_list)
-        # Target value to be checked
-        argv = values_list[0]
+        argc = len(argv)
 
         # Initialize current test details
-        self.current_test = {
+        citeration = {
             "argc": argc,               # Argument count
             "argv": argv,               # Value checked
             "value_split_order": None,  # Order of split values (if any)
@@ -177,17 +177,16 @@ class ArgPassTests:
         }
 
         # Check if the value is in the registers and update current test
-        self.current_test["registers"] = self.find_value_in_registers(argv, register_banks)
+        citeration["registers"] = hutils.find_registers_fill(argv.copy(), register_banks)
+        if not citeration["registers"]:
+            citeration["registers"], citeration["value_split_order"] = hutils.find_registers_pairs(argv.copy(), register_banks)
+
         # Check if the value is in the stack and update current test
-        self.current_test["value_in_stack"] = self.is_value_in_stack(argv, stack_values)
+        citeration["value_in_stack"] = hutils.find_value_fill_in_stack(argv.copy(), stack)
+        if not citeration["value_in_stack"]:
+            citeration["value_in_stack"] = hutils.find_value_pairs_in_stack(argv.copy(), stack)
 
-        # Append current test results to the results list
-        self.results.append(self.current_test)
-
-        value_in_stack = self.current_test["value_in_stack"]
-        self.current_test = {}
-
-        return value_in_stack
+        return citeration
 
 import sys
 if __name__ == "__main__":
