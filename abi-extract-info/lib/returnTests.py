@@ -18,10 +18,14 @@ class ReturnTests:
 
     def generate_summary(self, results):
         register_dict = {}
+        pairs_order = ""
 
         for key, value in results.items():
             fill = tuple(value[0]['registers_fill'])
             pairs = tuple(value[0]['registers_pairs'])
+
+            if not pairs_order:
+                pairs_order = value[0]["pairs_order"]
 
             if fill and not pairs:
                 if fill not in register_dict:
@@ -47,7 +51,7 @@ class ReturnTests:
                 else:
                     # Paired registers
                     summary.append(f"- {' : '.join(types)}")
-                    summary.append(f" - passed in registers: {', '.join([f'{reg}' for reg in regs])}")
+                    summary.append(f" - passed in registers {pairs_order}: {', '.join([f'{reg}' for reg in regs])}")
             else:
                 # No registers
                 summary.append(f"- {' : '.join(types)}")
@@ -60,6 +64,6 @@ class ReturnTests:
 
         argv = [argv]
         citeration["registers_fill"] = hutils.find_registers_fill(argv.copy(), register_banks)
-        citeration["registers_pairs"] = hutils.find_registers_pairs(argv.copy(), register_banks)
+        citeration["registers_pairs"], citeration["pairs_order"] = hutils.find_registers_pairs(argv.copy(), register_banks)
 
         return citeration
