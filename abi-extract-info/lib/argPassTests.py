@@ -110,56 +110,6 @@ class ArgPassTests:
 
         return "".join(summary)
 
-    # Find registers that hold the split halves of a value.
-    def find_registers_for_split_value(self, first_half, second_half, register_banks):
-        indexes = [
-            i for register_bank in register_banks.values()
-            for i, v in enumerate(register_bank) if v == first_half or v == second_half
-        ]
-        indexes.sort()
-
-        # Determine the order of the split values
-        first_index_value = list(register_banks.values())[0][indexes[0]]
-        if first_index_value == first_half:
-            self.current_test["value_split_order"] = ["[High]", "[Low]"]
-        else:
-            self.current_test["value_split_order"] = ["[Low]", "[High]"]
-        registers = [self.Target.get_registers()[i] for i in indexes]
-        return registers
-
-    # Retrieve the list of registers that hold the given value from the register banks.
-    def find_registers_for_value(self, value, register_banks):
-        indexes = [
-            i for register_bank in register_banks.values()
-            for i, v in enumerate(register_bank) if v == value
-        ]
-        registers = [self.Target.get_registers()[i] for i in indexes]
-        return registers
-
-    # Split a hexadecimal value into two halves.
-    def _split_hex_value(self, value):
-        value = value[2:]  # Remove '0x' prefix
-        midpoint = len(value) // 2
-        first_half = f"0x{value[:midpoint]}"
-        second_half = f"0x{value[midpoint:]}"
-        return first_half, second_half
-
-    # Find the registers holding the value or its split halves.
-    def find_value_in_registers(self, value, register_banks):
-        registers = self.find_registers_for_value(value, register_banks)
-        if not registers:
-            first_half, second_half = self._split_hex_value(value)
-            registers = self.find_registers_for_split_value(first_half, second_half, register_banks)
-        return registers
-
-    # Check if the value or its split halves are present in the stack.
-    def is_value_in_stack(self, value, stack_values):
-        if value == stack_values[0][1]:
-            return True
-
-        first_half, second_half = self._split_hex_value(value)
-        return first_half == stack_values[0][1] or second_half == stack_values[0][1]
-
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, stack, register_banks, argv):
         hutils = hexUtils.HexUtils(self.Target)
