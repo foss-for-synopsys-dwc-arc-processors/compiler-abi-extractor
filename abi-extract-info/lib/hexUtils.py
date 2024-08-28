@@ -10,6 +10,8 @@ This class is responsible for a set of utility
 functions for handling hexadecimal values.
 """
 
+from lib import helper
+
 class HexUtils:
     def __init__(self, target):
         self.Target = target
@@ -89,7 +91,8 @@ class HexUtils:
                         # Append the index of the value in the register bank.
                         indexes.append(index)
 
-        return indexes
+        registers = helper.indexes_to_registers(self.Target.get_registers(), indexes)
+        return registers
 
     # Finds the complete argument value in stack.
     def find_value_fill_in_stack(self, argv, stack):
@@ -141,7 +144,8 @@ class HexUtils:
                         # Append the index of the value in the register bank.
                         indexes.append(index)
 
-        return indexes
+        registers = helper.indexes_to_registers(self.Target.get_registers(), indexes)
+        return registers
 
     # Finds registers that match either half of a value in `argv`.
     def find_registers_pairs(self, argv, register_banks):
@@ -177,7 +181,8 @@ class HexUtils:
                             indexes.append(index)
                 continue
 
-        return indexes, order
+        registers = helper.indexes_to_registers(self.Target.get_registers(), indexes)
+        return registers, order
 
     # Finds registers that match combined values in `argv`.
     def find_registers_combined(self, argv, register_banks):
@@ -224,8 +229,8 @@ class HexUtils:
                     if register_value == combined_hex:
                         indexes.append(index)
 
-
-        return indexes
+        registers = helper.indexes_to_registers(self.Target.get_registers(), indexes)
+        return registers
 
     # Finds a reference pointer of the stack in the argument registers with complete value.
     def find_ref_in_stack_fill(self, citeration, argv, register_banks, stack):
