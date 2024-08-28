@@ -121,26 +121,26 @@ def do_argpass(Driver, Report, Target):
               "float", "double", "long double"]
 
     results = {}
-    for T in types:
+    for dtype in types:
         # Skip `long double` due to its size limitations. FIXME
-        if T == "long double":
+        if dtype == "long double":
             continue
 
         # Create an instance of `ArgPassTests` for the current Target
         arg_pass_tests = argPassTests.ArgPassTests(Target)
 
-        count = 1
+        argc = 1
         while (True):
-            # Generate hexadecimal values for the current datatype and count
-            value_list = helper.generate_hexa_values(Target, T, count)
+            # Generate hexadecimal values for the current datatype and argc
+            value_list = helper.generate_hexa_values(Target, dtype, argc)
             # Generate the content of the test file.
-            Content = argPassTestsGen.generate(Target, T, value_list)
+            content = argPassTestsGen.generate(Target, dtype, argv)
 
             # Create and write the test file.
-            T_file = T.replace(' ','_')
-            open(f"tmp/{T_file}.c", "w").write(Content)
+            dtype_file = dtype.replace(' ','_')
+            open(f"tmp/{dtype_file}.c", "w").write(content)
             # Compile and run the test file, and capture the stdout.
-            StdoutFile = Driver.run([f"tmp/{T_file}.c", "src/helper.c"], ["src/arch/riscv.s"], f"{T_file}")
+            StdoutFile = Driver.run([f"tmp/{dtype_file}.c", "src/helper.c"], ["src/arch/riscv.s"], f"{dtype_file}")
 
             # Parse the stdout to extract stack and register bank information.
             dump_information = dumpInformation.DumpInformation()
@@ -150,21 +150,19 @@ def do_argpass(Driver, Report, Target):
             stack = dump_information.get_stack()
             reg_banks = dump_information.get_reg_banks()
             # Run the test to check if the value is in the stack
-            is_value_in_stack = arg_pass_tests.run_test(stack, reg_banks, value_list)
+            citeration = arg_pass_tests.run_test(stack, reg_banks, argv)
 
-            # If the value is found in the stack, stop further test iterations
-            # for this datatype.
-            if is_value_in_stack == True:
+            if citeration["value_in_stack"]:
                 break
 
-            if count == 15:
+            if argc == 15:
                 print("DEBUG: Exitting for save purposes. [do_argpas]")
                 break
 
-            count += 1
+            argc += 1
 
         # Get the last iteration results
-        last_iteration = arg_pass_tests.results[-1]
+        last_iteration = citeration
         argc = last_iteration["argc"] - 1
         argr = last_iteration["registers"]
         are_values_on_stack = last_iteration["value_in_stack"]
@@ -179,7 +177,7 @@ def do_argpass(Driver, Report, Target):
                               "are_values_splitted": [] }
 
         # Append the current datatype and register information to the results
-        results[argc]["type"].append(T)
+        results[argc]["type"].append(dtype)
         results[argc]["regs"].append(argr)
         results[argc]["are_values_on_stack"] = are_values_on_stack
         results[argc]["are_values_splitted"] = are_values_splitted
