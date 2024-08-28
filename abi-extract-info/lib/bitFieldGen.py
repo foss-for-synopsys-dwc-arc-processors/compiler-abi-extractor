@@ -139,7 +139,7 @@ void print_bytes(void *ptr, size_t size) {
     def generate_main(self):
         self.append("int main (void) {")
 
-        self.append("    printf(\"Bit-field test case:\\n\");")
+        self.append("    printf(\"Bit-field test:\\n\");")
         for struct in self.structs:
             struct_name = self.generate_struct_name(struct)
             field_type_name = "_".join([value[0] for value in struct.values()])
