@@ -40,7 +40,7 @@ class ReturnTests:
                     register_dict[()] = []
                 register_dict[()].append(key)
 
-        summary = ["return registers:"]
+        summary = ["Return registers:"]
 
         for regs, types in register_dict.items():
             if regs:
@@ -57,6 +57,7 @@ class ReturnTests:
                 summary.append(f"- {' : '.join(types)}")
                 summary.append(" - passed in registers: None")
 
+        summary.append("")
         return "\n".join(summary)
 
     def run_test(self, citeration, stack, register_banks, argv):
