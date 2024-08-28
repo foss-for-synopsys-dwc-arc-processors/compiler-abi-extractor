@@ -56,6 +56,9 @@ def make_mapping(regs, values):
         reg_values[reg] = values[index]
     return reg_values
 
+def indexes_to_registers(register_names, indexes):
+    return [register_names[index] for index in indexes]
+
 # Create a list of hexadecimal values according to the datatype size.
 # Give the following example:
 # | Datatype |  Size   | hexadecimal value  |
