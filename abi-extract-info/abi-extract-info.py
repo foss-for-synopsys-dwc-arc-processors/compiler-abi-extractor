@@ -47,10 +47,12 @@ def do_datatypes(Driver, Report, Target):
 
 def do_saved(Driver, Report, Target):
     sizeof = Target.get_type_details("int")["size"]
-    content = savedGen.generate(Target, sizeof)
-    open("tmp/out_saved.c", "w").write(content)
+    content = savedGen.generate_main(Target, sizeof)
+    open("tmp/out_saved_main.c", "w").write(content)
+    content = savedGen.generate_aux(Target, sizeof)
+    open("tmp/out_saved_aux.c", "w").write(content)
     stdout_file = Driver.run(
-        ["tmp/out_saved.c", "src/helper.c"],
+        ["tmp/out_saved_main.c", "tmp/out_saved_aux.c", "src/helper.c"],
         ["src/arch/riscv.s"], "out_saved"
     )
 

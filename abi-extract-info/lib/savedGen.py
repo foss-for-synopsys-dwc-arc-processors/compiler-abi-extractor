@@ -38,51 +38,66 @@ class ReturnGenerator:
     def get_result(self):
         return "\n".join(self._result)
 
-    def generate_prototypes(self):
+    def generate_prototypes_aux(self):
+        self.append("extern void set_registers (int);")
+
+    def generate_prototypes_main(self):
         self.append("extern void callee (void);")
         self.append("extern void reset_registers (void);")
         self.append("extern void set_registers (int);")
         self.append("#define dump callee // this is temporary.")
+        self.append("int* aux (void (*func)(void));")
 
-    def generate_foobar(self):
+    def generate_func_aux(self):
         argv = helper.generate_hexa_values_2(self._sizeof, 30)
         register_names = self.Target.get_registers()
         register_names_str = '", "'.join(register_names)
         register_names_str = f'"{register_names_str}"'
 
         self.append("""
-void aux (void) {
+int* aux (void (*func)(void)) {
     asm volatile (""
     :
     :
     : %s);
 
     set_registers(%s);
+
+    return (int*)func;
 }
 """ % (register_names_str, argv))
 
-    def generate_main(self):
+    def generate_func_main(self):
         argv = helper.generate_hexa_values_2(self._sizeof)
         self.append("""
 int main (void) {
     reset_registers();
     set_registers(%s);
-    aux();
+    aux(dump);
     dump();
 
     return 0;
 }
 """ % (argv))
 
-    def generate(self):
-        self.generate_prototypes()
-        self.generate_foobar()
-        self.generate_main()
+    def generate_main(self):
+        self.generate_prototypes_main()
+        self.generate_func_main()
 
         return self.get_result()
 
-def generate(Target, sizeof):
-    return ReturnGenerator(Target, sizeof).generate()
+    def generate_aux(self):
+        self.generate_prototypes_aux()
+        self.generate_func_aux()
+
+        return self.get_result()
+
+
+def generate_main(Target, sizeof):
+    return ReturnGenerator(Target, sizeof).generate_main()
+
+def generate_aux(Target, sizeof):
+    return ReturnGenerator(Target, sizeof).generate_aux()
 
 if __name__ == "__main__":
     content = generate(None, None, 'int', 4)
