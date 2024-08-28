@@ -77,8 +77,6 @@ def do_return(Driver, Report, Target):
     return_tests = returnTests.ReturnTests(Target)
     results = {}
     for dtype in dtypes:
-        print("============================")
-        print(dtype)
         results[dtype] = []
 
         sizeof = Target.get_type_details(dtype)["size"]
@@ -103,7 +101,6 @@ def do_return(Driver, Report, Target):
         return_tests.run_test(citeration, stack, register_banks, argv)
         results[dtype].append(citeration)
 
-    print(results)
     summary_content = return_tests.generate_summary(results)
     summary_file = "tmp/out_return.sum"
     open(summary_file, "w").write(summary_content)
@@ -222,8 +219,6 @@ def do_struct_boundaries(Driver, Report, Target):
     # the max_boundary is defined.
     max_boundary = 0
 
-    results = {}
-
     # CHAR
     dtype = "char"
     results = {}
@@ -264,10 +259,8 @@ def do_struct_boundaries(Driver, Report, Target):
 
         count += 1
 
-        print(results)
 
 
-    print(f"LIMIT: {count}")
     max_boundary = count
 
     struct_tests = structTests.StructTests(Target)
@@ -319,11 +312,8 @@ def do_struct_boundaries(Driver, Report, Target):
             if citeration["passed_by_ref"] != None:
                 break
 
-        print("#########################")
         _boundary = len(results[dtype])
         _boundary += -1 if _boundary > 0 else 0
-        print(f"boundary : {_boundary}")
-        print(f"results  : {results[dtype]}")
 
     content = struct_tests.prepare_summary(results)
     open("tmp/out_structs.sum", "w").write(content)
