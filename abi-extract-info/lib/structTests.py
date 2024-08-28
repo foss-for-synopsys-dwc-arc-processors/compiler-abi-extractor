@@ -115,23 +115,17 @@ class StructTests:
         # Check if the value is in the registers and update current test
         citeration = hutils.find_ref_in_stack_fill(citeration, argv.copy(), register_banks, stack)
         if citeration["passed_by_ref"]:
-            print(citeration)
             return citeration
         citeration = hutils.find_ref_in_stack_pairs(citeration, argv.copy(), register_banks, stack)
         if citeration["passed_by_ref"]:
-            print(citeration)
             return citeration
         citeration = hutils.find_ref_in_stack_combined(citeration, argv.copy(), register_banks, stack)
         if citeration["passed_by_ref"]:
-            print(citeration)
             return citeration
 
         citeration["registers_fill"] = hutils.find_registers_fill(argv.copy(), register_banks)
         citeration["registers_pairs"] = hutils.find_registers_pairs(argv.copy(), register_banks)
         citeration["registers_combined"] = hutils.find_registers_combined(argv.copy(), register_banks)
-
-        #print(f"register_banks {register_banks}")
-        #print(f"stack {stack}")
 
         return citeration
 
