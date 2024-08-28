@@ -93,24 +93,24 @@ inline static float int_as_float(unsigned int lhs) {
 }
 """)
 
-    def generate_converter(self, datatype):
-        if datatype == "double":
+    def generate_converter(self, dtype):
+        if dtype == "double":
             self.generate_include()
             self.generate_as_double()
-        elif datatype == "float":
+        elif dtype == "float":
             self.generate_include()
             self.generate_as_float()
 
-    def generate_main(self, datatype, values_list):
-        types_list = [datatype] * len(values_list)
+    def generate_main(self, dtype, argv):
+        types_list = [dtype] * len(argv)
         types_str = ", ".join(types_list)
 
-        if datatype == "double":
-            values_str = ", ".join(f"ull_as_double({value})" for value in values_list)
-        elif datatype == "float":
-            values_str = ", ".join(f"int_as_float({value})" for value in values_list)
+        if dtype == "double":
+            argv_str = ", ".join(f"ull_as_double({value})" for value in argv)
+        elif dtype == "float":
+            argv_str = ", ".join(f"int_as_float({value})" for value in argv)
         else:
-            values_str = ", ".join(values_list)
+            argv_str = ", ".join(argv)
 
         self.append("""
 extern void callee(%s);
@@ -118,17 +118,17 @@ extern void callee(%s);
 int main(void) {
     callee(%s);
 }
-""" % (types_str, values_str))
+""" % (types_str, argv_str))
 
-    def generate(self, datatype, values_list):
-        self.generate_converter(datatype)
-        self.generate_main(datatype, values_list)
+    def generate(self, dtype, argv):
+        self.generate_converter(dtype)
+        self.generate_main(dtype, argv)
 
         return self.get_result()
 
 # Function to initiate the generation process
-def generate(Target, datatype, count):
-    return ArgPassGenerator(Target).generate(datatype, count)
+def generate(Target, dtype, argv):
+    return ArgPassGenerator(Target).generate(dtype, argv)
 
 import sys
 if __name__ == "__main__":
