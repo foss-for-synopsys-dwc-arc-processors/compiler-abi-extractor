@@ -91,6 +91,31 @@ class HexUtils:
 
         return indexes
 
+    # Finds the complete argument value in stack.
+    def find_value_fill_in_stack(self, argv, stack):
+        addresses = []
+
+        value = argv[-1]
+        for stack_address, stack_value in stack:
+            if stack_value == value:
+                addresses.append(stack_address)
+
+        return addresses
+
+    # Finds pairs of argument value in stack.
+    def find_value_pairs_in_stack(self, argv, stack):
+        addresses = []
+        value = argv[-1]
+        high, low = self._split_hex_value(value)
+
+        for stack_address, stack_value in stack:
+            if stack_value == high:
+                addresses.append(stack_address)
+            elif stack_value == low:
+                addresses.append(stack_address)
+
+        return addresses
+
     # Finds the zero or sign extended  argument values in the register banks.
     def find_registers_extended(self, argv, register_banks, is_zero):
         indexes = []
