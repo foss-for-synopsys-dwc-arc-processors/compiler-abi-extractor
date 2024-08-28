@@ -58,6 +58,8 @@ class StructTests:
                     self.handle_registers_combined(iteration, dtype, types)
                 elif sizeof_dtype > register_size:
                     self.handle_registers_pairs(iteration, dtype, types)
+                    if "pairs_order" in iteration:
+                        pairs_order = iteration["pairs_order"]
 
             # Track the boundary vakyes based on the sizeof(S) for the second last iteration.
             if len(iterations) >= 2:
@@ -67,11 +69,11 @@ class StructTests:
         boundary_value = next(iter(boundary.keys()), None)
         passed_by_ref_value = next(iter(passed_by_ref.keys()), None)
 
-        return types, boundary_value, passed_by_ref_value
+        return types, boundary_value, passed_by_ref_value, pairs_order
 
     # Create a summary of how different data types structs are passed,
     # categorizing them as "fill", "combined", "pairs".
-    def summary_results(self, types, boundary_value, passed_by_ref_value):
+    def summary_results(self, types, boundary_value, passed_by_ref_value, pairs_order):
         # Collect all unique registers.
         registers = list(set(types["fill"]) | set(types["combined"]) | set(types["pairs"]))
         summary = [
@@ -99,10 +101,10 @@ class StructTests:
     # Prepare the summary based on the test case results.
     def prepare_summary(self, results):
         # process the results
-        types, boundary_value, passed_by_ref_value = self.process_results(results)
+        types, boundary_value, passed_by_ref_value, pairs_order = self.process_results(results)
 
         # Summarize and output the results
-        summary = self.summary_results(types, boundary_value, passed_by_ref_value)
+        summary = self.summary_results(types, boundary_value, passed_by_ref_value, pairs_order)
         return "\n".join(summary)
 
     # Run the test to check if the value is in registers or the stack.
@@ -125,7 +127,7 @@ class StructTests:
             return citeration
 
         citeration["registers_fill"] = hutils.find_registers_fill(argv.copy(), register_banks)
-        citeration["registers_pairs"] = hutils.find_registers_pairs(argv.copy(), register_banks)
+        citeration["registers_pairs"], citeration["pairs_order"] = hutils.find_registers_pairs(argv.copy(), register_banks)
         citeration["registers_combined"] = hutils.find_registers_combined(argv.copy(), register_banks)
 
         return citeration
