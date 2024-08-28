@@ -64,7 +64,7 @@ int main() {
 
     printf("Stack alignment test:\\n");
     printf("- Number of least significant 0 bits: %d\\n", finalAlignment);
-    printf("- Stack is aligned to %d bytes.", 1 << finalAlignment);
+    printf("- Stack is aligned to %d bytes.\\n", 1 << finalAlignment);
 
     return 0;
 }
