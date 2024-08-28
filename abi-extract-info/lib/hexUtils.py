@@ -146,6 +146,7 @@ class HexUtils:
     # Finds registers that match either half of a value in `argv`.
     def find_registers_pairs(self, argv, register_banks):
         indexes = []
+        order = ""
 
         # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
         sizeof_int = 4
@@ -162,14 +163,21 @@ class HexUtils:
                 # Search for each half in each register bank.
                 for bank_name, bank_register in register_banks.items():
                     for index, register_value in enumerate(bank_register):
-                        # TODO Get the order of [low] and [high]
+
+                        # Get the order of [low] and [high]
+                        if not order:
+                            if register_value == first_half and bank_register[index+1] == second_half:
+                                order = "[high], [low]"
+                            elif register_value == second_half and bank_register[index+1] == first_half:
+                                order = "[low], [high]"
+
                         if register_value == first_half:
                             indexes.append(index)
                         elif register_value == second_half:
                             indexes.append(index)
                 continue
 
-        return indexes
+        return indexes, order
 
     # Finds registers that match combined values in `argv`.
     def find_registers_combined(self, argv, register_banks):
