@@ -69,7 +69,7 @@ class DatatypesTests:
     # Generate summary.
     def generate_summary(self):
         for key in ["size", "align", "signedness", "struct size", "struct align", "union size", "union align"]:
-            self.append(f"{key}:")
+            self.append(f"Datatype {key} test:")
             if key == "signedness":
                 self.append(f" - {' : '.join(self.categorizes[key])}")
             else:
