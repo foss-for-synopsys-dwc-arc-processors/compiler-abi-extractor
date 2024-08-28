@@ -17,11 +17,16 @@ class SavedTests:
     def __init__(self, Target):
         self.Target = Target
 
-    def generate_summary(self, callee, caller):
+    def generate_summary(self, caller, callee):
+
+        caller_str = ", ".join(caller)
+        callee_str = ", ".join(callee)
+
         summary = []
-        summary.append("caller/callee-saved:")
-        summary.append(f" - caller-saved {caller}")
-        summary.append(f" - callee-saved {callee}")
+        summary.append("Caller/callee-saved test:")
+        summary.append(f" - caller-saved {caller_str}")
+        summary.append(f" - callee-saved {callee_str}")
+        summary.append("")
 
         return "\n".join(summary)
 
