@@ -75,7 +75,7 @@ class StructTests:
         # Collect all unique registers.
         registers = list(set(types["fill"]) | set(types["combined"]) | set(types["pairs"]))
         summary = [
-            "struct pasing:",
+            "Struct passing test:",
             f"- sizeof(S) <= {boundary_value} : passed in registers: {', '.join(map(str, registers))}",
             f"- sizeof(S) >  {boundary_value} : passed by ref: {passed_by_ref_value}"
         ]
@@ -88,9 +88,10 @@ class StructTests:
 
         # Append the categorized data types to the summary.
         summary.extend([
-            f"  - {', '.join(dtypes['fill'])} : as fill",
-            f"  - {', '.join(dtypes['combined'])} : as combined",
-            f"  - {', '.join(dtypes['pairs'])} : as pairs"
+            f"  - {' : '.join(dtypes['fill'])} - as fill",
+            f"  - {' : '.join(dtypes['combined'])} - as combined",
+            f"  - {' : '.join(dtypes['pairs'])} - as pairs {pairs_order}",
+            f""
         ])
 
         return summary
