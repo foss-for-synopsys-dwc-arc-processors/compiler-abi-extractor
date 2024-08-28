@@ -61,7 +61,7 @@ class ArgPassTests:
 
     # Generate a summary string from the extracted information.
     def create_summary_string(self, results):
-        summary = []
+        summary = ["Passing test:"]
 
         for argument_count, value in results.items():
             # Join the types into a single string separated by ' : '
@@ -101,14 +101,15 @@ class ArgPassTests:
                 description = f"passed in registers/stack {values_splitted}: {common_regs} sp ..."
 
             # Build the summary string for each argument
-            summary.append(f"- {types}\n")
-            summary.append(f" - argc > {argument_count} : {description}\n")
+            summary.append(f"- {types}")
+            summary.append(f" - argc > {argument_count} : {description}")
 
             # Add a warning message if there are non-common registers
             if value["noncommon_regs"]:
-                summary.append(" - WARNING: some inconsistencies were detected, for details see ......\n")
+                summary.append(" - WARNING: some inconsistencies were detected, for details see ......")
 
-        return "".join(summary)
+        summary.append("")
+        return "\n".join(summary)
 
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, stack, register_banks, argv):
