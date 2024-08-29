@@ -258,8 +258,7 @@ class HexUtils:
                 # but has been observe that the next value is not always in the next stack address.
                 if stack_value == argv[0]:
                     citeration["passed_by_ref_register"] = ["a0"] # FIXME hardcoded..
-                    diff = self._hex_difference(stack[0][0], stack[index][0])
-                    citeration["passed_by_ref"] = f"sp + {diff}"
+                    citeration["passed_by_ref"] = "[stack]"
 
                     return citeration
         return citeration
@@ -304,8 +303,7 @@ class HexUtils:
                     # but has been observe that the next value is not always in the next stack address.
                     if stack_value == first_half or stack_value == second_half:
                         citeration["passed_by_ref_register"] = ["a0"] # FIXME harcoded..
-                        diff = self._hex_difference(stack[0][0], stack[index][0])
-                        citeration["passed_by_ref"] = f"sp + {diff}"
+                        citeration["passed_by_ref"] = "[stack]"
 
                         return citeration
 
@@ -360,8 +358,7 @@ class HexUtils:
                 if register_values_dict["a0"] == stack_address:
                     if stack_value == combined_hex:
                         citeration["passed_by_ref_register"] = ["a0"]
-                        diff = self._hex_difference(stack[0][0], stack[index][0])
-                        citeration["passed_by_ref"] = f"sp + {diff}"
+                        citeration["passed_by_ref"] = "[stack]"
 
                         return citeration
 

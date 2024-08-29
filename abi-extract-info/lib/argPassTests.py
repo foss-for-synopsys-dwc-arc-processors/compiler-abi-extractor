@@ -76,7 +76,7 @@ class ArgPassTests:
 
             # Check if values are passed on stack and not in registers
             elif not value["common_regs"] and value["are_values_on_stack"]:
-                description = f"passed in stack: sp ..."
+                description = f"passed in stack: [stack] ..."
 
             # Check if values are split and passed in registers
             elif value["common_regs"] and value["are_values_splitted"] and not value["are_values_on_stack"]:
@@ -87,18 +87,18 @@ class ArgPassTests:
             # Check if values are split and passed on stack
             elif not value["common_regs"] and value["are_values_splitted"] and value["are_values_on_stack"]:
                 values_splitted = ", ".join(value["are_values_splitted"])
-                description = f"passed in stack {values_splitted}: sp ..."
+                description = f"passed in stack {values_splitted}: [stack] ..."
 
             # Check if values are passed in both registers and stack
             elif value["common_regs"] and value["are_values_on_stack"] and not value["are_values_splitted"]:
                 common_regs = " ".join(value["common_regs"])
-                description = f"passed in registers/stack: {common_regs} sp ..."
+                description = f"passed in registers/stack: {common_regs} [stack] ..."
 
             # Check if values are split and passed in both registers and stack
             elif value["common_regs"] and value["are_values_on_stack"] and value["are_values_splitted"]:
                 common_regs = " ".join(value["common_regs"])
                 values_splitted = value["are_values_splitted"]
-                description = f"passed in registers/stack {values_splitted}: {common_regs} sp ..."
+                description = f"passed in registers/stack {values_splitted}: {common_regs} [stack] ..."
 
             # Build the summary string for each argument
             summary.append(f"- {types}")
