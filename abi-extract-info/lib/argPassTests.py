@@ -61,7 +61,7 @@ class ArgPassTests:
 
     # Generate a summary string from the extracted information.
     def create_summary_string(self, results):
-        summary = ["Passing test:"]
+        summary = ["Passing arguments test:"]
 
         for argument_count, value in results.items():
             # Join the types into a single string separated by ' : '
