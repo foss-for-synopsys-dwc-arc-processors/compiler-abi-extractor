@@ -40,13 +40,14 @@ class ReturnGenerator:
 
     def generate_prototypes_aux(self):
         self.append("extern void set_registers (int);")
+        self.append("int dummy;")
 
     def generate_prototypes_main(self):
         self.append("extern void callee (void);")
         self.append("extern void reset_registers (void);")
         self.append("extern void set_registers (int);")
         self.append("#define dump callee // this is temporary.")
-        self.append("int* aux (void (*func)(void));")
+        self.append("int* aux (void);")
 
     def generate_func_aux(self):
         argv = helper.generate_hexa_values_2(self._sizeof, 30)
@@ -55,7 +56,7 @@ class ReturnGenerator:
         register_names_str = f'"{register_names_str}"'
 
         self.append("""
-int* aux (void (*func)(void)) {
+int* aux (void) {
     asm volatile (""
     :
     :
@@ -63,7 +64,7 @@ int* aux (void (*func)(void)) {
 
     set_registers(%s);
 
-    return (int*)func;
+    return &dummy;
 }
 """ % (register_names_str, argv))
 
@@ -73,7 +74,7 @@ int* aux (void (*func)(void)) {
 int main (void) {
     reset_registers();
     set_registers(%s);
-    aux(dump);
+    aux();
     dump();
 
     return 0;
