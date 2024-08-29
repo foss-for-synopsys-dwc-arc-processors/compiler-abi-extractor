@@ -208,9 +208,7 @@ def do_empty_struct(Driver, Report, Target):
 
     StdoutFile = Driver.run(["tmp/out_emptyStruct.c", "src/helper.c"], ["src/arch/riscv.s"], "out_emptyStruct")
     content = emptyStructTests.split_sections(StdoutFile, Target)
-    open("tmp/out_emptyStruct.sum", "w").write(content)
-
-    Report.append("tmp/out_emptyStruct.sum")
+    return content
 
 def do_struct_boundaries(Driver, Report, Target):
     # TODO: Test for 64-bit scenarios.
@@ -320,6 +318,7 @@ def do_struct_boundaries(Driver, Report, Target):
         _boundary += -1 if _boundary > 0 else 0
 
     content = struct_tests.prepare_summary(results)
+    content += do_empty_struct(Driver, Report, Target)
     open("tmp/out_structs.sum", "w").write(content)
 
     # Store the generated report file for struct argumnet passing test case.
@@ -353,7 +352,6 @@ def do_tests(Driver, Report, Target):
     do_stack_align(Driver, Report)
     do_argpass(Driver, Report, Target)
     do_struct_boundaries(Driver, Report, Target)
-    do_empty_struct(Driver, Report, Target)
     do_endianness(Driver, Report)
     do_saved(Driver, Report, Target)
     do_return(Driver, Report, Target)

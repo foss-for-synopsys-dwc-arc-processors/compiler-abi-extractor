@@ -85,9 +85,9 @@ class EmptyStructValidator:
                     break
 
         if is_ignored:
-            return "Empty Struct is ignored by C compiler.\n"
+            return "- empty struct is ignored by C compiler.\n"
         else:
-            return "Empty Struct is not ignored by C compiler.\n"
+            return "- empty struct is not ignored by C compiler.\n"
 
 def split_sections(StdoutFile, Target):
     return EmptyStructValidator(Target).split_sections(StdoutFile)
