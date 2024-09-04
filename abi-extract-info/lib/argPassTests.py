@@ -128,14 +128,18 @@ class ArgPassTests:
         }
 
         # Check if the value is in the registers and update current test
-        citeration["registers"] = hutils.find_registers_fill(argv.copy(), register_banks)
+        tmp = hutils.find_registers_fill(argv.copy(), register_banks)
+        citeration["registers"], citeration["inconsistencies"] = tmp
         if not citeration["registers"]:
-            citeration["registers"], citeration["value_split_order"] = hutils.find_registers_pairs(argv.copy(), register_banks)
+            tmp = hutils.find_registers_pairs(argv.copy(), register_banks)
+            citeration["registers"], citeration["inconsistencies"], citeration["pairs_order"] = tmp
 
         # Check if the value is in the stack and update current test
-        citeration["value_in_stack"] = hutils.find_value_fill_in_stack(argv.copy(), stack)
+        tmp = hutils.find_value_fill_in_stack(citeration, argv.copy(), stack)
+        citeration["value_in_stack"], citeration["inconsistencies"] = tmp
         if not citeration["value_in_stack"]:
-            citeration["value_in_stack"] = hutils.find_value_pairs_in_stack(argv.copy(), stack)
+            tmp = hutils.find_value_pairs_in_stack(citeration, argv.copy(), stack)
+            citeration["value_in_stack"], citeration["inconsistencies"] = tmp
 
         return citeration
 
