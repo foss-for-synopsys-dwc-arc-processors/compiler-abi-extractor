@@ -143,9 +143,9 @@ def do_argpass(Driver, Report, Target):
 
             # Create and write the test file.
             dtype_file = dtype.replace(' ','_')
-            open(f"tmp/{dtype_file}.c", "w").write(content)
+            open(f"tmp/out_argpass_{dtype_file}_{argc}.c", "w").write(content)
             # Compile and run the test file, and capture the stdout.
-            StdoutFile = Driver.run([f"tmp/{dtype_file}.c", "src/helper.c"], ["src/arch/riscv.S"], f"{dtype_file}")
+            StdoutFile = Driver.run([f"tmp/out_argpass_{dtype_file}_{argc}.c", "src/helper.c"], ["src/arch/riscv.S"], f"out_argpass_{dtype_file}_{argc}")
 
             # Parse the stdout to extract stack and register bank information.
             dump_information = dumpInformation.DumpInformation()
