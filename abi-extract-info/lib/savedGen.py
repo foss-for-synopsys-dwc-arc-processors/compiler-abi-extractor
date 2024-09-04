@@ -51,7 +51,11 @@ class ReturnGenerator:
 
     def generate_func_aux(self):
         argv = helper.generate_hexa_values_2(self._sizeof, 30)
-        register_names = self.Target.get_registers()
+
+        register_names = []
+        for value in self.Target.get_registers().values():
+            register_names.extend(value)
+
         register_names_str = '", "'.join(register_names)
         register_names_str = f'"{register_names_str}"'
 
