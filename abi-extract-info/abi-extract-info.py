@@ -53,7 +53,7 @@ def do_saved(Driver, Report, Target):
     open("tmp/out_saved_aux.c", "w").write(content)
     stdout_file = Driver.run(
         ["tmp/out_saved_main.c", "tmp/out_saved_aux.c", "src/helper.c"],
-        ["src/arch/riscv.s"], "out_saved"
+        ["src/arch/riscv.S"], "out_saved"
     )
 
     dump_information = dumpInformation.DumpInformation()
@@ -87,7 +87,7 @@ def do_return(Driver, Report, Target):
 
         stdout_file = Driver.run(
             [f"tmp/out_return_{dtype}.c", "src/helper.c"],
-            ["src/arch/riscv.s", "src/arch/riscv2.s"], f"out_return_{dtype}"
+            ["src/arch/riscv.S", "src/arch/riscv2.s"], f"out_return_{dtype}"
         )
 
         argv = helper.generate_hexa_values_2(sizeof, 20)
@@ -146,7 +146,7 @@ def do_argpass(Driver, Report, Target):
             dtype_file = dtype.replace(' ','_')
             open(f"tmp/{dtype_file}.c", "w").write(content)
             # Compile and run the test file, and capture the stdout.
-            StdoutFile = Driver.run([f"tmp/{dtype_file}.c", "src/helper.c"], ["src/arch/riscv.s"], f"{dtype_file}")
+            StdoutFile = Driver.run([f"tmp/{dtype_file}.c", "src/helper.c"], ["src/arch/riscv.S"], f"{dtype_file}")
 
             # Parse the stdout to extract stack and register bank information.
             dump_information = dumpInformation.DumpInformation()
@@ -206,7 +206,7 @@ def do_empty_struct(Driver, Report, Target):
     Content = emptyStructGen.generate(MaxCallCount)
     open("tmp/out_emptyStruct.c", "w").write(Content)
 
-    StdoutFile = Driver.run(["tmp/out_emptyStruct.c", "src/helper.c"], ["src/arch/riscv.s"], "out_emptyStruct")
+    StdoutFile = Driver.run(["tmp/out_emptyStruct.c", "src/helper.c"], ["src/arch/riscv.S"], "out_emptyStruct")
     content = emptyStructTests.split_sections(StdoutFile, Target)
     return content
 
@@ -234,7 +234,7 @@ def do_struct_boundaries(Driver, Report, Target):
 
         stdout_file = Driver.run(
             [f"tmp/out_struct_boundaries_{dtype}_{count}.c", "src/helper.c"],
-            ["src/arch/riscv.s"], f"out_struct_boundaries_{dtype}_{count}"
+            ["src/arch/riscv.S"], f"out_struct_boundaries_{dtype}_{count}"
         )
 
         struct_tests = structTests.StructTests(Target)
@@ -285,7 +285,7 @@ def do_struct_boundaries(Driver, Report, Target):
 
         StdoutFile = Driver.run(
             [f"tmp/out_struct_boundaries_{dtype}.c", "src/helper.c"],
-            ["src/arch/riscv.s"], f"out_struct_boundaries_{dtype}"
+            ["src/arch/riscv.S"], f"out_struct_boundaries_{dtype}"
         )
 
         # As multiple calls are made to the "callee()" external function,
@@ -343,7 +343,7 @@ def do_stack_align(Driver, Report):
     # `src/heler.c` has been added as a placeholder for the dump_information function
     # as it is called within the `callee` function in `src/arch/riscv.s`.
     # Although this function is not used, it is present in the riscv.s file.
-    stdoutFile = Driver.run(["tmp/out_functions.c", "tmp/out_driver.c", "src/helper.c"], ["src/arch/riscv.s"], "out_stackalign")
+    stdoutFile = Driver.run(["tmp/out_functions.c", "tmp/out_driver.c", "src/helper.c"], ["src/arch/riscv.S"], "out_stackalign")
     Report.append(stdoutFile)
 
 def do_tests(Driver, Report, Target):
