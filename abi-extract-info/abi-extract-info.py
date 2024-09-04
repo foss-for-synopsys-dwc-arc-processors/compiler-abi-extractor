@@ -258,7 +258,7 @@ def do_struct_boundaries(Driver, Report, Target):
         stack_address = None
 
         citeration = {}
-        struct_tests.run_test(citeration, stack, reg_banks, argv)
+        struct_tests.run_test(citeration, dtype, stack, reg_banks, argv)
         results[dtype].append(citeration)
         if citeration["passed_by_ref"] != None:
             break
@@ -313,7 +313,7 @@ def do_struct_boundaries(Driver, Report, Target):
             stack_address = None
 
             citeration = {}
-            struct_tests.run_test(citeration, stack, reg_banks, argv)
+            struct_tests.run_test(citeration, dtype, stack, reg_banks, argv)
             results[dtype].append(citeration)
             if citeration["passed_by_ref"] != None:
                 break
