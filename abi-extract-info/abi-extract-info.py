@@ -265,6 +265,9 @@ def do_struct_boundaries(Driver, Report, Target):
 
         count += 1
 
+        if count == 10:
+            print("breaking for safe purposes [struct_boundaries]")
+            break
 
 
     max_boundary = count
