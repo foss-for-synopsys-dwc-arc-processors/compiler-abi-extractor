@@ -47,8 +47,10 @@ class DumpInformation:
         if "// regs_bank" not in content[0]:
             return content
 
-        # Delete comment - "// regs_bank"
+        # Pop comment - "// regs_bank"
         reg_bank = content.pop(0)
+        # Delete `// `
+        reg_bank = reg_bank[3:]
         self.RegBanks[reg_bank] = list()
 
         while content:
