@@ -34,10 +34,12 @@ class SavedTests:
         hutils = hexUtils.HexUtils(self.Target)
 
         caller_saved_argv = helper.generate_hexa_values_2(sizeof, 30)
-        caller_saved_registers = hutils.find_registers_fill([caller_saved_argv], register_banks)
+        tmp = hutils.find_registers_fill([caller_saved_argv], register_banks)
+        caller_saved_registers, _  = tmp
 
         callee_saved_argv = helper.generate_hexa_values_2(sizeof)
-        callee_saved_registers = hutils.find_registers_fill([callee_saved_argv], register_banks)
 
+        tmp = hutils.find_registers_fill([callee_saved_argv], register_banks)
+        callee_saved_registers, _ = tmp
 
         return self.generate_summary(caller_saved_registers, callee_saved_registers)
