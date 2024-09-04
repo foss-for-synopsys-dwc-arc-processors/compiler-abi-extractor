@@ -172,6 +172,9 @@ def do_argpass(Driver, Report, Target):
         argr = last_iteration["registers"]
         are_values_on_stack = last_iteration["value_in_stack"]
         are_values_splitted = last_iteration["value_split_order"]
+        inconsistencies = last_iteration["inconsistencies"]
+
+        Target.set_argument_registers_2(dtype, citeration["registers"])
 
         # Initialize the results dictionary for the current argument count,
         # if not already present.
@@ -179,13 +182,15 @@ def do_argpass(Driver, Report, Target):
             results[argc] = { "type": [], "regs": [],
                               "common_regs": [], "noncommon_regs": [],
                               "are_values_on_stack": False,
-                              "are_values_splitted": [] }
+                              "are_values_splitted": [],
+                              "inconsistencies": [] }
 
         # Append the current datatype and register information to the results
         results[argc]["type"].append(dtype)
         results[argc]["regs"].append(argr)
         results[argc]["are_values_on_stack"] = are_values_on_stack
         results[argc]["are_values_splitted"] = are_values_splitted
+        results[argc]["inconsistencies"] = inconsistencies
 
     # Process the results to extract common and non-common registers used.
     for rkey, rvalue in results.items():
