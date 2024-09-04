@@ -108,7 +108,7 @@ class StructTests:
         return "\n".join(summary)
 
     # Run the test to check if the value is in registers or the stack.
-    def run_test(self, citeration, stack, register_banks, argv):
+    def run_test(self, citeration, dtype, stack, register_banks, argv):
         hutils = hexUtils.HexUtils(self.Target)
 
         # Get sizeof() of current iteration's struct.
@@ -116,19 +116,30 @@ class StructTests:
         citeration["sizeof(S)"] = sum(sizeofs)
 
         # Check if the value is in the registers and update current test
-        citeration = hutils.find_ref_in_stack_fill(citeration, argv.copy(), register_banks, stack)
-        if citeration["passed_by_ref"]:
-            return citeration
-        citeration = hutils.find_ref_in_stack_pairs(citeration, argv.copy(), register_banks, stack)
-        if citeration["passed_by_ref"]:
-            return citeration
-        citeration = hutils.find_ref_in_stack_combined(citeration, argv.copy(), register_banks, stack)
+        tmp = hutils.find_ref_in_stack_fill(dtype, argv.copy(), register_banks, stack)
+        citeration["passed_by_ref"], citeration["passed_by_ref_register"] = tmp
         if citeration["passed_by_ref"]:
             return citeration
 
-        citeration["registers_fill"] = hutils.find_registers_fill(argv.copy(), register_banks)
-        citeration["registers_pairs"], citeration["pairs_order"] = hutils.find_registers_pairs(argv.copy(), register_banks)
-        citeration["registers_combined"] = hutils.find_registers_combined(argv.copy(), register_banks)
+        tmp = hutils.find_ref_in_stack_pairs(dtype, argv.copy(), register_banks, stack)
+        citeration["passed_by_ref"], citeration["passed_by_ref_register"] = tmp
+        if citeration["passed_by_ref"]:
+            return citeration
+
+        tmp = hutils.find_ref_in_stack_combined(dtype, argv.copy(), register_banks, stack)
+        citeration["passed_by_ref"], citeration["passed_by_ref_register"] = tmp
+        if citeration["passed_by_ref"]:
+            return citeration
+
+
+        tmp = hutils.find_registers_fill(argv.copy(), register_banks)
+        citeration["registers_fill"], _ = tmp
+
+        tmp = hutils.find_registers_pairs(argv.copy(), register_banks)
+        citeration["registers_pairs"], _, citeration["pairs_order"] = tmp
+
+        tmp = hutils.find_registers_combined(argv.copy(), register_banks)
+        citeration["registers_combined"], _ = tmp
 
         return citeration
 
