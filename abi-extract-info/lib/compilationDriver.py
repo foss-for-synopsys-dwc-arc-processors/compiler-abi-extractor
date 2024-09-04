@@ -58,6 +58,7 @@ class CompilationDriver:
         for asmFile in asmFiles:
             objFile = tmp + os.path.basename(asmFile)
             objFile = objFile.replace(".s", ".o")
+            objFile = objFile.replace(".S", ".o")
             self.assemble(asmFile, objFile)
             objFiles.append(objFile)
 
