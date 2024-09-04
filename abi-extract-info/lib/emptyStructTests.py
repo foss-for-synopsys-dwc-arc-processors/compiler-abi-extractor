@@ -39,9 +39,9 @@ class EmptyStructValidator:
         self.Target = Target
         self.Keyword = "0xdead"
 
-    def validate_if_ignored(self, regs_bank, count):
+    def validate_if_ignored(self, bank_name, regs_bank, count):
         target = self.Target
-        for i, r in enumerate(target.get_registers()):
+        for i, r in enumerate(target.get_registers(bank_name)):
             self.Mapping[r] = regs_bank[i]
 
         is_ignored = False
@@ -80,7 +80,7 @@ class EmptyStructValidator:
             dump_information.parse(sublist)
 
             for key, value in dump_information.RegBanks.items():
-                is_ignored = self.validate_if_ignored(value, count + 1)
+                is_ignored = self.validate_if_ignored(key, value, count + 1)
                 if is_ignored is False:
                     break
 
