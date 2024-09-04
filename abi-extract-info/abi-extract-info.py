@@ -136,8 +136,7 @@ def do_argpass(Driver, Report, Target):
         argc = 1
         while (True):
             # Generate hexadecimal values for the current datatype and count
-            reset = 10 if argc == 1 else None
-            argv = helper.generate_hexa_list(argc, dtype_sizeof, reset)
+            argv = helper.generate_hexa_list(argc, dtype_sizeof, 10)
 
             # Generate the content of the test file.
             content = argPassTestsGen.generate(Target, dtype, argv)
