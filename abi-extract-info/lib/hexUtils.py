@@ -78,50 +78,68 @@ class HexUtils:
 
     # Finds the complete argument values in the register banks.
     def find_registers_fill(self, argv, register_banks):
-        indexes = []
+        registers = {}
+        inconsistencies = []
 
         # Iterate through each value in argv.
         while (argv):
+            tmp = []
             value = argv.pop(0)
 
             # Search for the value in each register bank.
             for bank_name, bank_register in register_banks.items():
+                bank_register_names = self.Target.get_registers(bank_name)
                 for index, register_value in enumerate(bank_register):
                     if register_value == value:
-                        # Append the index of the value in the register bank.
-                        indexes.append(index)
+                        # Append register.
+                        tmp.append(bank_register_names[index])
+                        registers[bank_register_names[index]] = value
 
-        registers = helper.indexes_to_registers(self.Target.get_registers(), indexes)
-        return registers
+            if len(tmp) > 1:
+                inconsistencies.append(tmp)
+
+        return (registers, inconsistencies)
 
     # Finds the complete argument value in stack.
-    def find_value_fill_in_stack(self, argv, stack):
+    def find_value_fill_in_stack(self, citeration, argv, stack):
         addresses = []
+        inconsistencies = []
 
         value = argv[-1]
         for stack_address, stack_value in stack:
             if stack_value == value:
+                for k,v in citeration["registers"].items():
+                    if v == value:
+                        inconsistencies.append((k,"[stack]"))
                 addresses.append(stack_address)
 
-        return addresses
+        return (addresses, inconsistencies)
 
     # Finds pairs of argument value in stack.
-    def find_value_pairs_in_stack(self, argv, stack):
+    def find_value_pairs_in_stack(self, citeration, argv, stack):
         addresses = []
+        tmp = []
+        inconsistencies = []
         value = argv[-1]
+
+        # riscv ilp32d fp registers are 64bit..
+        if self.sizeof(value) < self.Target.get_type_details("int")["size"]:
+            return addresses, inconsistencies
+
         high, low = self._split_hex_value(value)
 
         for stack_address, stack_value in stack:
-            if stack_value == high:
-                addresses.append(stack_address)
-            elif stack_value == low:
+            if stack_value in (high, low):
+                for k, v in citeration["registers"].items():
+                    if v == stack_value:
+                        tmp.append((k, "[stack]"))
                 addresses.append(stack_address)
 
-        return addresses
+        return (addresses, inconsistencies)
 
     # Finds the zero or sign extended  argument values in the register banks.
     def find_registers_extended(self, argv, register_banks, is_zero):
-        indexes = []
+        registers = []
 
         # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
         sizeof_int = 4
@@ -139,17 +157,18 @@ class HexUtils:
 
             # Search for the value in each register bank.
             for bank_name, bank_register in register_banks.items():
+                bank_register_names = self.Target.get_registers(bank_name)
                 for index, register_value in enumerate(bank_register):
                     if register_value == value:
-                        # Append the index of the value in the register bank.
-                        indexes.append(index)
+                        # Append register.
+                        registers.append(bank_register_names[index])
 
-        registers = helper.indexes_to_registers(self.Target.get_registers(), indexes)
         return registers
 
     # Finds registers that match either half of a value in `argv`.
     def find_registers_pairs(self, argv, register_banks):
-        indexes = []
+        registers = {}
+        inconsistencies = []
         order = ""
 
         # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
@@ -157,6 +176,7 @@ class HexUtils:
 
         # Process `argv` to find matching register values.
         while argv:
+            tmp = []
             value = argv.pop(0)
             sizeof_value = self.sizeof(value)
 
@@ -166,6 +186,7 @@ class HexUtils:
 
                 # Search for each half in each register bank.
                 for bank_name, bank_register in register_banks.items():
+                    bank_register_names = self.Target.get_registers(bank_name)
                     for index, register_value in enumerate(bank_register):
 
                         # Get the order of [low] and [high]
@@ -176,26 +197,35 @@ class HexUtils:
                                 order = "[low], [high]"
 
                         if register_value == first_half:
-                            indexes.append(index)
+                            # Append register
+                            tmp.append(bank_register_names[index])
+                            registers[bank_register_names[index]] = first_half
+
                         elif register_value == second_half:
-                            indexes.append(index)
+                            # Append register
+                            tmp.append(bank_register_names[index])
+                            registers[bank_register_names[index]] = second_half
+
+                if len(tmp) > 1:
+                    inconsistencies.append(tmp)
                 continue
 
-        registers = helper.indexes_to_registers(self.Target.get_registers(), indexes)
-        return registers, order
+        return (registers, inconsistencies, order)
 
     # Finds registers that match combined values in `argv`.
     def find_registers_combined(self, argv, register_banks):
         # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
         sizeof_int = 4
 
-        indexes = []
+        registers = {}
+        inconsistencies = []
 
         # Process `argv` to combine values.
         while (argv):
             # Peek the value from `argv`
             value = argv[0]
             res = []
+            tmp = []
 
             # Check if the current value is already of the expected size.
             if self.sizeof(value) == sizeof_int:
@@ -225,21 +255,28 @@ class HexUtils:
 
             # Search for the combined hexadecimal value in each register bank.
             for bank_name, bank_register in register_banks.items():
+                bank_register_names = self.Target.get_registers(bank_name)
                 for index, register_value in enumerate(bank_register):
                     if register_value == combined_hex:
-                        indexes.append(index)
+                        # Append register
+                        tmp.append(bank_register_names[index])
+                        registers[bank_register_names[index]] = combined_hex
+            if len(tmp) > 1:
+                inconsistencies.append(tmp)
 
-        registers = helper.indexes_to_registers(self.Target.get_registers(), indexes)
-        return registers
+        return (registers, inconsistencies)
 
     # Finds a reference pointer of the stack in the argument registers with complete value.
-    def find_ref_in_stack_fill(self, citeration, argv, register_banks, stack):
-        citeration["passed_by_ref"] = None
+    def find_ref_in_stack_fill(self, dtype, argv, register_banks, stack):
+        passed_by_ref = None
+        passed_by_ref_register = None
+
+        argument_registers = self.Target.get_argument_registers_2(dtype)
 
         # Build a dictionary of register-values from the register banks.
-        registers = self.Target.get_registers()
         register_values_dict = dict()
         for bank_name, register_values in register_banks.items():
+            registers = self.Target.get_registers(bank_name)
             for index, reg in enumerate(registers):
                 register_values_dict[reg] = register_values[index]
 
@@ -253,26 +290,31 @@ class HexUtils:
             # compiler might use another of the argument registers to store a stack address to load
             # the values into the first argument register before the actual function call.
             # i.e it first stores the values into the stack, then loads it to register.
-            if register_values_dict["a0"] == stack_address:
+            if register_values_dict[argument_registers[0]] == stack_address:
                 # FIXME Here it would make sense to validate the next stack value,
                 # but has been observe that the next value is not always in the next stack address.
                 if stack_value == argv[0]:
-                    citeration["passed_by_ref_register"] = ["a0"] # FIXME hardcoded..
-                    citeration["passed_by_ref"] = "[stack]"
+                    passed_by_ref_register = register_values_dict[argument_registers[0]]
+                    passed_by_ref = "[stack]"
 
-                    return citeration
-        return citeration
+                    return (passed_by_ref, passed_by_ref_register)
+
+        return (passed_by_ref, passed_by_ref_register)
 
     # Finds a reference pointer of the stack in the argument registers with the expected argv.
-    def find_ref_in_stack_pairs(self, citeration, argv, register_banks, stack):
-        citeration["passed_by_ref"] = None
+    def find_ref_in_stack_pairs(self, dtype, argv, register_banks, stack):
+        passed_by_ref = None
+        passed_by_ref_register = None
+
         # FIXME Assume sizeof(int) is 4  bytes; this should be dynamic if the size can change (i.e 64bits).
         sizeof_int = 4
 
+        argument_registers = self.Target.get_argument_registers_2(dtype)
+
         # Build a dictionary of register-values from the register banks.
-        registers = self.Target.get_registers()
         register_values_dict = dict()
         for bank_name, register_values in register_banks.items():
+            registers = self.Target.get_registers(bank_name)
             for index, reg in enumerate(registers):
                 register_values_dict[reg] = register_values[index]
 
@@ -298,26 +340,30 @@ class HexUtils:
                 # compiler might use another of the argument registers to store a stack address to load
                 # the values into the first argument register before the actual function call.
                 # i.e it first stores the values into the stack, then loads it to register.
-                if register_values_dict["a0"] == stack_address:
+                if register_values_dict[argument_registers[0]] == stack_address:
                     # FIXME Here it would make sense to validate the next stack value,
                     # but has been observe that the next value is not always in the next stack address.
                     if stack_value == first_half or stack_value == second_half:
-                        citeration["passed_by_ref_register"] = ["a0"] # FIXME harcoded..
-                        citeration["passed_by_ref"] = "[stack]"
+                        passed_by_ref_register = register_values_dict[argument_registers[0]]
+                        passed_by_ref = "[stack]"
 
-                        return citeration
+                        return (passed_by_ref, passed_by_ref_register)
 
-        return citeration
+        return (passed_by_ref, passed_by_ref_register)
 
-    def find_ref_in_stack_combined(self, citeration, argv, register_banks, stack):
-        citeration["passed_by_ref"] = None
+    def find_ref_in_stack_combined(self, dtype, argv, register_banks, stack):
+        passed_by_ref = None
+        passed_by_ref_register = None
+
         # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
         sizeof_int = 4
 
+        argument_registers = self.Target.get_argument_registers_2(dtype)
+
         # Build a dictionary of register-values from the register banks.
-        registers = self.Target.get_registers()
         register_values_dict = dict()
         for bank_name, register_values in register_banks.items():
+            registers = self.Target.get_registers(bank_name)
             for index, reg in enumerate(registers):
                 register_values_dict[reg] = register_values[index]
 
@@ -355,11 +401,11 @@ class HexUtils:
                 # Here instead of checking all positions in the stack,
                 # we only care about the first one.
                 stack_address, stack_value = stack[index]
-                if register_values_dict["a0"] == stack_address:
+                if register_values_dict[argument_registers[0]] == stack_address:
                     if stack_value == combined_hex:
-                        citeration["passed_by_ref_register"] = ["a0"]
-                        citeration["passed_by_ref"] = "[stack]"
+                        passed_by_ref_register = register_values_dict[argument_registers[0]]
+                        passed_by_ref = "[stack]"
 
-                        return citeration
+                        return (passed_by_ref, passed_by_ref_register)
 
-        return citeration
+        return (passed_by_ref, passed_by_ref_register)
