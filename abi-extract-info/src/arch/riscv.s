@@ -6,7 +6,14 @@
 
 .data
 .globl regs_bank0
+.globl regs_bank1
+
 regs_bank0:
+    .rept 32
+    .word 0
+    .endr
+
+regs_bank1:
     .rept 32
     .word 0
     .endr
@@ -55,6 +62,44 @@ callee:
     sw x28, 112(t6)
     sw x29, 116(t6)
     sw x30, 120(t6)
+
+    # Initialize t6 to point to the start of the regs_bank1 array
+.if CONFIG_FPU
+    la t6, regs_bank1
+    fsw f0, 0(t6)
+    fsw f1, 4(t6)
+    fsw f2, 8(t6)
+    fsw f3, 12(t6)
+    fsw f4, 16(t6)
+    fsw f5, 20(t6)
+    fsw f6, 24(t6)
+    fsw f7, 28(t6)
+    fsw f8, 32(t6)
+    fsw f9, 36(t6)
+    fsw f10, 40(t6)
+    fsw f11, 44(t6)
+    fsw f12, 48(t6)
+    fsw f13, 52(t6)
+    fsw f14, 56(t6)
+    fsw f15, 60(t6)
+    fsw f16, 64(t6)
+    fsw f17, 68(t6)
+    fsw f18, 72(t6)
+    fsw f19, 76(t6)
+    fsw f20, 80(t6)
+    fsw f21, 84(t6)
+    fsw f22, 88(t6)
+    fsw f23, 92(t6)
+    fsw f24, 96(t6)
+    fsw f25, 100(t6)
+    fsw f26, 104(t6)
+    fsw f27, 108(t6)
+    fsw f28, 112(t6)
+    fsw f29, 116(t6)
+    fsw f30, 120(t6)
+    fsw f31, 124(t6)
+.endif
+    la t6, regs_bank0
 
     # handle t6/x31
     lw x30, -4(sp)
