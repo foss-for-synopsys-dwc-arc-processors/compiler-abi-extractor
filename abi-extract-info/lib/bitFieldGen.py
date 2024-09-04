@@ -38,11 +38,7 @@ For int example:
                 00000000 00111111 11111111 11111111
                   0x00     0x3F     0xFF      0xFF
 
-
-    The resulting hexadecimal value `0x003FFFFF` is in big-endian format,
-    so we need to convert it to little-endian.
-
-    In little-endian, the value becomes `0xFFFF3F00` (`0xFF` `0xFF` `0x3F` `0x00`)
+    In little-endian, the memory layout becomes `0xFF` `0xFF` `0x3F` `0x00`
 
 
 For short example:
@@ -63,10 +59,7 @@ For short example:
                 00001111 11111111 00000011 11111111
                   0x0F     0xFF     0x03     0xFF
 
-    The resulting hexadecimal value `0x0FFF03FF` is in big-endian format, so we need to
-    convert it to little-endian.
-
-    In little-endian, the value becomes `0xFF03FF0F` (`0xFF` `0x03` `0xFF` `0x0F`)
+    In little-endian, the memory layout becomes `0xFF` `0x03` `0xFF` `0x0F`
 """
 
 class BitFieldGenerator:
