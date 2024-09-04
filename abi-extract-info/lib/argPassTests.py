@@ -104,6 +104,10 @@ class ArgPassTests:
             summary.append(f"- {types}")
             summary.append(f" - argc > {argument_count} : {description}")
 
+            # Add a warning message if inconsistencies are found.
+            if value["inconsistencies"]:
+                summary.append(f" - WARNING: multiple value occurencies detected in {value['inconsistencies']}")
+
             # Add a warning message if there are non-common registers
             if value["noncommon_regs"]:
                 summary.append(" - WARNING: some inconsistencies were detected, for details see ......")
