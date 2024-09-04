@@ -62,9 +62,12 @@ class ReturnTests:
 
     def run_test(self, citeration, stack, register_banks, argv):
         hutils = hexUtils.HexUtils(self.Target)
-
         argv = [argv]
-        citeration["registers_fill"] = hutils.find_registers_fill(argv.copy(), register_banks)
-        citeration["registers_pairs"], citeration["pairs_order"] = hutils.find_registers_pairs(argv.copy(), register_banks)
+
+        tmp = hutils.find_registers_fill(argv.copy(), register_banks)
+        citeration["registers_fill"], citeration["inconsistencies"] = tmp
+
+        tmp = hutils.find_registers_pairs(argv.copy(), register_banks)
+        citeration["registers_pairs"], citeration["inconsistencies"], citeration["pairs_order"] = tmp
 
         return citeration
