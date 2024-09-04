@@ -160,7 +160,7 @@ def do_argpass(Driver, Report, Target):
             if citeration["value_in_stack"]:
                 break
 
-            if argc == 15:
+            if argc == 20:
                 print("DEBUG: Exitting for save purposes. [do_argpas]")
                 break
 
