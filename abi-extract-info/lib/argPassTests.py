@@ -170,6 +170,10 @@ class ArgPassTests:
             citeration["value_in_stack"] = value_in_stack
             citeration["inconsistencies"] = inconsistencies
 
+        # Convert registers to a list if its a dictionary
+        if not isinstance(citeration["registers"], list):
+            citeration["registers"] = list(citeration["registers"].keys())
+
         return citeration
 
 import sys
