@@ -130,24 +130,45 @@ class ArgPassTests:
         citeration = {
             "argc": argc,               # Argument count
             "argv": argv,               # Value checked
-            "value_split_order": None,  # Order of split values (if any)
             "registers": None,          # Registers containing the value
-            "value_in_stack": None      # Wether the value is in the stack
+            "value_in_stack": None,     # Wether the value is in the stack
+            "pairs_order": None,        # Order of split values (if any)
+            "inconsistencies": None     # Multiple value occurrences detected
         }
 
         # Check if the value is in the registers and update current test
-        tmp = hutils.find_registers_fill(argv.copy(), register_banks)
-        citeration["registers"], citeration["inconsistencies"] = tmp
-        if not citeration["registers"]:
-            tmp = hutils.find_registers_pairs(argv.copy(), register_banks)
-            citeration["registers"], citeration["inconsistencies"], citeration["pairs_order"] = tmp
+        registers, inconsistencies = hutils.find_registers_fill(argv.copy(), register_banks)
+        citeration["registers"], citeration["inconsistencies"] = registers, inconsistencies
+
+        registers, inconsistencies, pairs_order = hutils.find_registers_pairs(argv.copy(), register_banks)
+        if registers:
+            if not citeration.get("registers"):
+                citeration["registers"] = registers
+            else:
+                citeration["registers"].update(registers)
+
+        if inconsistencies:
+            if not citeration.get("inconsistencies"):
+                citeration["inconsistencies"] = registers
+            else:
+                citeration["inconsistencies"].update(inconsistencies)
+
+        if pairs_order:
+            if not citeration.get("pairs_order"):
+                citeration["pairs_order"] = pairs_order
+            else:
+                citeration["pairs_order"].update(pairs_order)
 
         # Check if the value is in the stack and update current test
-        tmp = hutils.find_value_fill_in_stack(citeration, argv.copy(), stack)
-        citeration["value_in_stack"], citeration["inconsistencies"] = tmp
+        value_in_stack, inconsistencies = hutils.find_value_fill_in_stack(citeration, argv.copy(), stack)
+        citeration["value_in_stack"] = value_in_stack
+        citeration["inconsistencies"] = inconsistencies
+
+        # If value was not found in the stack, check for pairs in the stack
         if not citeration["value_in_stack"]:
-            tmp = hutils.find_value_pairs_in_stack(citeration, argv.copy(), stack)
-            citeration["value_in_stack"], citeration["inconsistencies"] = tmp
+            value_in_stack, inconsistencies = hutils.find_value_pairs_in_stack(citeration, argv.copy(), stack)
+            citeration["value_in_stack"] = value_in_stack
+            citeration["inconsistencies"] = inconsistencies
 
         return citeration
 
