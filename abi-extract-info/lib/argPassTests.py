@@ -69,6 +69,18 @@ class ArgPassTests:
 
             description = ""
 
+            # If there is an inconsistency between registers and stack,
+            # we must take the stack as priority and remove the conflicting
+            # register/s from the list of registers.
+            for inconsistencies in value["inconsistencies"]:
+                # If there is an inconsistency with [stack],
+                # it will always be in index 1 of the tuple.
+                if inconsistencies[1] == "[stack]":
+                    tmp = inconsistencies[0]
+                    if tmp in value["common_regs"]:
+                        # Remove the conflicting register from the list.
+                        value["common_regs"].remove(tmp)
+
             # Check if values are passed in registers and not on stack
             if value["common_regs"] and not value["are_values_on_stack"]:
                 common_regs = " ".join(value["common_regs"])
