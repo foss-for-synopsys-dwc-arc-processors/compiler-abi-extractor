@@ -118,7 +118,6 @@ class HexUtils:
     # Finds pairs of argument value in stack.
     def find_value_pairs_in_stack(self, citeration, argv, stack):
         addresses = []
-        tmp = []
         inconsistencies = []
         value = argv[-1]
 
@@ -132,7 +131,7 @@ class HexUtils:
             if stack_value in (high, low):
                 for k, v in citeration["registers"].items():
                     if v == stack_value:
-                        tmp.append((k, "[stack]"))
+                        inconsistencies.append((k, "[stack]"))
                 addresses.append(stack_address)
 
         return (addresses, inconsistencies)
