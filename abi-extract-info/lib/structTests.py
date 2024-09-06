@@ -90,9 +90,9 @@ class StructTests:
 
         # Append the categorized data types to the summary.
         summary.extend([
-            f"  - {' : '.join(dtypes['fill'])} - as fill",
-            f"  - {' : '.join(dtypes['combined'])} - as combined",
-            f"  - {' : '.join(dtypes['pairs'])} - as pairs {pairs_order}",
+            f"  - {' : '.join(sorted(dtypes['fill']))} - as fill",
+            f"  - {' : '.join(sorted(dtypes['combined']))} - as combined",
+            f"  - {' : '.join(sorted(dtypes['pairs']))} - as pairs {pairs_order}",
             f""
         ])
 
