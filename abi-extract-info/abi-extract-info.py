@@ -171,7 +171,7 @@ def do_argpass(Driver, Report, Target):
         argc = last_iteration["argc"] - 1
         argr = last_iteration["registers"]
         are_values_on_stack = last_iteration["value_in_stack"]
-        are_values_splitted = last_iteration["value_split_order"]
+        are_values_splitted = last_iteration["pairs_order"]
         inconsistencies = last_iteration["inconsistencies"]
 
         Target.set_argument_registers_2(dtype, citeration["registers"])
