@@ -106,7 +106,11 @@ class ArgPassTests:
 
             # Add a warning message if inconsistencies are found.
             if value["inconsistencies"]:
-                summary.append(f" - WARNING: multiple value occurencies detected in {value['inconsistencies']}")
+                # Convert an list of string tuples to a single string.
+                # e.g [("reg1", "reg2"), ("reg3", "reg4")]:
+                # - WARNING: multiple value occurrences detected in (reg1, reg2), (reg3, reg4)
+                inconsistencies = ", ".join(f"({', '.join(i)})" for i in value["inconsistencies"])
+                summary.append(f" - WARNING: multiple value occurrences detected in {inconsistencies}")
 
             # Add a warning message if there are non-common registers
             if value["noncommon_regs"]:
