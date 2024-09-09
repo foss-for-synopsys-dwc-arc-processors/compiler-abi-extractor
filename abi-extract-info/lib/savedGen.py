@@ -60,7 +60,7 @@ class ReturnGenerator:
         register_names_str = f'"{register_names_str}"'
 
         self.append("""
-int* aux (void) {
+void aux (void) {
     asm volatile (""
     :
     :
@@ -68,7 +68,8 @@ int* aux (void) {
 
     set_registers(%s);
 
-    return &dummy;
+    /* Preventing the compiler from optimizing. */
+    asm volatile("":::);
 }
 """ % (register_names_str, argv))
 
