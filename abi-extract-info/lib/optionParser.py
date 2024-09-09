@@ -48,3 +48,5 @@ class OptionParser:
                 self.set("verbose")
             elif arg == "--print-report":
                 self.set("print-report")
+            elif arg == "--save-temps":
+                self.set("save_temps")

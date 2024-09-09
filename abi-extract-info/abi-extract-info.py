@@ -393,3 +393,6 @@ if __name__ == "__main__":
     # Run tests and generate summary report
     do_tests(Driver, Report, Target)
     Report.generateReport()
+
+    if not OptionParser.get("save_temps"):
+        helper.cleanup()
