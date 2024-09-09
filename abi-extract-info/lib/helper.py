@@ -24,6 +24,19 @@ def read_file(file_name):
     with open(file_name, "r") as file:
         return file.read()
 
+def cleanup(folder="tmp/"):
+    # Check if the folder exists
+    if os.path.exists(folder):
+        # Loop through the directory and remove contents
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path):
+                    # Remove file
+                    os.remove(file_path)
+            except Exception as e:
+                print(f"Failed to delete {file_path}. Reason: {e}")
+
 import re
 # Responsible for parsing the standard output from the datatype
 #  signedness/size/align test case for use in other test cases.
