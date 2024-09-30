@@ -357,7 +357,7 @@ union {name}_union {{
         for d in self.data:
             name = self.get_name(d)
             self.generate_struct_union(name, d)
-            self.generate_func(name, d)
+            self.generate_calculate(name, d)
 
         self.generate_main()
         return self.get_result()
