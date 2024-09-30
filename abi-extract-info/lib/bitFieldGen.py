@@ -188,3 +188,21 @@ class BitFieldGenerator:
         le = self.pad_mult_4(le)
         le = self.format_binary(le, 8)
         return " ".join(le.split()[::-1])
+
+    # Generate a name for the datatype.
+    def get_name(self, data):
+        # Create the initial name from the data types
+        base_name = "_".join(i["dtype"] for i in data)
+
+        # Initialize the name to the base name
+        name = base_name
+        count = 2
+
+        # Check for name collisions and increment count as needed
+        while name in self.names:
+            name = f"{base_name}_{count}"
+            count += 1
+
+        # Add the final name to self.names
+        self.names.append(name)
+        return name
