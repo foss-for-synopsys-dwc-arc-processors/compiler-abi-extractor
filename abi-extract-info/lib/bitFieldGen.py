@@ -123,3 +123,7 @@ class BitFieldGenerator:
             binary = "0" * (sizeof - length) + binary
 
         return binary
+
+    # Concatenate binary values without adding padding.
+    def no_extra_padding(self, bvalues):
+        return ''.join(b.replace(" ", "") for b in reversed(bvalues))
