@@ -93,3 +93,18 @@ class BitFieldGenerator:
                 decimal_value += 2 ** i
 
         return decimal_value
+
+    # Convert decimal to hexa
+    def decimal_to_hexa(self, decimal_value):
+        if decimal_value == 0:
+            return "0"
+
+        hex_value = ""
+        hex_digits = "0123456789ABCDEF"
+
+        while decimal_value > 0:
+            remainder = decimal_value % 16
+            hex_value = hex_digits[remainder] + hex_value
+            decimal_value //= 16
+
+        return "0x" + hex_value
