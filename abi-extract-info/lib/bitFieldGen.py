@@ -181,3 +181,10 @@ class BitFieldGenerator:
             binary = "0" * zeros_to_add + binary
 
         return binary
+
+    # Convert little endian to big endian.
+    def binary_le_to_be(self, le):
+        le = le.replace(" ", "")
+        le = self.pad_mult_4(le)
+        le = self.format_binary(le, 8)
+        return " ".join(le.split()[::-1])
