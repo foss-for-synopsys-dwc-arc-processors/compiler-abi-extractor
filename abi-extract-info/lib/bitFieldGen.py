@@ -80,3 +80,16 @@ class BitFieldGenerator:
         self.append("#include <stdio.h>")
         self.append("#include <stdint.h>")
         self.append("")
+
+    # Convert binary to decimal
+    def binary_to_decimal(self, binary_str):
+        binary_str = binary_str.replace(" ", "")
+        length = len(binary_str)
+        decimal_value = 0
+
+        for i in range(length):
+            bit = binary_str[length - 1 - i]
+            if bit == "1":
+                decimal_value += 2 ** i
+
+        return decimal_value
