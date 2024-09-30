@@ -146,3 +146,28 @@ class BitFieldGenerator:
 
         # Reverse back and strip the trailing space
         return formatted_str[::-1].strip()
+
+    # Convert binary to hexa
+    def binary_to_hexa(self, bvalue):
+        # Remove any spaces in the binary value
+        bvalue = bvalue.replace(" ", "")
+
+        # Ensure the binary value is a valid length (multiple of 4)
+        while len(bvalue) % 4 != 0:
+            bvalue = "0" + bvalue
+
+        # Create a mapping of binary to hexadecimal
+        binary_to_hex_map = {
+        '0000': '0', '0001': '1', '0010': '2', '0011': '3',
+        '0100': '4', '0101': '5', '0110': '6', '0111': '7',
+        '1000': '8', '1001': '9', '1010': 'A', '1011': 'B',
+        '1100': 'C', '1101': 'D', '1110': 'E', '1111': 'F'
+        }
+
+        hvalue = ""
+        # Process each 4-bit chunk
+        for i in range(0, len(bvalue), 4):
+            four_bits = bvalue[i:i + 4]
+            hvalue += binary_to_hex_map[four_bits]
+
+        return "0x" + hvalue
