@@ -61,3 +61,17 @@ For short example:
 
     In little-endian, the memory layout becomes `0xFF` `0x03` `0xFF` `0x0F`
 """
+
+class BitFieldGenerator:
+    def __init__(self):
+        self.result = []
+        self.names = []
+
+    def append(self, W):
+        self.result.append(W)
+
+    def extend(self, W):
+        self.result.extend(W)
+
+    def get_result(self):
+        return "\n".join(self.result)
