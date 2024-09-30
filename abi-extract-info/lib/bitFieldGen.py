@@ -206,3 +206,26 @@ class BitFieldGenerator:
         # Add the final name to self.names
         self.names.append(name)
         return name
+
+    def generate_struct_union(self, name, data):
+        # e.g
+        # struct short_short_struct {
+        #     unsigned short x : 10;
+        #     unsigned short y : 12;
+        # };
+        self.append(f"struct {name}_struct {{")
+        self.extend(f'  unsigned {i["dtype"]} {i["var"]} : {i["bfield"]};' for i in data)
+        self.append("};")
+
+        # e.g
+        # union short_short_union {
+        #     struct short_short_struct s;
+        #     unsigned long value;
+        #     unsigned char bytes[sizeof(struct short_short_struct)];
+        # };
+        self.append(f"""
+union {name}_union {{
+    struct {name}_struct s;
+    unsigned {data[0]["value_dtype"]} value;
+    unsigned char bytes[sizeof(struct {name}_struct)];
+}};""")
