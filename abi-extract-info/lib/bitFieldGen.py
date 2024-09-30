@@ -134,3 +134,15 @@ class BitFieldGenerator:
         extended_bvalues = [self.extend_with_zeros(b, dtype) for b in bvalues[:-1]] + [bvalues[-1]]
 
         return self.no_extra_padding(extended_bvalues)
+
+    # Add a space between each X bits (X=4 default).
+    def format_binary(self, binary_str, value=4):
+        # Reverse the string to format from the right
+        reversed_str = binary_str[::-1]
+        formatted_str = ''
+
+        for i in range(0, len(reversed_str), value):
+            formatted_str += reversed_str[i:i+value] + ' '
+
+        # Reverse back and strip the trailing space
+        return formatted_str[::-1].strip()
