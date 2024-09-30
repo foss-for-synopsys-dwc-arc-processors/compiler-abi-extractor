@@ -171,3 +171,13 @@ class BitFieldGenerator:
             hvalue += binary_to_hex_map[four_bits]
 
         return "0x" + hvalue
+
+    # Add padding to multiple of 4.
+    def pad_mult_4(self, binary):
+        # Calculate the number of zeros needed
+        length = len(binary)
+        if length % 4 != 0:
+            zeros_to_add = 4 - (length % 4)
+            binary = "0" * zeros_to_add + binary
+
+        return binary
