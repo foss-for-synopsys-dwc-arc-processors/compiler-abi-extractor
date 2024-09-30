@@ -304,3 +304,9 @@ union {name}_union {{
 
         self.append('printf("\\n");')
         self.append("}")
+
+    def generate_main(self):
+        self.append("int main (void) {")
+        self.extend(f'  calculate_{name}();' for name in self.names)
+        self.append(f"  return 0;")
+        self.append("}")
