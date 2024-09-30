@@ -26,6 +26,7 @@ from lib import returnTests
 from lib import savedGen
 from lib import savedTests
 from lib import bitFieldGen
+from lib import bitFieldTests
 
 import sys
 
@@ -114,8 +115,12 @@ def do_bitfield(Driver, Report, Target):
     content = bitFieldGen.generate()
     open("tmp/out_bitfield.c", "w").write(content)
     stdout_file = Driver.run(["tmp/out_bitfield.c"], [], "out_bitfield")
+    content = helper.read_file(stdout_file)
 
-    Report.append(stdout_file)
+    summary_content = bitFieldTests.prepare_summary(content)
+    summary_file = "tmp/out_bitfield.sum"
+    open(summary_file, "w").write(summary_content)
+    Report.append(summary_file)
 
 def do_argpass(Driver, Report, Target):
     # List of datatypes to be tested.
