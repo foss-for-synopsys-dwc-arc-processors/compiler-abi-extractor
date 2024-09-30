@@ -323,3 +323,6 @@ union {name}_union {{
 
 def generate():
     return BitFieldGenerator().generate()
+
+if __name__ == "__main__":
+    print(generate())
