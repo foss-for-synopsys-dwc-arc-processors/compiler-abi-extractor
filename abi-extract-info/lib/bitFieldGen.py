@@ -229,3 +229,78 @@ union {name}_union {{
     unsigned {data[0]["value_dtype"]} value;
     unsigned char bytes[sizeof(struct {name}_struct)];
 }};""")
+
+    def generate_calculate(self, name, data):
+        # e.g
+        # void calculate_short_short (void) {
+        self.append(f"void calculate_{name} (void) {{")
+
+        # e.g
+        # union short_short_union test = { .s = { .x = 0x2AA, .y = 0xDB6 } };
+        tmp = [f'.{i["var"]} = {self.binary_to_hexa(i["value"])}, ' for i in data]
+        self.append(f"  union {name}_union test = {{ .s = {{ {' '.join(tmp)} }} }};")
+
+        # e.g
+        # printf("short_short:>:");
+        self.append(f'printf("{name}:{data[0]["sign"]}:");')
+
+        bvalues = [i["value"] for i in data]
+
+        # e.g
+        # if ((test.value & 0x36DAAA) == 0x36DAAA)
+        # {
+        #   printf("No extra padding.:");
+        #   printf("Little-endian.");
+        # }
+        le_no_pad = self.no_extra_padding(bvalues)
+        self.append(f"""
+    if ((test.value & {self.binary_to_hexa(le_no_pad)}) == {self.binary_to_hexa(le_no_pad)})
+    {{
+        printf("No extra padding.:");
+        printf("Little-endian.");
+    }}""")
+
+        # e.g
+        # else if ((test.value & 0xAADA36) == 0xAADA36)
+        # {
+        #   printf("No extra padding.:");
+        #   printf("Big endian.");
+        # }
+        be_no_pad = self.binary_le_to_be(le_no_pad)
+        self.append(f"""
+    if ((test.value & {self.binary_to_hexa(be_no_pad)}) == {self.binary_to_hexa(be_no_pad)})
+    {{
+        printf("No extra padding.:");
+        printf("Big-endian.");
+    }}""")
+
+        # e.g
+        # else if ((test.value & 0xDB602AA) == 0xDB602AA)
+        # {
+        #   printf("Extra padding.:");
+        #   printf("Little endian.");
+        # }
+        le_pad = self.extra_padding(bvalues, data[0]["dtype"])
+        self.append(f"""
+    if ((test.value & {self.binary_to_hexa(le_pad)}) == {self.binary_to_hexa(le_pad)})
+    {{
+        printf("Extra padding.:");
+        printf("Little-endian.");
+    }}""")
+
+        # e.g
+        # else if ((test.value & 0xAA02DB6D) == 0xAA02B6D)
+        # {
+        #   printf("Extra padding.:");
+        #   printf("Big endian.");
+        # }
+        be_pad = self.binary_le_to_be(le_pad)
+        self.append(f"""
+    if ((test.value & {self.binary_to_hexa(be_pad)}) == {self.binary_to_hexa(be_pad)})
+    {{
+        printf("Extra padding.:");
+        printf("Big-endian.");
+    }}""")
+
+        self.append('printf("\\n");')
+        self.append("}")
