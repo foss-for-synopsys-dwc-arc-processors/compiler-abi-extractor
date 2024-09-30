@@ -38,7 +38,7 @@ For int example:
                 00000000 00111111 11111111 11111111
                   0x00     0x3F     0xFF      0xFF
 
-    In little-endian, the memory layout becomes `0xFF` `0xFF` `0x3F` `0x00`
+    The memory layout is `0x00` `0x3F` `0xFF` `0xFF`
 
 
 For short example:
@@ -59,7 +59,7 @@ For short example:
                 00001111 11111111 00000011 11111111
                   0x0F     0xFF     0x03     0xFF
 
-    In little-endian, the memory layout becomes `0xFF` `0x03` `0xFF` `0x0F`
+    The memory layout is `0x0F` `0xFF` `0x03` `0xFF`
 """
 
 class BitFieldGenerator:
