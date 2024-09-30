@@ -75,3 +75,8 @@ class BitFieldGenerator:
 
     def get_result(self):
         return "\n".join(self.result)
+
+    def generate_includes(self):
+        self.append("#include <stdio.h>")
+        self.append("#include <stdint.h>")
+        self.append("")
