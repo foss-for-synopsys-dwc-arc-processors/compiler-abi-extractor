@@ -310,3 +310,16 @@ union {name}_union {{
         self.extend(f'  calculate_{name}();' for name in self.names)
         self.append(f"  return 0;")
         self.append("}")
+
+    def generate(self):
+        self.generate_includes()
+        for d in self.data:
+            name = self.get_name(d)
+            self.generate_struct_union(name, d)
+            self.generate_func(name, d)
+
+        self.generate_main()
+        return self.get_result()
+
+def generate():
+    return BitFieldGenerator().generate()
