@@ -108,3 +108,18 @@ class BitFieldGenerator:
             decimal_value //= 16
 
         return "0x" + hex_value
+
+    # Extend binary value with `0` to fit in a given datatype size
+    def extend_with_zeros(self, binary, dtype):
+        # TODO: Change this.
+        if dtype == "int":
+            sizeof = 32
+        elif dtype == "short":
+            sizeof = 16
+
+        binary = binary.replace(" ", "")
+        length = len(binary)
+        if length < sizeof:
+            binary = "0" * (sizeof - length) + binary
+
+        return binary
