@@ -153,14 +153,25 @@ class ArgPassTests:
         for k, v in result.items():
             r.append(f"- {' : '.join(k.split())}")
 
+            inconsistencies = []
             for x in v:
+                # Create a list of inconsistencies from dtype if any.
+                if x["inconsistencies"]:
+                    inconsistencies.extend(x["inconsistencies"])
+
                 order = x["order"] or ""
                 regs = " ".join(x["regs"]) if x["regs"] else "[stack]" if x["stack"] else ""
 
                 r.append(f" - args {array_to_range(x['args']):<3} {order}: {regs}")
 
-        r.append("")
+            # e.g
+            # inconsistencies = [ ("t0", "[stack]"), ("t1", "a1") ]
+            #  - WARNING: multiple value occurrences detected in (t0, [stack]), (t1, a1)
+            if inconsistencies:
+                inconsistency_str = ", ".join(map(str, inconsistencies)).replace("'", "")
+                r.append(f" - WARNING: multiple value occurrences detected in {inconsistency_str}")
 
+        r.append("")
         return "\n".join(r)
 
     # Run the test to check if the value is in registers or the stack.
