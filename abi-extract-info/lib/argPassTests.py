@@ -185,6 +185,13 @@ class ArgPassTests:
         r.append("")
         return "\n".join(r)
 
+    def process_stages(self, results):
+        results = self.process_stage1(results)
+        results = self.process_stage2(results)
+        results = self.process_stage3(results)
+        results = self.process_summary(results)
+        return results
+
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, stack, register_banks, argv):
         hutils = hexUtils.HexUtils(self.Target)
