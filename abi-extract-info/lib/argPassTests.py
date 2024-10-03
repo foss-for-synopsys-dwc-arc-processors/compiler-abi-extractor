@@ -148,7 +148,7 @@ class ArgPassTests:
         #   - args 9   : [stack]
         # - double
         #   - args 1-8 : fa0 fa1 fa2 fa3 fa4 fa5 fa6 fa7
-        #   - args 9-12 [low, high]: a0 a1 a2 a3 a4 a5 a6 a7
+        #   - args 9-12 [low, high]: [a0 a1] [a2 a3] [a4 a5] [a6 a7]
         #   - args 13  : [stack]
         for k, v in result.items():
             r.append(f"- {' : '.join(k.split())}")
@@ -159,10 +159,21 @@ class ArgPassTests:
                 if x["inconsistencies"]:
                     inconsistencies.extend(x["inconsistencies"])
 
-                order = x["order"] or ""
-                regs = " ".join(x["regs"]) if x["regs"] else "[stack]" if x["stack"] else ""
+                # e.g
+                # old -> args 9-12 [low, high]: a0 a1 a2 a3 a4 a5 a6 a7
+                # new -> args 9-12 [low, high]: [a0 a1] [a2 a3] [a4 a5] [a6 a7]
+                if not x["stack"]:
+                    if x["order"]:
+                        order_str = x["order"]
+                        regs = x["regs"]
+                        regs_str = " ".join([f"[{regs[i]}, {regs[i+1]}]" for i in range(0, len(regs), 2)])
+                    else:
+                        order_str = ""
+                        regs_str = " ".join(x["regs"]) if x["regs"] else "[stack]" if x["stack"] else ""
+                else:
+                    regs_str = "[stack]"
 
-                r.append(f" - args {array_to_range(x['args']):<3} {order}: {regs}")
+                r.append(f" - args {array_to_range(x['args']):<3} {order_str}: {regs_str}")
 
             # e.g
             # inconsistencies = [ ("t0", "[stack]"), ("t1", "a1") ]
