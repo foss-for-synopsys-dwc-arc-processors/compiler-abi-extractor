@@ -65,6 +65,44 @@ class ArgPassTests:
 
         return types
 
+    # e.g
+    # { "char": [
+    #   { "args": [1,2,3,4,5,6,7,8], "regs": [a0,a1,a2,a3,a4,a5,a6,a7], "order": None, "stack": None },
+    #   { "args": [9], "regs": None, "order": None, "stack": True }],
+    #   "int": [
+    #   { "args": [1,2,3,4,5,6,7,8], "regs": [a0,a1,a2,a3,a4,a5,a6,a7], "order": None, "stack": None },
+    #   { "args": [9], "regs": None, "order": None, "stack": True }],
+    #   "double": [
+    #   { "args": [1,2,3,4,5,6,7,8], "regs": [fa0,fa1,fa2,fa3,fa4,fa5,fa6,fa7], "order": None, "stack": None },
+    #   { "args": [9,10,11,12], "regs": [a0,a1,a2,a3,a4,a5,a6,a7], "order": [low, high], "stack": None }
+    #   { "args": [13], "regs": None, "order": [low, high], "stack": True }]
+    # }
+    def process_stage2(self, types):
+        result = {}
+        for x in types:
+            dtypes_k = " ".join(x["dtypes"])
+
+            # Create a new entry if the key does not exist
+            if dtypes_k not in result:
+                result[dtypes_k] = []
+
+            for y in result[dtypes_k]:
+                if y["order"] == x["order"] and y["stack"] == x["stack"]:
+                    y["args"].append(x["argc"])
+                    y["regs"].extend(x["regs"])
+                    break
+            else:
+                # If no matching entry was found, create a new one
+                result[dtypes_k].append({
+                    "args": [x["argc"]],
+                    "regs": x["regs"],
+                    "order": x["order"],
+                    "inconsistencies": x["inconsistencies"],
+                    "stack": x["stack"]
+                })
+
+        return result
+
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, stack, register_banks, argv):
         hutils = hexUtils.HexUtils(self.Target)
