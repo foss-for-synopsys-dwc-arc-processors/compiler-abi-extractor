@@ -129,6 +129,40 @@ class ArgPassTests:
 
         return merged_r
 
+    def process_summary(self, result):
+        # e.g
+        # n = [1,2,3,4,5,6,7,8]
+        # return 1-8
+        def array_to_range(n):
+            if len(n) == 1:
+                return str(n[0])
+            if all(n[i] + 1 == n[i + 1] for i in range(len(n) - 1)):
+                return f"{n[0]}-{n[-1]}"
+            return ", ".join(map(str, n))
+
+        r = ["Argument passing test:"]
+
+        # e.g
+        # - char : int
+        #   - args 1-8 : a0 a1 a2 a3 a4 a5 a6 a7
+        #   - args 9   : [stack]
+        # - double
+        #   - args 1-8 : fa0 fa1 fa2 fa3 fa4 fa5 fa6 fa7
+        #   - args 9-12 [low, high]: a0 a1 a2 a3 a4 a5 a6 a7
+        #   - args 13  : [stack]
+        for k, v in result.items():
+            r.append(f"- {' : '.join(k.split())}")
+
+            for x in v:
+                order = x["order"] or ""
+                regs = " ".join(x["regs"]) if x["regs"] else "[stack]" if x["stack"] else ""
+
+                r.append(f" - args {array_to_range(x['args']):<3} {order}: {regs}")
+
+        r.append("")
+
+        return "\n".join(r)
+
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, stack, register_banks, argv):
         hutils = hexUtils.HexUtils(self.Target)
