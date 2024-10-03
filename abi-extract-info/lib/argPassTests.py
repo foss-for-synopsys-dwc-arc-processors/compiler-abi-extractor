@@ -32,6 +32,39 @@ class ArgPassTests:
         self.Target = Target
         self.results = []
 
+    # e.g
+    # { "dtype": [double], "argc": 1, "regs": [fa0], "order": None, "inconsistencies": None, "stack": None }
+    # ...
+    # { "dtype": [double], "argc": 9, "regs": [a0, a1], "order": [low, high], "inconsistencies": None, "stack": None }
+    # ...
+    # { "dtype": [double], "argc": 13, "regs": None, "order": [low, high], "inconsistencies": None, "stack": True }
+    def process_stage1(self, results):
+        types = []
+        for dtype, iterations in results.items():
+            dtype = dtype.replace(" ", "_")
+
+            duplicates = set()
+            for citeration in iterations:
+                argc = citeration["argc"]
+                # Filter out duplicates from registers
+                regs = [item for item in citeration["registers"] if item not in duplicates]
+                order = citeration["pairs_order"]
+                inconsistencies = citeration["inconsistencies"]
+                stack = True if citeration["value_in_stack"] else False
+
+                types.append({
+                    "dtypes": [dtype],
+                    "argc": argc,
+                    "regs": regs,
+                    "order": order,
+                    "inconsistencies": inconsistencies,
+                    "stack": stack
+                })
+
+                duplicates.update(citeration["registers"])
+
+        return types
+
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, stack, register_banks, argv):
         hutils = hexUtils.HexUtils(self.Target)
