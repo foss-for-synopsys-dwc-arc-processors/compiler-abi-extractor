@@ -137,6 +137,7 @@ def do_argpass(Driver, Report, Target):
         arg_pass_tests = argPassTests.ArgPassTests(Target)
 
         dtype_sizeof = Target.get_type_details(dtype)["size"]
+        results[dtype] = []
 
         argc = 1
         while (True):
@@ -162,6 +163,7 @@ def do_argpass(Driver, Report, Target):
             # Run the test to check if the value is in the stack
             citeration = arg_pass_tests.run_test(stack, reg_banks, argv)
 
+            results[dtype].append(citeration)
             if citeration["value_in_stack"]:
                 break
 
@@ -171,40 +173,12 @@ def do_argpass(Driver, Report, Target):
 
             argc += 1
 
-        # Get the last iteration results
-        last_iteration = citeration
-        argc = last_iteration["argc"] - 1
-        argr = last_iteration["registers"]
-        are_values_on_stack = last_iteration["value_in_stack"]
-        are_values_splitted = last_iteration["pairs_order"]
-        inconsistencies = last_iteration["inconsistencies"]
-
         Target.set_argument_registers_2(dtype, citeration["registers"])
 
-        # Initialize the results dictionary for the current argument count,
-        # if not already present.
-        if argc not in results:
-            results[argc] = { "type": [], "regs": [],
-                              "common_regs": [], "noncommon_regs": [],
-                              "are_values_on_stack": False,
-                              "are_values_splitted": [],
-                              "inconsistencies": [] }
-
-        # Append the current datatype and register information to the results
-        results[argc]["type"].append(dtype)
-        results[argc]["regs"].append(argr)
-        results[argc]["are_values_on_stack"] = are_values_on_stack
-        results[argc]["are_values_splitted"] = are_values_splitted
-        results[argc]["inconsistencies"] = inconsistencies
-
-    # Process the results to extract common and non-common registers used.
-    for rkey, rvalue in results.items():
-        common_regs, noncommon_regs = arg_pass_tests.extract_common_regs(rvalue["regs"])
-        rvalue["common_regs"] = common_regs
-        rvalue["noncommon_regs"] = noncommon_regs
+    # Process the results
+    Content = arg_pass_tests.process_stages(results)
 
     # Write a summary report from the results.
-    Content = arg_pass_tests.create_summary_string(results)
     open("tmp/out_argPassTests.sum", "w").write(Content)
     Report.append("tmp/out_argPassTests.sum")
 
