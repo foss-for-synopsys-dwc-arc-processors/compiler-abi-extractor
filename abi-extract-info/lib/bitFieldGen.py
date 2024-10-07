@@ -244,13 +244,13 @@ class BitFieldGenerator:
         return "".join(bvalue.split()[::-1])
 
     # Generate a name for the datatype.
-    def get_name(self, data):
-        # Create the initial name from the data types
-        base_name = "_".join(i["dtype"] for i in data)
+    def get_name(self, dtype):
+        # Create the initial name from the data type
+        base_name = f"{dtype}"
 
         # Initialize the name to the base name
-        name = base_name
-        count = 2
+        name = f"{base_name}_{count}"
+        count = 0
 
         # Check for name collisions and increment count as needed
         while name in self.names:
