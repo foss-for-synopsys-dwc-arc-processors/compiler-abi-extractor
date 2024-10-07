@@ -275,7 +275,7 @@ union union_{name} {{
 
     def generate_calculate(self, name, dtype, bitfields):
         # e.g
-        # void calculate_short_short (void) {
+        # void calculate_short_0 (void) {
         self.append(f"void calculate_{name} (void) {{")
 
         tmp_str = ""
