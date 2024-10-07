@@ -355,10 +355,11 @@ union union_{name} {{
 
     def generate(self):
         self.generate_includes()
-        for d in self.data:
-            name = self.get_name(d)
-            self.generate_struct_union(name, d)
-            self.generate_calculate(name, d)
+        for dtype, data in self.data.items():
+            for bitfields in data:
+                name = self._get_name(dtype)
+                self._generate_struct_union(name, dtype, bitfields)
+                self._generate_calculate(name, dtype, bitfields)
 
         self.generate_main()
         return self.get_result()
