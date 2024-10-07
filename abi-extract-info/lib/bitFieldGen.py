@@ -63,7 +63,8 @@ For short example:
 """
 
 class BitFieldGenerator:
-    def __init__(self):
+    def __init__(self, Target):
+        self.Target = Target
         self.result = []
         self.names = []
         self.data = {
@@ -364,8 +365,8 @@ union union_{name} {{
         self.generate_main()
         return self.get_result()
 
-def generate():
-    return BitFieldGenerator().generate()
+def generate(Target):
+    return BitFieldGenerator(Target).generate()
 
 if __name__ == "__main__":
     print(generate())
