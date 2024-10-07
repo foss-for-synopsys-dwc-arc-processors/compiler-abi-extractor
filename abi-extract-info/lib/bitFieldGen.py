@@ -286,6 +286,10 @@ union union_{name} {{
             tmp_str += f".x{i} = {hvalue}, "
             hvalues.append(hvalue)
 
+        # e.g
+        # union union_short_0 test = { .s = { .x = 0x2AA, .y = 0xDB6 } };
+        self.append(f"  union union_{name} test = {{ .s = {{ {''.join(tmp_str)} }} }};")
+
         bfields_sum = sum(bitfields)
         sizeof = self.Target.get_type_details(dtype)["size"]
         sizeof *= 8 # FIXME: Convert bytes to bits.
@@ -295,14 +299,6 @@ union union_{name} {{
         # e.g
         # printf("short:>:");
         self.append(f'printf("{name}:{sign}:");')
-
-        # e.g
-        # union union_short_0 test = { .s = { .x = 0x2AA, .y = 0xDB6 } };
-        self.append(f"  union union_{name} test = {{ .s = {{ {''.join(tmp_str)} }} }};")
-
-        # e.g
-        # printf("short_short:>:");
-        self.append(f'printf("{name}:{data[0]["sign"]}:");')
 
         bvalues = []
         for hvalue in hvalues:
