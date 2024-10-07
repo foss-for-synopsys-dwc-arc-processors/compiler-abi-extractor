@@ -230,12 +230,18 @@ class BitFieldGenerator:
 
         return bvalue
 
-    # Convert little endian to big endian.
-    def binary_le_to_be(self, le):
-        le = le.replace(" ", "")
-        le = self.pad_mult_4(le)
-        le = self.format_binary(le, 8)
-        return " ".join(le.split()[::-1])
+    # Convert binary value from little endian to big endian.
+    def little_to_big_endian(self, bvalue):
+        # (e.g) bvalue =      1101 1011 0110 NNNN NN10 1010 1010
+        #   bvalue_pad = NNNN 1101 1011 0110 NNNN NN10 1010 1010
+        bvalue_pad = self.pad_mult_4(bvalue)
+
+        # Add a space between each 8 bits.
+        # (e.g) le = NNNN1101 10110110 NNNNNN10 10101010
+        bvalue = self.format_binary(bvalue_pad, 8)
+
+        # (e.g) return 10101010 NNNNNN10 10110110 NNNN1101
+        return "".join(bvalue.split()[::-1])
 
     # Generate a name for the datatype.
     def get_name(self, data):
