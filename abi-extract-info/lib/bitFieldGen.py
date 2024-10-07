@@ -381,9 +381,9 @@ union union_{name} {{
         self.generate_includes()
         for dtype, data in self.data.items():
             for bitfields in data:
-                name = self._get_name(dtype)
-                self._generate_struct_union(name, dtype, bitfields)
-                self._generate_calculate(name, dtype, bitfields)
+                name = self.get_name(dtype)
+                self.generate_struct_union(name, dtype, bitfields)
+                self.generate_calculate(name, dtype, bitfields)
 
         self.generate_main()
         return self.get_result()
