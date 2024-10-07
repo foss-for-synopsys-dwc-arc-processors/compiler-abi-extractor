@@ -62,6 +62,8 @@ For short example:
     The memory layout is `0x0F` `0xFF` `0x03` `0xFF`
 """
 
+from lib import helper
+
 class BitFieldGenerator:
     def __init__(self, Target):
         self.Target = Target
