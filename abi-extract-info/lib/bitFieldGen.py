@@ -138,59 +138,6 @@ class BitFieldGenerator:
         # Reverse back and strip the trailing space
         return formatted_str[::-1].strip()
 
-    # Convert binary to hexa
-    def binary_to_hexa(self, bvalue):
-        # Remove any spaces in the binary value
-        bvalue = bvalue.replace(" ", "")
-
-        # Remove undefined digits
-        bvalue = bvalue.replace("N", "0")
-
-        # Ensure the binary value is a valid length (multiple of 4)
-        while len(bvalue) % 4 != 0:
-            bvalue = "0" + bvalue
-
-        # Create a mapping of binary to hexadecimal
-        binary_to_hex_map = {
-        '0000': '0', '0001': '1', '0010': '2', '0011': '3',
-        '0100': '4', '0101': '5', '0110': '6', '0111': '7',
-        '1000': '8', '1001': '9', '1010': 'A', '1011': 'B',
-        '1100': 'C', '1101': 'D', '1110': 'E', '1111': 'F'
-        }
-
-        hvalue = ""
-        # Process each 4-bit chunk
-        for i in range(0, len(bvalue), 4):
-            four_bits = bvalue[i:i + 4]
-            hvalue += binary_to_hex_map[four_bits]
-
-        return "0x" + hvalue
-
-    # Convert hexadecimal to binary with leading zeros removed
-    def hexa_to_binary(self, hvalue):
-        # Remove the '0x' prefix if present
-        if hvalue.startswith("0x"):
-            hvalue = hvalue[2:]
-
-        # Create a mapping of hexadecimal to binary
-        hex_to_binary_map = {
-            '0': '0000', '1': '0001', '2': '0010', '3': '0011',
-            '4': '0100', '5': '0101', '6': '0110', '7': '0111',
-            '8': '1000', '9': '1001', 'A': '1010', 'B': '1011',
-            'C': '1100', 'D': '1101', 'E': '1110', 'F': '1111'
-        }
-
-        bvalue = ""
-        # Process each hexadecimal digit
-        for digit in hvalue.upper():
-            bvalue += hex_to_binary_map[digit]
-
-        # Remove leading zeros
-        bvalue = bvalue.lstrip('0')
-
-        # Return '0' if the result is an empty string (e.g., for input '0x0')
-        return bvalue if bvalue else '0'
-
     # Add padding to multiple of 4.
     def pad_mult_4(self, bvalue):
          # Remove any spaces in the binary value
@@ -302,7 +249,7 @@ union union_{name} {{
 
         bvalues = []
         for hvalue in hvalues:
-            bvalues.append(self.hexa_to_binary(hvalue))
+            bvalues.append(helper.hexa_to_binary(hvalue))
 
         # e.g
         # if ((test.value & 0x3FFFFF) == 0x36DAAA)
@@ -313,7 +260,7 @@ union union_{name} {{
         bvalue_little_endian_no_pad = self.no_extra_padding(bvalues)
         bmask_little_endian_no_pad  = self.create_mask(bvalue_little_endian_no_pad)
         self.append(f"""
-    if ((test.value & {self.binary_to_hexa(bmask_little_endian_no_pad)}) == {self.binary_to_hexa(bvalue_little_endian_no_pad)})
+    if ((test.value & {helper.binary_to_hexa(bmask_little_endian_no_pad)}) == {helper.binary_to_hexa(bvalue_little_endian_no_pad)})
     {{
         printf("No extra padding.:");
         printf("Little-endian.");
@@ -328,7 +275,7 @@ union union_{name} {{
         bvalue_big_endian_no_pad = self.little_to_big_endian(bvalue_little_endian_no_pad)
         bmask_big_endian_no_pad  = self.create_mask(bvalue_big_endian_no_pad)
         self.append(f"""
-    if ((test.value & {self.binary_to_hexa(bmask_big_endian_no_pad)}) == {self.binary_to_hexa(bvalue_big_endian_no_pad)})
+    if ((test.value & {helper.binary_to_hexa(bmask_big_endian_no_pad)}) == {helper.binary_to_hexa(bvalue_big_endian_no_pad)})
     {{
         printf("No extra padding.:");
         printf("Big-endian.");
@@ -343,7 +290,7 @@ union union_{name} {{
         bvalue_little_endian_pad = self.extra_padding(bvalues, dtype)
         bmask_little_endian_pad  = self.create_mask(bvalue_little_endian_pad)
         self.append(f"""
-    if ((test.value & {self.binary_to_hexa(bmask_little_endian_pad)}) == {self.binary_to_hexa(bvalue_little_endian_pad)})
+    if ((test.value & {helper.binary_to_hexa(bmask_little_endian_pad)}) == {helper.binary_to_hexa(bvalue_little_endian_pad)})
     {{
         printf("Extra padding.:");
         printf("Little-endian.");
@@ -358,7 +305,7 @@ union union_{name} {{
         bvalue_big_endian_pad = self.little_to_big_endian(bvalue_little_endian_pad)
         bmask_big_endian_pad  = self.create_mask(bvalue_big_endian_pad)
         self.append(f"""
-    if ((test.value & {self.binary_to_hexa(bmask_big_endian_pad)}) == {self.binary_to_hexa(bvalue_big_endian_pad)})
+    if ((test.value & {helper.binary_to_hexa(bmask_big_endian_pad)}) == {helper.binary_to_hexa(bvalue_big_endian_pad)})
     {{
         printf("Extra padding.:");
         printf("Big-endian.");
