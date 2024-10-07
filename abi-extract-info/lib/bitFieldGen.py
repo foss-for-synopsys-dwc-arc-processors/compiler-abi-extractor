@@ -249,6 +249,9 @@ class BitFieldGenerator:
             self.append(f"  unsigned {dtype} x{i} : {bfield};")
         self.append("};")
 
+        # FIXME
+        tmp = "long long" if dtype == "int" else "long"
+
          # e.g
          # union union_short_0 {
          #     struct struct_short_0 s;
@@ -257,7 +260,7 @@ class BitFieldGenerator:
         self.append(f"""
 union union_{name} {{
     struct struct_{name} s;
-    unsigned {long} value;
+    unsigned {tmp} value;
 }};""")
 
     def generate_calculate(self, name, dtype, bitfields):
