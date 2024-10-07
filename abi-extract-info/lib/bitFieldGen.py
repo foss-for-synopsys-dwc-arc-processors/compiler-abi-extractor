@@ -167,7 +167,8 @@ class BitFieldGenerator:
 
     # Concatenate binary values without adding padding.
     def no_extra_padding(self, bvalues):
-        return ''.join(b.replace(" ", "") for b in reversed(bvalues))
+        bvalue = ''.join(b.replace(" ", "") for b in reversed(bvalues))
+        return self.pad_mult_4(bvalue)
 
     # Add padding to fit each value in their datatype size.
     def extra_padding(self, bvalues, dtype):
