@@ -88,21 +88,6 @@ class BitFieldGenerator:
         self.append("#include <stdint.h>")
         self.append("")
 
-    # Convert decimal to hexa
-    def decimal_to_hexa(self, decimal_value):
-        if decimal_value == 0:
-            return "0"
-
-        hex_value = ""
-        hex_digits = "0123456789ABCDEF"
-
-        while decimal_value > 0:
-            remainder = decimal_value % 16
-            hex_value = hex_digits[remainder] + hex_value
-            decimal_value //= 16
-
-        return "0x" + hex_value
-
     # Extend binary value with `N` to fit in a given datatype size
     def extend_with_undefined(self, bvalue, dtype):
         sizeof = self.Target.get_type_details(dtype)["size"]
