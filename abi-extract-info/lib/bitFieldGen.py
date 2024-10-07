@@ -230,6 +230,16 @@ class BitFieldGenerator:
 
         return bvalue
 
+    # Create a mask from a binary value.
+    def create_mask(self, bvalue):
+        # e.g
+        # bvalue = NNNN 1101 1011 0110 NNNN NN10 1010 1010
+        # bmask  = 0000 1111 1111 1111 0000 0011 1111 1111
+        bmask = bvalue.replace("0", "1")
+        bmask = bmask.replace("N", "0")
+
+        return bmask
+
     # Convert binary value from little endian to big endian.
     def little_to_big_endian(self, bvalue):
         # (e.g) bvalue =      1101 1011 0110 NNNN NN10 1010 1010
