@@ -285,56 +285,60 @@ union union_{name} {{
             bvalues.append(self.hexa_to_binary(hvalue))
 
         # e.g
-        # if ((test.value & 0x36DAAA) == 0x36DAAA)
+        # if ((test.value & 0x3FFFFF) == 0x36DAAA)
         # {
         #   printf("No extra padding.:");
         #   printf("Little-endian.");
         # }
-        le_no_pad = self.no_extra_padding(bvalues)
+        bvalue_little_endian_no_pad = self.no_extra_padding(bvalues)
+        bmask_little_endian_no_pad  = self.create_mask(bvalue_little_endian_no_pad)
         self.append(f"""
-    if ((test.value & {self.binary_to_hexa(le_no_pad)}) == {self.binary_to_hexa(le_no_pad)})
+    if ((test.value & 0b{self.binary_to_hexa(bmask_little_endian_no_pad)}) == {self.binary_to_hexa(bvalue_little_endian_no_pad)})
     {{
         printf("No extra padding.:");
         printf("Little-endian.");
     }}""")
 
         # e.g
-        # else if ((test.value & 0xAADA36) == 0xAADA36)
+        # else if ((test.value & 0xFFFF3F) == 0xAADA36)
         # {
         #   printf("No extra padding.:");
         #   printf("Big endian.");
         # }
-        be_no_pad = self.binary_le_to_be(le_no_pad)
+        bvalue_big_endian_no_pad = self.little_to_big_endian(bvalue_little_endian_no_pad)
+        bmask_big_endian_no_pad  = self.create_mask(bvalue_big_endian_no_pad)
         self.append(f"""
-    if ((test.value & {self.binary_to_hexa(be_no_pad)}) == {self.binary_to_hexa(be_no_pad)})
+    if ((test.value & 0b{self.binary_to_hexa(bmask_big_endian_no_pad)}) == {self.binary_to_hexa(bvalue_big_endian_no_pad)})
     {{
         printf("No extra padding.:");
         printf("Big-endian.");
     }}""")
 
         # e.g
-        # else if ((test.value & 0xDB602AA) == 0xDB602AA)
+        # else if ((test.value & FFF03FF) == 0xDB602AA)
         # {
         #   printf("Extra padding.:");
         #   printf("Little endian.");
         # }
-        le_pad = self.extra_padding(bvalues, data[0]["dtype"])
+        bvalue_little_endian_pad = self.extra_padding(bvalues, dtype)
+        bmask_little_endian_pad  = self.create_mask(bvalue_little_endian_pad)
         self.append(f"""
-    if ((test.value & {self.binary_to_hexa(le_pad)}) == {self.binary_to_hexa(le_pad)})
+    if ((test.value & 0b{self.binary_to_hexa(bmask_little_endian_pad)}) == {self.binary_to_hexa(bvalue_little_endian_pad)})
     {{
         printf("Extra padding.:");
         printf("Little-endian.");
     }}""")
 
         # e.g
-        # else if ((test.value & 0xAA02DB6D) == 0xAA02B6D)
+        # else if ((test.value & 0xFF03FF0F) == 0xAA02B6D)
         # {
         #   printf("Extra padding.:");
         #   printf("Big endian.");
         # }
-        be_pad = self.binary_le_to_be(le_pad)
+        bvalue_big_endian_pad = self.little_to_big_endian(bvalue_little_endian_pad)
+        bmask_big_endian_pad  = self.create_mask(bvalue_big_endian_pad)
         self.append(f"""
-    if ((test.value & {self.binary_to_hexa(be_pad)}) == {self.binary_to_hexa(be_pad)})
+    if ((test.value & 0b{self.binary_to_hexa(bmask_big_endian_pad)}) == {self.binary_to_hexa(bvalue_big_endian_pad)})
     {{
         printf("Extra padding.:");
         printf("Big-endian.");
