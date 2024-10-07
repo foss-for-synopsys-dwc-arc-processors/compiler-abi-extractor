@@ -66,47 +66,10 @@ class BitFieldGenerator:
     def __init__(self):
         self.result = []
         self.names = []
-        self.data = [
-        ({
-            "dtype": "short",   "var": "x",
-            "bfield": 10,       "value": "10 1010 1010",
-            "value_dtype": "long", "sign": ">"
-        },
-        {
-            "dtype": "short",   "var": "y",
-            "bfield": 12,       "value": "1101 1011 0110",
-            "value_dtype": "long", "sign": ">"
-        }),
-        ({
-            "dtype": "short",   "var": "x",
-            "bfield": 6,        "value": "11 0011",
-            "value_dtype": "long", "sign": "<"
-        },
-        {
-            "dtype": "short",   "var": "y",
-            "bfield": 8,        "value": "1001 1001",
-            "value_dtype": "long", "sign": "<"
-        }),
-        ({
-            "dtype": "int",     "var": "x",
-            "bfield": 18,       "value": "11 1101 1101 0110 0101",
-            "value_dtype": "long long", "sign": ">"
-        },
-        {
-            "dtype": "int",     "var": "y",
-            "bfield": 19,       "value": "111 1101 1010 1010 0110",
-            "value_dtype": "long long", "sign": ">"
-        }),
-        ({
-            "dtype": "int",     "var": "x",
-            "bfield": 10,       "value": "10 1010 1010",
-            "value_dtype": "long", "sign": "<"
-        },
-        {
-            "dtype": "int",     "var": "y",
-            "bfield": 12,       "value": "1101 1011 0110",
-            "value_dtype": "long", "sign": "<"
-        }),       ]
+        self.data = {
+            "short": [(10, 12),  (6,  8)],
+            "int":   [(18, 19), (10, 12)],
+        }
 
     def append(self, W):
         self.result.append(W)
