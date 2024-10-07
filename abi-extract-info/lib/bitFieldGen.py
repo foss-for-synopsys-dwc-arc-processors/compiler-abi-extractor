@@ -313,7 +313,7 @@ union union_{name} {{
         bvalue_little_endian_no_pad = self.no_extra_padding(bvalues)
         bmask_little_endian_no_pad  = self.create_mask(bvalue_little_endian_no_pad)
         self.append(f"""
-    if ((test.value & 0b{self.binary_to_hexa(bmask_little_endian_no_pad)}) == {self.binary_to_hexa(bvalue_little_endian_no_pad)})
+    if ((test.value & {self.binary_to_hexa(bmask_little_endian_no_pad)}) == {self.binary_to_hexa(bvalue_little_endian_no_pad)})
     {{
         printf("No extra padding.:");
         printf("Little-endian.");
@@ -328,7 +328,7 @@ union union_{name} {{
         bvalue_big_endian_no_pad = self.little_to_big_endian(bvalue_little_endian_no_pad)
         bmask_big_endian_no_pad  = self.create_mask(bvalue_big_endian_no_pad)
         self.append(f"""
-    if ((test.value & 0b{self.binary_to_hexa(bmask_big_endian_no_pad)}) == {self.binary_to_hexa(bvalue_big_endian_no_pad)})
+    if ((test.value & {self.binary_to_hexa(bmask_big_endian_no_pad)}) == {self.binary_to_hexa(bvalue_big_endian_no_pad)})
     {{
         printf("No extra padding.:");
         printf("Big-endian.");
@@ -343,7 +343,7 @@ union union_{name} {{
         bvalue_little_endian_pad = self.extra_padding(bvalues, dtype)
         bmask_little_endian_pad  = self.create_mask(bvalue_little_endian_pad)
         self.append(f"""
-    if ((test.value & 0b{self.binary_to_hexa(bmask_little_endian_pad)}) == {self.binary_to_hexa(bvalue_little_endian_pad)})
+    if ((test.value & {self.binary_to_hexa(bmask_little_endian_pad)}) == {self.binary_to_hexa(bvalue_little_endian_pad)})
     {{
         printf("Extra padding.:");
         printf("Little-endian.");
@@ -358,7 +358,7 @@ union union_{name} {{
         bvalue_big_endian_pad = self.little_to_big_endian(bvalue_little_endian_pad)
         bmask_big_endian_pad  = self.create_mask(bvalue_big_endian_pad)
         self.append(f"""
-    if ((test.value & 0b{self.binary_to_hexa(bmask_big_endian_pad)}) == {self.binary_to_hexa(bvalue_big_endian_pad)})
+    if ((test.value & {self.binary_to_hexa(bmask_big_endian_pad)}) == {self.binary_to_hexa(bvalue_big_endian_pad)})
     {{
         printf("Extra padding.:");
         printf("Big-endian.");
