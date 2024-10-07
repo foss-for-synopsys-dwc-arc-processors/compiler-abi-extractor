@@ -259,21 +259,30 @@ union union_{name} {{
     unsigned {long} value;
 }};""")
 
-    def generate_calculate(self, name, data):
+    def generate_calculate(self, name, dtype, bitfields):
         # e.g
         # void calculate_short_short (void) {
         self.append(f"void calculate_{name} (void) {{")
 
+        tmp_str = ""
+        hvalues = []
+        for i, bfield in enumerate(bitfields):
+            bvalue = helper.generate_binary_value(bfield)
+            hvalue = helper.binary_to_hexa(bvalue)
+            tmp_str += f".x{i} = {hvalue}, "
+            hvalues.append(hvalue)
+
         # e.g
-        # union short_short_union test = { .s = { .x = 0x2AA, .y = 0xDB6 } };
-        tmp = [f'.{i["var"]} = {self.binary_to_hexa(i["value"])}, ' for i in data]
-        self.append(f"  union {name}_union test = {{ .s = {{ {' '.join(tmp)} }} }};")
+        # union union_short_0 test = { .s = { .x = 0x2AA, .y = 0xDB6 } };
+        self.append(f"  union union_{name} test = {{ .s = {{ {''.join(tmp_str)} }} }};")
 
         # e.g
         # printf("short_short:>:");
         self.append(f'printf("{name}:{data[0]["sign"]}:");')
 
-        bvalues = [i["value"] for i in data]
+        bvalues = []
+        for hvalue in hvalues:
+            bvalues.append(self.hexa_to_binary(hvalue))
 
         # e.g
         # if ((test.value & 0x36DAAA) == 0x36DAAA)
