@@ -181,6 +181,31 @@ class BitFieldGenerator:
 
         return "0x" + hvalue
 
+    # Convert hexadecimal to binary with leading zeros removed
+    def hexa_to_binary(self, hvalue):
+        # Remove the '0x' prefix if present
+        if hvalue.startswith("0x"):
+            hvalue = hvalue[2:]
+
+        # Create a mapping of hexadecimal to binary
+        hex_to_binary_map = {
+            '0': '0000', '1': '0001', '2': '0010', '3': '0011',
+            '4': '0100', '5': '0101', '6': '0110', '7': '0111',
+            '8': '1000', '9': '1001', 'A': '1010', 'B': '1011',
+            'C': '1100', 'D': '1101', 'E': '1110', 'F': '1111'
+        }
+
+        bvalue = ""
+        # Process each hexadecimal digit
+        for digit in hvalue.upper():
+            bvalue += hex_to_binary_map[digit]
+
+        # Remove leading zeros
+        bvalue = bvalue.lstrip('0')
+
+        # Return '0' if the result is an empty string (e.g., for input '0x0')
+        return bvalue if bvalue else '0'
+
     # Add padding to multiple of 4.
     def pad_mult_4(self, bvalue):
          # Remove any spaces in the binary value
