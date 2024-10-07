@@ -215,14 +215,20 @@ class BitFieldGenerator:
         return "0x" + hvalue
 
     # Add padding to multiple of 4.
-    def pad_mult_4(self, binary):
+    def pad_mult_4(self, bvalue):
+         # Remove any spaces in the binary value
+        bvalue = bvalue.replace(" ", "")
+
         # Calculate the number of zeros needed
-        length = len(binary)
+        # e.g
+        # bvalue = 1010101010
+        # return NN1010101010
+        length = len(bvalue)
         if length % 4 != 0:
             zeros_to_add = 4 - (length % 4)
-            binary = "0" * zeros_to_add + binary
+            bvalue = "N" * zeros_to_add + bvalue
 
-        return binary
+        return bvalue
 
     # Convert little endian to big endian.
     def binary_le_to_be(self, le):
