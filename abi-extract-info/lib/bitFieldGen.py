@@ -194,6 +194,9 @@ class BitFieldGenerator:
         # Remove any spaces in the binary value
         bvalue = bvalue.replace(" ", "")
 
+        # Remove undefined digits
+        bvalue = bvalue.replace("N", "0")
+
         # Ensure the binary value is a valid length (multiple of 4)
         while len(bvalue) % 4 != 0:
             bvalue = "0" + bvalue
