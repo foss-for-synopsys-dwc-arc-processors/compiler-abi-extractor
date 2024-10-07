@@ -236,8 +236,8 @@ class BitFieldGenerator:
         base_name = f"{dtype}"
 
         # Initialize the name to the base name
-        name = f"{base_name}_{count}"
         count = 0
+        name = f"{base_name}_{count}"
 
         # Check for name collisions and increment count as needed
         while name in self.names:
