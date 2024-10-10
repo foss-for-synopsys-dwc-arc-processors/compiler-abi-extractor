@@ -84,6 +84,24 @@ class BitFieldTests:
 
         return entries
 
+    # e.g
+    # [{'dtype': ['short'], 'sign': '>', 'content': 'unknown'},
+    #  {'dtype': ['short', 'int', 'long', 'long_long'], 'sign': '<', 'content': 'No extra padding.:Little-endian.'},
+    #  {'dtype': ['int', 'long', 'long_long'], 'sign': '>', 'content': 'Extra padding.:Little-endian.'}]
+    def process_stage3(self, entries):
+        # Merge entries based on sign and content
+        for entry in entries:
+            for entry2 in entries.copy():
+                if entry["dtype"] == entry2["dtype"]:
+                    continue
+
+                # If sign and content are the same, merge dtype
+                if entry["sign"] == entry2["sign"] and entry["content"] == entry2["content"]:
+                    entry["dtype"].extend(entry2["dtype"])
+                    entries.remove(entry2)  # Remove merged entry
+
+        return entries
+
     def process_results(self, content):
         lines = content.split("\n")
         types = []
