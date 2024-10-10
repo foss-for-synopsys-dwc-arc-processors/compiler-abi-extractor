@@ -91,7 +91,7 @@ class BitFieldGenerator:
     # Generate 3 greater than and 3 less than examples
     # for each datatype.
     def generate_data(self):
-        dtypes = ["short", "int", "long", "long long"]
+        dtypes = ["char", "short", "int", "long", "long long"]
 
         data = {}
         for dtype in dtypes:
@@ -327,6 +327,82 @@ class BitFieldGenerator:
         self.append('printf("\\n");')
         self.append("}")
 
+    def generate_calculate_byte(self, name, dtype, bitfields):
+        # e.g
+        # void calculate_char_0 (void) {
+        self.append(f"void calculate_{name} (void) {{")
+
+        tmp_str = ""
+        hvalues = []
+        for i, bfield in enumerate(bitfields):
+            bvalue = helper.generate_binary_value(bfield, True)
+            hvalue = helper.binary_to_hexa(bvalue)
+            tmp_str += f".x{i} = {hvalue}, "
+            hvalues.append(hvalue)
+
+        # e.g
+        # union union_char_0 test = { .s = { .x0 = 0x2A, .x1 = 0x15 } };
+        self.append(f"  union union_{name} test = {{ .s = {{ {''.join(tmp_str)} }} }};")
+
+        bfields_sum = sum(bitfields)
+        sizeof = self.Target.get_type_details(dtype)["size"]
+        sizeof *= 8 # FIXME: Convert bytes to bits.
+        # Calculate if greater.
+        sign = ">" if bfields_sum > sizeof else "<"
+
+        # e.g
+        # printf("char:>:");
+        self.append(f'printf("{name}:{sign}:");')
+
+        bvalues = []
+        for hvalue in hvalues:
+            bvalues.append(helper.hexa_to_binary(hvalue))
+
+        # e.g
+        # if ((*test.values & 0x7FF) == 0x56A)
+        # {
+        #     printf("No extra padding.");
+        # }
+        bvalue_little_endian_no_pad = self.no_extra_padding(bvalues)
+        bmask_little_endian_no_pad  = self.create_mask(bvalue_little_endian_no_pad)
+        self.append(f"""
+    if ((*test.values & {helper.binary_to_hexa(bmask_little_endian_no_pad)}) == {helper.binary_to_hexa(bvalue_little_endian_no_pad)})
+    {{
+        printf("No extra padding.");
+    }}""")
+
+        # e.g
+        # if ((*test.values & 0x1F3F) == 0x152A)
+        # {
+        #     printf("Extra padding.");
+        # }
+        bvalue_little_endian_pad = self.extra_padding(bvalues, dtype)
+        bmask_little_endian_pad  = self.create_mask(bvalue_little_endian_pad)
+        self.append(f"""
+    if ((*test.values & {helper.binary_to_hexa(bmask_little_endian_pad)}) == {helper.binary_to_hexa(bvalue_little_endian_pad)})
+    {{
+        printf("Extra padding.:");
+        printf("Little-endian.");
+    }}""")
+
+        # e.g
+        # if ((*test.values & 0x3F1F) == 0x2A15)
+        # {
+        #     printf("Extra padding.:");
+        #     printf("Big-endian.");
+        # }
+        bvalue_big_endian_pad = self.little_to_big_endian(bvalue_little_endian_pad)
+        bmask_big_endian_pad  = self.create_mask(bvalue_big_endian_pad)
+        self.append(f"""
+    if ((*test.values & {helper.binary_to_hexa(bmask_big_endian_pad)}) == {helper.binary_to_hexa(bvalue_big_endian_pad)})
+    {{
+        printf("Extra padding.:");
+        printf("Big-endian.");
+    }}""")
+
+        self.append('printf("\\n");')
+        self.append("}")
+
     def generate_calculate_for_split(self, name, dtype, bitfields):
         # e.g
         # void calculate_long_long_0 (void) {
@@ -469,9 +545,13 @@ class BitFieldGenerator:
                 dtype_sizeof     = self.Target.get_type_details(dtype)["size"]
                 long_long_sizeof = self.Target.get_type_details("long long")["size"]
 
+                if dtype == "char":
+                    self.generate_calculate_byte(name, dtype, bitfields)
+
                 # If datatype size is less than `long long`, than dont split.
-                if dtype_sizeof < long_long_sizeof:
+                elif dtype_sizeof < long_long_sizeof:
                     self.generate_calculate(name, dtype, bitfields)
+
                 else:
                     self.generate_calculate_for_split(name, dtype, bitfields)
 
