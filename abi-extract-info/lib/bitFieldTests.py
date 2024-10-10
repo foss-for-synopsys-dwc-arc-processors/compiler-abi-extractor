@@ -156,5 +156,31 @@ short:<:No extra padding.:Little endian.
 int:>:Extra padding.:Little endian.
 int:<:No extra padding.:Little endian."""
 
+    content = """
+short_0:>:
+short_1:<:No extra padding.:Little-endian.
+short_2:>:
+short_3:<:No extra padding.:Little-endian.
+short_4:>:No extra padding.:Little-endian.Extra padding.:Little-endian.
+short_5:<:No extra padding.:Little-endian.
+int_0:>:Extra padding.:Little-endian.
+int_1:<:No extra padding.:Little-endian.
+int_2:>:Extra padding.:Little-endian.
+int_3:<:No extra padding.:Little-endian.
+int_4:>:Extra padding.:Little-endian.
+int_5:<:No extra padding.:Little-endian.
+long_0:>:Extra padding.:Little-endian.
+long_1:<:No extra padding.:Little-endian.
+long_2:>:Extra padding.:Little-endian.
+long_3:<:No extra padding.:Little-endian.No extra padding.:Big-endian.
+long_4:>:Extra padding.:Little-endian.
+long_5:<:No extra padding.:Little-endian.
+long_long_0:>:Extra padding.:Little-endian.
+long_long_1:<:No extra padding.:Little-endian.
+long_long_2:>:Extra padding.:Little-endian.
+long_long_3:<:No extra padding.:Little-endian.
+long_long_4:>:Extra padding.:Little-endian.
+long_long_5:<:No extra padding.:Little-endian.
+"""
     content = prepare_summary(content)
     print(content)
