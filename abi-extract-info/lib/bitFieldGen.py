@@ -233,7 +233,7 @@ class BitFieldGenerator:
         self.append(f" unsigned long long values[{len(bitfields)}];")
         self.append("};")
 
-    def generate_calculate(self, name, dtype, bitfields):
+    def generate_calculate_initial(self, name, dtype, bitfields):
         # e.g
         # void calculate_short_0 (void) {
         self.append(f"void calculate_{name} (void) {{")
@@ -263,6 +263,26 @@ class BitFieldGenerator:
         bvalues = []
         for hvalue in hvalues:
             bvalues.append(helper.hexa_to_binary(hvalue))
+
+        dtype_sizeof     = self.Target.get_type_details(dtype)["size"]
+        long_long_sizeof = self.Target.get_type_details("long long")["size"]
+        if dtype == "char":
+            self.generate_calculate_byte(dtype, bvalues)
+
+        # If datatype size is greater than `long long`, than split.
+        elif dtype_sizeof >= long_long_sizeof:
+            self.generate_calculate_for_split(dtype, bvalues)
+
+        else:
+            self.generate_calculate(dtype, bvalues)
+
+
+
+    def generate_calculate(self, dtype, bvalues):
+        # e.g
+        # void calculate_short_0 (void) {
+        # union union_short_0 test = { .s = { .x = 0x2AA, .y = 0xDB6 } };
+        # printf("short:>:");
 
         # e.g
         # if ((test.value & 0x3FFFFF) == 0x36DAAA)
@@ -327,36 +347,11 @@ class BitFieldGenerator:
         self.append('printf("\\n");')
         self.append("}")
 
-    def generate_calculate_byte(self, name, dtype, bitfields):
+    def generate_calculate_byte(self, dtype, bvalues):
         # e.g
         # void calculate_char_0 (void) {
-        self.append(f"void calculate_{name} (void) {{")
-
-        tmp_str = ""
-        hvalues = []
-        for i, bfield in enumerate(bitfields):
-            bvalue = helper.generate_binary_value(bfield, True)
-            hvalue = helper.binary_to_hexa(bvalue)
-            tmp_str += f".x{i} = {hvalue}, "
-            hvalues.append(hvalue)
-
-        # e.g
         # union union_char_0 test = { .s = { .x0 = 0x2A, .x1 = 0x15 } };
-        self.append(f"  union union_{name} test = {{ .s = {{ {''.join(tmp_str)} }} }};")
-
-        bfields_sum = sum(bitfields)
-        sizeof = self.Target.get_type_details(dtype)["size"]
-        sizeof *= 8 # FIXME: Convert bytes to bits.
-        # Calculate if greater.
-        sign = ">" if bfields_sum > sizeof else "<"
-
-        # e.g
         # printf("char:>:");
-        self.append(f'printf("{name}:{sign}:");')
-
-        bvalues = []
-        for hvalue in hvalues:
-            bvalues.append(helper.hexa_to_binary(hvalue))
 
         # e.g
         # if ((*test.values & 0x7FF) == 0x56A)
@@ -403,41 +398,15 @@ class BitFieldGenerator:
         self.append('printf("\\n");')
         self.append("}")
 
-    def generate_calculate_for_split(self, name, dtype, bitfields):
+    def generate_calculate_for_split(self, dtype, bvalues):
         # e.g
         # void calculate_long_long_0 (void) {
-        self.append(f"void calculate_{name} (void) {{")
-
-        tmp_str = ""
-        hvalues = []
-        for i, bfield in enumerate(bitfields):
-            bvalue = helper.generate_binary_value(bfield, True)
-            hvalue = helper.binary_to_hexa(bvalue)
-            tmp_str += f".x{i} = {hvalue}, "
-            hvalues.append(hvalue)
-
-        # e.g
         # union union_short_0 test = { .s = { .x = 0xBB6171D, .y = 0xA678 } };
-        self.append(f"  union union_{name} test = {{ .s = {{ {''.join(tmp_str)} }} }};")
-
-        bfields_sum = sum(bitfields)
-        sizeof = self.Target.get_type_details(dtype)["size"]
-        sizeof *= 8 # FIXME: Convert bytes to bits.
-        # Calculate if greater.
-        sign = ">" if bfields_sum > sizeof else "<"
-
-        # e.g
         # printf("long_long:<:");
-        self.append(f'printf("{name}:{sign}:");')
-
-        bvalues = []
-        for hvalue in hvalues:
-            bvalues.append(helper.hexa_to_binary(hvalue))
 
         self.append("""
     unsigned long long lower_bits = (*(test.values + 0) & 0xFFFFFFFF);
-    unsigned long long upper_bits = ((*(test.values + 0) >> 32));
-""")
+    unsigned long long upper_bits = ((*(test.values + 0) >> 32));""")
 
         # e.g
         # if ((lower_bits & 0xFFFFFFFF) == 0x8BB6171D &&
@@ -542,18 +511,7 @@ class BitFieldGenerator:
                 name = self.get_name(dtype)
                 self.generate_struct_union(name, dtype, bitfields)
 
-                dtype_sizeof     = self.Target.get_type_details(dtype)["size"]
-                long_long_sizeof = self.Target.get_type_details("long long")["size"]
-
-                if dtype == "char":
-                    self.generate_calculate_byte(name, dtype, bitfields)
-
-                # If datatype size is less than `long long`, than dont split.
-                elif dtype_sizeof < long_long_sizeof:
-                    self.generate_calculate(name, dtype, bitfields)
-
-                else:
-                    self.generate_calculate_for_split(name, dtype, bitfields)
+                self.generate_calculate_initial(name, dtype, bitfields)
 
         self.generate_main()
         return self.get_result()
