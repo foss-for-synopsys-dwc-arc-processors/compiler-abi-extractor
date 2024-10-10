@@ -180,6 +180,11 @@ class BitFieldGenerator:
         self.names.append(name)
         return name
 
+    # Split binary value as upper and lower bits.
+    def split_upper_lower(self, bvalue, bits=32):
+        upper_length = len(bvalue) - bits
+        return bvalue[:upper_length], bvalue[-bits:]
+
     def generate_struct_union(self, name, dtype, bitfields):
         # e.g
         # union union_short_0 {
