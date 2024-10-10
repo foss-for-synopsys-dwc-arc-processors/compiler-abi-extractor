@@ -291,6 +291,127 @@ class BitFieldGenerator:
         self.append('printf("\\n");')
         self.append("}")
 
+    def generate_calculate_for_split(self, name, dtype, bitfields):
+        # e.g
+        # void calculate_short_0 (void) {
+        self.append(f"void calculate_{name} (void) {{")
+
+        tmp_str = ""
+        hvalues = []
+        for i, bfield in enumerate(bitfields):
+            bvalue = helper.generate_binary_value(bfield)
+            hvalue = helper.binary_to_hexa(bvalue)
+            tmp_str += f".x{i} = {hvalue}, "
+            hvalues.append(hvalue)
+
+        # e.g
+        # union union_short_0 test = { .s = { .x = 0x2AA, .y = 0xDB6 } };
+        self.append(f"  union union_{name} test = {{ .s = {{ {''.join(tmp_str)} }} }};")
+
+        bfields_sum = sum(bitfields)
+        sizeof = self.Target.get_type_details(dtype)["size"]
+        sizeof *= 8 # FIXME: Convert bytes to bits.
+        # Calculate if greater.
+        sign = ">" if bfields_sum > sizeof else "<"
+
+        # e.g
+        # printf("short:>:");
+        self.append(f'printf("{name}:{sign}:");')
+
+        bvalues = []
+        for hvalue in hvalues:
+            bvalues.append(helper.hexa_to_binary(hvalue))
+
+        self.append("""
+    unsigned long long lower_bits = (*(test.values + 0) & 0xFFFFFFFF);
+    unsigned long long upper_bits = ((*(test.values + 0) >> 32) & 0xFFFFFFFF);
+""")
+
+        # e.g
+        # if ((lower_bits & 0x3FFFFF) == 0x36DAAA)
+        # {
+        #   printf("No extra padding.:");
+        #   printf("Little-endian.");
+        # }
+        bvalue_little_endian_no_pad = self.no_extra_padding(bvalues)
+        bmask_little_endian_no_pad  = self.create_mask(bvalue_little_endian_no_pad)
+
+        bvalue_upper, bvalue_lower = self.split_upper_lower(bvalue_little_endian_no_pad)
+        bmask_upper, bmask_lower  = self.split_upper_lower(bmask_little_endian_no_pad)
+
+        self.append(f"""
+    if ((lower_bits & {helper.binary_to_hexa(bmask_lower)}) == {helper.binary_to_hexa(bvalue_lower)} &&
+        (upper_bits & {helper.binary_to_hexa(bmask_upper)}) == {helper.binary_to_hexa(bvalue_upper)})
+    {{
+        printf("No extra padding.:");
+        printf("Little-endian.");
+    }}""")
+
+        # e.g
+        # else if ((test.value & 0xFFFF3F) == 0xAADA36)
+        # {
+        #   printf("No extra padding.:");
+        #   printf("Big endian.");
+        # }
+        bvalue_big_endian_no_pad = self.little_to_big_endian(bvalue_little_endian_no_pad)
+        bmask_big_endian_no_pad  = self.create_mask(bvalue_big_endian_no_pad)
+
+        bvalue_upper, bvalue_lower = self.split_upper_lower(bvalue_big_endian_no_pad)
+        bmask_upper, bmask_lower  = self.split_upper_lower(bmask_big_endian_no_pad)
+
+        self.append(f"""
+    if ((lower_bits & {helper.binary_to_hexa(bmask_lower)}) == {helper.binary_to_hexa(bvalue_lower)} &&
+        (upper_bits & {helper.binary_to_hexa(bmask_upper)}) == {helper.binary_to_hexa(bvalue_upper)})
+    {{
+        printf("No extra padding.:");
+        printf("Big-endian.");
+    }}""")
+
+        self.append("""
+    lower_bits = (*(test.values + 0) & 0xFFFFFFFFFFFFFFFF);
+    upper_bits = (*(test.values + 1) & 0xFFFFFFFFFFFFFFFF);
+""")
+
+        # e.g
+        # else if ((test.value & FFF03FF) == 0xDB602AA)
+        # {
+        #   printf("Extra padding.:");
+        #   printf("Little endian.");
+        # }
+        bvalue_little_endian_pad = self.extra_padding(bvalues, dtype)
+        bmask_little_endian_pad  = self.create_mask(bvalue_little_endian_pad)
+
+        bvalue_upper, bvalue_lower = self.split_upper_lower(bvalue_little_endian_pad, 64)
+        bmask_upper, bmask_lower  = self.split_upper_lower(bmask_little_endian_pad, 64)
+        self.append(f"""
+    if ((lower_bits & {helper.binary_to_hexa(bmask_lower)}) == {helper.binary_to_hexa(bvalue_lower)} &&
+        (upper_bits & {helper.binary_to_hexa(bmask_upper)}) == {helper.binary_to_hexa(bvalue_upper)})
+    {{
+        printf("Extra padding.:");
+        printf("Little-endian.");
+    }}""")
+
+        # e.g
+        # else if ((test.value & 0xFF03FF0F) == 0xAA02B6D)
+        # {
+        #   printf("Extra padding.:");
+        #   printf("Big endian.");
+        # }
+        bvalue_big_endian_pad = self.little_to_big_endian(bvalue_little_endian_pad)
+        bmask_big_endian_pad  = self.create_mask(bvalue_big_endian_pad)
+
+        _, bvalue_lower = self.split_upper_lower(bvalue_big_endian_pad, 64)
+        _, bmask_lower  = self.split_upper_lower(bmask_big_endian_pad, 64)
+        self.append(f"""
+    if ((lower_bits & {helper.binary_to_hexa(bmask_lower)}) == {helper.binary_to_hexa(bvalue_lower)})
+    {{
+        printf("Extra padding.:");
+        printf("Big-endian.");
+    }}""")
+
+        self.append('printf("\\n");')
+        self.append("}")
+
     def generate_main(self):
         self.append("int main (void) {")
         self.extend(f'  calculate_{name}();' for name in self.names)
