@@ -165,7 +165,7 @@ class BitFieldGenerator:
     # Generate a name for the datatype.
     def get_name(self, dtype):
         # Create the initial name from the data type
-        base_name = f"{dtype}"
+        base_name = f"{dtype.replace(' ', '_')}"
 
         # Initialize the name to the base name
         count = 0
