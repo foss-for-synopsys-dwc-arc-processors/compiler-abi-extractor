@@ -360,7 +360,7 @@ class BitFieldGenerator:
 
         self.append("""
     unsigned long long lower_bits = (*(test.values + 0) & 0xFFFFFFFF);
-    unsigned long long upper_bits = ((*(test.values + 0) >> 32) & 0xFFFFFFFF);
+    unsigned long long upper_bits = ((*(test.values + 0) >> 32));
 """)
 
         # e.g
