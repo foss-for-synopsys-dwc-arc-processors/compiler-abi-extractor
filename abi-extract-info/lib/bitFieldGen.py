@@ -63,16 +63,47 @@ For short example:
 """
 
 from lib import helper
+import random
 
 class BitFieldGenerator:
     def __init__(self, Target):
         self.Target = Target
         self.result = []
         self.names = []
-        self.data = {
-            "short": [(10, 12),  (6,  8)],
-            "int":   [(18, 19), (10, 12)],
-        }
+        self.data = self.generate_data()
+
+    # Generate a tuple of values (correspodings to the bitfields)
+    # according to the sizeof the datatype, and the stype of sign
+    # (if greater or less than)
+    def gen_tuple(self, sizeof, sign):
+        while True:
+            value1 = random.randint(1,sizeof - sizeof/4)
+            value2 = random.randint(1,sizeof - sizeof/4)
+
+            if sign == ">":
+                if value1 + value2 > sizeof:
+                    return (value1, value2)
+            else:
+                if value1 + value2 < sizeof and \
+                   value1 + value2 > sizeof/2:
+                    return (value1, value2)
+
+    # Generate 3 greater than and 3 less than examples
+    # for each datatype.
+    def generate_data(self):
+        dtypes = ["short", "int", "long", "long long"]
+
+        data = {}
+        for dtype in dtypes:
+            arr = []
+            for i in range(3):
+                sizeof = self.Target.get_type_details(dtype)["size"]
+                sizeof *= 8 # Convert to bits.
+                arr.append(self.gen_tuple(sizeof, ">"))
+                arr.append(self.gen_tuple(sizeof, "<"))
+
+            data[dtype] = arr
+        return data
 
     def append(self, W):
         self.result.append(W)
