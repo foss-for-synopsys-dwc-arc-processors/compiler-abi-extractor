@@ -329,7 +329,7 @@ class BitFieldGenerator:
 
     def generate_calculate_for_split(self, name, dtype, bitfields):
         # e.g
-        # void calculate_short_0 (void) {
+        # void calculate_long_long_0 (void) {
         self.append(f"void calculate_{name} (void) {{")
 
         tmp_str = ""
@@ -341,7 +341,7 @@ class BitFieldGenerator:
             hvalues.append(hvalue)
 
         # e.g
-        # union union_short_0 test = { .s = { .x = 0x2AA, .y = 0xDB6 } };
+        # union union_short_0 test = { .s = { .x = 0xBB6171D, .y = 0xA678 } };
         self.append(f"  union union_{name} test = {{ .s = {{ {''.join(tmp_str)} }} }};")
 
         bfields_sum = sum(bitfields)
@@ -351,7 +351,7 @@ class BitFieldGenerator:
         sign = ">" if bfields_sum > sizeof else "<"
 
         # e.g
-        # printf("short:>:");
+        # printf("long_long:<:");
         self.append(f'printf("{name}:{sign}:");')
 
         bvalues = []
@@ -364,10 +364,11 @@ class BitFieldGenerator:
 """)
 
         # e.g
-        # if ((lower_bits & 0x3FFFFF) == 0x36DAAA)
+        # if ((lower_bits & 0xFFFFFFFF) == 0x8BB6171D &&
+        #     (upper_bits & 0xFFF) == 0xA67)
         # {
-        #   printf("No extra padding.:");
-        #   printf("Little-endian.");
+        #     printf("No extra padding.:");
+        #     printf("Little-endian.");
         # }
         bvalue_little_endian_no_pad = self.no_extra_padding(bvalues)
         bmask_little_endian_no_pad  = self.create_mask(bvalue_little_endian_no_pad)
@@ -384,10 +385,11 @@ class BitFieldGenerator:
     }}""")
 
         # e.g
-        # else if ((test.value & 0xFFFF3F) == 0xAADA36)
+        # if ((lower_bits & 0xFFFFFFFF) == 0x7B68B67A &&
+        #     (upper_bits & 0xFFF) == 0x1D1)
         # {
-        #   printf("No extra padding.:");
-        #   printf("Big endian.");
+        #     printf("No extra padding.:");
+        #     printf("Big-endian.");
         # }
         bvalue_big_endian_no_pad = self.little_to_big_endian(bvalue_little_endian_no_pad)
         bmask_big_endian_no_pad  = self.create_mask(bvalue_big_endian_no_pad)
@@ -409,10 +411,11 @@ class BitFieldGenerator:
 """)
 
         # e.g
-        # else if ((test.value & FFF03FF) == 0xDB602AA)
+        # if ((lower_bits & 0x000000000FFFFFFF) == 0x000000000BB6171D &&
+        #     (upper_bits & 0xFFFF) == 0xA678)
         # {
-        #   printf("Extra padding.:");
-        #   printf("Little endian.");
+        #     printf("Extra padding.:");
+        #     printf("Little-endian.");
         # }
         bvalue_little_endian_pad = self.extra_padding(bvalues, dtype)
         bmask_little_endian_pad  = self.create_mask(bvalue_little_endian_pad)
@@ -428,10 +431,11 @@ class BitFieldGenerator:
     }}""")
 
         # e.g
-        # else if ((test.value & 0xFF03FF0F) == 0xAA02B6D)
+        # if ((lower_bits & 0xFF0F00000000FFFF) == 0xB60B0000000078A6 &&
+        #     (upper_bits & 0xFFFF) == 0x1D17)
         # {
-        #   printf("Extra padding.:");
-        #   printf("Big endian.");
+        #     printf("Extra padding.:");
+        #     printf("Big-endian.");
         # }
         bvalue_big_endian_pad = self.little_to_big_endian(bvalue_little_endian_pad)
         bmask_big_endian_pad  = self.create_mask(bvalue_big_endian_pad)
