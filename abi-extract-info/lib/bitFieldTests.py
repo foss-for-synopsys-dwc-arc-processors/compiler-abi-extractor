@@ -60,6 +60,30 @@ class BitFieldTests:
 
         return entries
 
+    # e.g
+    # [{'dtype': ['short'], 'sign': '>', 'content': 'unknown'},
+    #  {'dtype': ['short'], 'sign': '<', 'content': 'No extra padding.:Little-endian.'},
+    #  {'dtype': ['int'], 'sign': '>', 'content': 'Extra padding.:Little-endian.'},
+    #  {'dtype': ['int'], 'sign': '<', 'content': 'No extra padding.:Little-endian.'}
+    #  ...
+    def process_stage2(self, entries):
+        # Find the most frequent content for each entry
+        for entry in entries:
+            occurrences = {}
+
+            # Count occurrences of each content
+            for c in entry["content"]:
+                if c in occurrences:
+                    occurrences[c] += 1
+                else:
+                    occurrences[c] = 1
+
+            # Get the most frequent content (or 'unknown' if no clear winner)
+            max_entry = max(occurrences, key=occurrences.get)
+            entry["content"] = max_entry or "unknown"
+
+        return entries
+
     def process_results(self, content):
         lines = content.split("\n")
         types = []
