@@ -112,7 +112,7 @@ def do_return(Driver, Report, Target):
     Report.append(summary_file)
 
 def do_bitfield(Driver, Report, Target):
-    content = bitFieldGen.generate()
+    content = bitFieldGen.generate(Target)
     open("tmp/out_bitfield.c", "w").write(content)
     stdout_file = Driver.run(["tmp/out_bitfield.c"], [], "out_bitfield")
     content = helper.read_file(stdout_file)
