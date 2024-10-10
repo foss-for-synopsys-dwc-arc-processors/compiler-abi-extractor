@@ -429,7 +429,15 @@ class BitFieldGenerator:
             for bitfields in data:
                 name = self.get_name(dtype)
                 self.generate_struct_union(name, dtype, bitfields)
-                self.generate_calculate(name, dtype, bitfields)
+
+                dtype_sizeof     = self.Target.get_type_details(dtype)["size"]
+                long_long_sizeof = self.Target.get_type_details("long long")["size"]
+
+                # If datatype size is less than `long long`, than dont split.
+                if dtype_sizeof < long_long_sizeof:
+                    self.generate_calculate(name, dtype, bitfields)
+                else:
+                    self.generate_calculate_for_split(name, dtype, bitfields)
 
         self.generate_main()
         return self.get_result()
