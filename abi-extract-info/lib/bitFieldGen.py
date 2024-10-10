@@ -405,10 +405,11 @@ class BitFieldGenerator:
         bvalue_big_endian_pad = self.little_to_big_endian(bvalue_little_endian_pad)
         bmask_big_endian_pad  = self.create_mask(bvalue_big_endian_pad)
 
-        _, bvalue_lower = self.split_upper_lower(bvalue_big_endian_pad, 64)
-        _, bmask_lower  = self.split_upper_lower(bmask_big_endian_pad, 64)
+        bvalue_upper, bvalue_lower = self.split_upper_lower(bvalue_big_endian_pad, 64)
+        bmask_upper, bmask_lower  = self.split_upper_lower(bmask_big_endian_pad, 64)
         self.append(f"""
-    if ((lower_bits & {helper.binary_to_hexa(bmask_lower)}) == {helper.binary_to_hexa(bvalue_lower)})
+    if ((lower_bits & {helper.binary_to_hexa(bmask_lower)}) == {helper.binary_to_hexa(bvalue_lower)} &&
+        (upper_bits & {helper.binary_to_hexa(bmask_upper)}) == {helper.binary_to_hexa(bvalue_upper)})
     {{
         printf("Extra padding.:");
         printf("Big-endian.");
