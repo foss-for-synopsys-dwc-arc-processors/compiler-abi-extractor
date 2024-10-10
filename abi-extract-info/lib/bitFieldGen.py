@@ -241,7 +241,7 @@ class BitFieldGenerator:
         tmp_str = ""
         hvalues = []
         for i, bfield in enumerate(bitfields):
-            bvalue = helper.generate_binary_value(bfield)
+            bvalue = helper.generate_binary_value(bfield, True)
             hvalue = helper.binary_to_hexa(bvalue)
             tmp_str += f".x{i} = {hvalue}, "
             hvalues.append(hvalue)
@@ -335,7 +335,7 @@ class BitFieldGenerator:
         tmp_str = ""
         hvalues = []
         for i, bfield in enumerate(bitfields):
-            bvalue = helper.generate_binary_value(bfield)
+            bvalue = helper.generate_binary_value(bfield, True)
             hvalue = helper.binary_to_hexa(bvalue)
             tmp_str += f".x{i} = {hvalue}, "
             hvalues.append(hvalue)

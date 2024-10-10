@@ -160,9 +160,9 @@ def generate_hexa_list_from_datatypes(dtypes, Target, reset = None):
     return values
 
 import random
-def generate_binary_value(sizeof):
+def generate_binary_value(sizeof, reset=False):
     # Initialize static variable
-    if not hasattr(generate_binary_value, "used_values"):
+    if not hasattr(generate_binary_value, "used_values") or reset:
         generate_binary_value.used_values = []
 
     # The most significant bit must be 1. So we
