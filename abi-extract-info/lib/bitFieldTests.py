@@ -129,19 +129,15 @@ class BitFieldTests:
 
         return types, endians
 
-    def summary_results(self, types, endians):
-        # TODO: If different datatypes have different memory layouts,
-        # it will be ignored (yet).
+    def summary_results(self, entries):
         self.append("Bit-Field test:")
-        for t in types:
-            self.append(f"- sum(bit-fields) {t['sign']} sizeof(dtype)")
-            self.append(f"  - {t['padding']}")
-            if len(endians) > 1:
-                self.append(f"  - {t['endian']}")
-
-        if len(endians) == 1:
-            self.append(f"- {''.join(endians)}")
-
+        for sign in [">", "<"]:
+            self.append(f"- sum(bit-fields) {sign} sizeof(datatype)")
+            for entry in entries:
+                if entry["sign"] == sign:
+                    self.append(f"  - {' : '.join(entry['dtype'])}")
+                    tmp = entry["content"].replace(":", "\n    - ")
+                    self.append(f"    - {tmp}")
 
     def prepare_summary(self, content):
         types, endians = self.process_results(content)
