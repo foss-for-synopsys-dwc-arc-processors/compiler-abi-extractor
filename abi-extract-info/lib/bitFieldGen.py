@@ -181,29 +181,21 @@ class BitFieldGenerator:
         return name
 
     def generate_struct_union(self, name, dtype, bitfields):
-         # e.g
-         # struct struct_short_0 {
-         #     unsigned short x0 : 10;
-         #     unsigned short x1 : 12;
-         # };
-        self.append(f"struct struct_{name} {{")
+        # e.g
+        # union union_short_0 {
+        #   struct {
+        #       unsigned short x0 : 10;
+        #       unsigned short x1 : 12;
+        #   } s;
+        #   unsigned long long values[2];
+        # };
+        self.append(f"union union_{name} {{")
+        self.append(f"  struct {{")
         for i, bfield in enumerate(bitfields):
-            self.append(f"  unsigned {dtype} x{i} : {bfield};")
+            self.append(f"    unsigned {dtype} x{i} : {bfield};")
+        self.append("  } s;")
+        self.append(f" unsigned long long values[{len(bitfields)}];")
         self.append("};")
-
-        # FIXME
-        tmp = "long long" if dtype == "int" else "long"
-
-         # e.g
-         # union union_short_0 {
-         #     struct struct_short_0 s;
-         #     unsigned long value;
-         # };
-        self.append(f"""
-union union_{name} {{
-    struct struct_{name} s;
-    unsigned {tmp} value;
-}};""")
 
     def generate_calculate(self, name, dtype, bitfields):
         # e.g
