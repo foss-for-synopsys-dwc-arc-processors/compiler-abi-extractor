@@ -102,33 +102,6 @@ class BitFieldTests:
 
         return entries
 
-    def process_results(self, content):
-        lines = content.split("\n")
-        types = []
-
-        for l in lines:
-            if not l:
-                continue
-
-            dtype, sign, padding, endian = l.split(":")
-
-            found = False
-            for index, j in enumerate(types.copy()):
-                if j["sign"] == sign and j["padding"] == padding and j["endian"] == endian:
-                    types[index]["dtypes"].append(dtype)
-                    found = True
-
-            # This has been optimized. It used to be in the beginning of the loop and at the end.
-            # But if the types array is empty, it will not enter the loop and enter here anyway.
-            if not found:
-                types.append( {"dtypes": [dtype], "sign": sign, "padding": padding, "endian": endian} )
-                continue
-
-        # Collect unique endians
-        endians = {e["endian"] for e in types}
-
-        return types, endians
-
     def summary_results(self, entries):
         self.append("Bit-Field test:")
         for sign in [">", "<"]:
