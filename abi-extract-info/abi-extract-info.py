@@ -84,11 +84,12 @@ def do_return(Driver, Report, Target):
 
         sizeof = Target.get_type_details(dtype)["size"]
         content = returnGen.generate_single_call(Target, None, dtype, sizeof)
-        open(f"tmp/out_return_{dtype}.c", "w").write(content)
+        dtype_ = dtype.replace(' ', '_')
+        open(f"tmp/out_return_{dtype_}.c", "w").write(content)
 
         stdout_file = Driver.run(
-            [f"tmp/out_return_{dtype}.c", "src/helper.c"],
-            ["src/arch/riscv.S", "src/arch/riscv2.s"], f"out_return_{dtype}"
+            [f"tmp/out_return_{dtype_}.c", "src/helper.c"],
+            ["src/arch/riscv.S", "src/arch/riscv2.s"], f"out_return_{dtype_}"
         )
 
         argv = helper.generate_hexa_values_2(sizeof, 20)
