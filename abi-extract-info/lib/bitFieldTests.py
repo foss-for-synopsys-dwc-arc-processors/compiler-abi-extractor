@@ -20,6 +20,46 @@ class BitFieldTests:
     def get_results(self):
         return "\n".join(self.results)
 
+    # e.g
+    # [{'dtype': ['short'], 'sign': '>', 'content': ['', '',
+    #                                                'No extra padding.:Little-endian.Extra padding.:Little-endian.']},
+    #  {'dtype': ['short'], 'sign': '<', 'content': ['No extra padding.:Little-endian.',
+    #                                                'No extra padding.:Little-endian.',
+    #                                                'No extra padding.:Little-endian.']},
+    #  {'dtype': ['int'], 'sign': '>', 'content': ['Extra padding.:Little-endian.',
+    #                                              'Extra padding.:Little-endian.',
+    #                                              'Extra padding.:Little-endian.']},
+    #  {'dtype': ['int'], 'sign': '<', 'content': ['No extra padding.:Little-endian.',
+    #                                              'No extra padding.:Little-endian.',
+    #                                              'No extra padding.:Little-endian.']},
+    #  ...
+    def process_stage1(self, content):
+        # Split the input content into individual entries
+        data = content.split("\n")
+
+        entries = []
+        for entry in data:
+            if not entry:
+                continue
+
+            # Split the string to get dtype, sign, and content
+            sdata   = entry.split(":")
+            dtype   = sdata[0][:-2]  # Removing the '_0', '_1', etc. from dtype
+            sign    = sdata[1]
+            content = ":".join(sdata[2:])
+
+            found = False
+            for e in entries:
+                if e["dtype"][0] == dtype and e["sign"] == sign:
+                    e["content"].append(content)  # Append content to existing entry
+                    found = True
+                    break
+
+            if not found:
+                entries.append({ "dtype": [dtype], "sign": sign, "content": [content] })
+
+        return entries
+
     def process_results(self, content):
         lines = content.split("\n")
         types = []
