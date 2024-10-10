@@ -280,7 +280,7 @@ class BitFieldGenerator:
     }}""")
 
         # e.g
-        # else if ((test.value & 0xFFFF3F) == 0xAADA36)
+        # if ((test.value & 0xFFFF3F) == 0xAADA36)
         # {
         #   printf("No extra padding.:");
         #   printf("Big endian.");
@@ -295,7 +295,7 @@ class BitFieldGenerator:
     }}""")
 
         # e.g
-        # else if ((test.value & FFF03FF) == 0xDB602AA)
+        # if ((test.value & FFF03FF) == 0xDB602AA)
         # {
         #   printf("Extra padding.:");
         #   printf("Little endian.");
@@ -310,7 +310,7 @@ class BitFieldGenerator:
     }}""")
 
         # e.g
-        # else if ((test.value & 0xFF03FF0F) == 0xAA02B6D)
+        # if ((test.value & 0xFF03FF0F) == 0xAA02B6D)
         # {
         #   printf("Extra padding.:");
         #   printf("Big endian.");
