@@ -140,8 +140,10 @@ class BitFieldTests:
                     self.append(f"    - {tmp}")
 
     def prepare_summary(self, content):
-        types, endians = self.process_results(content)
-        self.summary_results(types, endians)
+        entries = self.process_stage1(content)
+        entries = self.process_stage2(entries)
+        entries = self.process_stage3(entries)
+        self.summary_results(entries)
         return self.get_results()
 
 
