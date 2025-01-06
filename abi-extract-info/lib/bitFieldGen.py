@@ -77,8 +77,15 @@ class BitFieldGenerator:
     # (if greater or less than)
     def gen_tuple(self, sizeof, sign):
         while True:
-            value1 = random.randint(1,sizeof - sizeof/4)
-            value2 = random.randint(1,sizeof - sizeof/4)
+            # In the latest Python versions (current 3.12.3),
+            # the `random.randint()` function can no longer
+            # accept a float object as input.
+            # A division expression will result in a floating
+            # point value, so it must be converted to integer.
+            # I.e `8 / 4 = 2.0`
+            limit = sizeof - int(sizeof / 4)
+            value1 = random.randint(1, limit)
+            value2 = random.randint(1, limit)
 
             if sign == ">":
                 if value1 + value2 > sizeof:
