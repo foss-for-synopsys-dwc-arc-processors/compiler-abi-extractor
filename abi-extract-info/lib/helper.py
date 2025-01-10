@@ -124,13 +124,13 @@ def generate_hexa_value(sizeof):
     return hvalue
 
 # Generate a list of unique hexadecimal values.
-def generate_hexa_list(length, sizeof, reset = None):
-    values = []
+def generate_hexa_list(length, sizeof):
+    hvalues = []
     for i in range(length):
-        values.append(generate_hexa_values_2(sizeof, reset))
-        reset = None
+        hvalue = generate_hexa_value(sizeof)
+        hvalues.append(hvalue)
 
-    return values
+    return hvalues
 
 # Generate a list of unique hexadecimal values based on datatypes.
 def generate_hexa_list_from_datatypes(dtypes, Target, reset = None):
