@@ -87,58 +87,29 @@ def decimal_to_hex(decimal, width=2):
 
     return hex_str.zfill(width)
 
-# Generates a unique hexadecimal value of a given saize, optionally resetting the counter.
-def generate_hexa_values_2(sizeof, reset = None):
+import random
+def generate_binary_value(sizeof):
+    # Initialize static variable.
+    if not hasattr(generate_binary_value, "used_values"):
+        generate_binary_value.used_values = []
 
-    # Initialize static variables if they do not exist.
-    if not hasattr(generate_hexa_values_2, "used_values"):
-        generate_hexa_values_2.used_values = set()
+    bvalue = "".join(random.choice("01") for _ in range(length))
+    # The generated value cannot:
+    #   - be all zeros;
+    #   - have the 4 most significant bits set to 0.
+    #   - have the middle 4 bits (in this case where sizeof >= 8 ) set to 0;
+    #   (Used when a value is split in two)
+    #   - be reused.
+    while (bvalue == "0" * length) or \
+          (sizeof >= 4 and bvalue[:4] == "0000") or \
+          (sizeof >= 8 and bvalue[sizeof//2:sizeof//2+4] == "0000") or \
+          (bvalue in generate_binary_value.used_values):
+        bvalue = "".join(random.choice("01") for _ in range(length))
 
-    if not hasattr(generate_hexa_values_2, "i") or reset != None:
-        reset_to = reset if reset else 1
-        # e.i static int i = 1;
-        generate_hexa_values_2.i = reset_to # Initialize the static variable
-        generate_hexa_values_2.used_values.clear()
+    # Append to used_values list.
+    generate_binary_value.used_values.append(bvalue)
 
-
-    while True:
-        result = ""
-        # Generate the hexadecimal string based on current counter.
-        for j in range(1, sizeof + 1):
-            result += decimal_to_hex(generate_hexa_values_2.i)
-            generate_hexa_values_2.i += 1
-
-        # Ensure the hexadecimal value does not start with a 0.
-        # The `0` would be ignored by the compiler, leading to unmatching
-        # values when validating.
-        if result[0] == "0":
-            num_str = str(generate_hexa_values_2.i)
-            first_digit = num_str[0]
-            result = first_digit + result[1:]
-
-        # FIXME Assuming sizeof(int) is 4 bytes; should be dynamic if needed
-        sizeof_int = 4
-
-        # When the value is too big to fit in a single register, its likely that
-        # the compiler will split it in half. When this happens, we need to ensure
-        # that the second half does not also start with a `0`.
-        if sizeof == sizeof_int * 2:
-            if result[len(result) // 2] == "0":
-                result = list(result)
-                num_str = str(generate_hexa_values_2.i)
-                first_digit = num_str[0]
-                result[len(result) // 2] = first_digit
-                result = "".join(result)
-
-        # Add generated hexadecimal value to used list.
-        if result not in generate_hexa_values_2.used_values:
-            generate_hexa_values_2.used_values.add(result)
-            break
-
-    # Change this to the `_add` function in hexUtils.
-    result = f"0x{result}"
-
-    return result
+    return bvalue
 
 # Generate a list of unique hexadecimal values.
 def generate_hexa_list(length, sizeof, reset = None):
