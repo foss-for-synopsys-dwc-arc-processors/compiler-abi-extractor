@@ -89,8 +89,15 @@ def do_return(Driver, Report, Target):
     for dtype in dtypes:
         results[dtype] = []
 
+        # Get the sizeof the current data type.
         sizeof = Target.get_type_details(dtype)["size"]
-        content = returnGen.generate_single_call(Target, None, dtype, sizeof)
+        # Reset the already used values.
+        helper.reset_used_values()
+        # Generate a single hexadecimal value.
+        hvalue_return = helper.generate_hexa_value(sizeof)
+
+        # Generate and build/execute the test case.
+        content = returnGen.generate_single_call(Target, dtype, hvalue_return)
         dtype_ = dtype.replace(' ', '_')
         open(f"tmp/out_return_{dtype_}.c", "w").write(content)
 
@@ -99,8 +106,7 @@ def do_return(Driver, Report, Target):
             ["src/arch/riscv.S", "src/arch/riscv2.s"], f"out_return_{dtype_}"
         )
 
-        argv = helper.generate_hexa_values_2(sizeof, 20)
-
+        # Parse the dump information.
         dump_information = dumpInformation.DumpInformation()
         dump_information.parse(stdout_file, True)
 
@@ -109,7 +115,7 @@ def do_return(Driver, Report, Target):
         register_banks = dump_information.get_reg_banks()
 
         citeration = {}
-        return_tests.run_test(citeration, stack, register_banks, argv)
+        return_tests.run_test(citeration, stack, register_banks, hvalue_return)
         results[dtype].append(citeration)
 
     summary_content = return_tests.generate_summary(results)
