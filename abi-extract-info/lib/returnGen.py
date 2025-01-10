@@ -33,12 +33,10 @@ copy that array to the actual return call.
 """
 
 class ReturnGenerator:
-    def __init__(self, Target, count, dtype, sizeof):
+    def __init__(self, Target, dtype):
         self._result = []
         self.Target = Target
-        self._count = count
         self._dtype = dtype
-        self._sizeof = sizeof
 
     def append(self, W):
         self._result.append(W)
@@ -84,12 +82,13 @@ inline static double ull_as_double(unsigned long long lhs)
         self.append("extern void foo (void);")
         self.append("extern void reset_registers (void);")
 
-    def generate_single_call_bar(self):
-        argv = helper.generate_hexa_values_2(self._sizeof, 20)
+    def generate_single_call_bar(self, hvalue_return):
         if self._dtype == "float":
-            argv = f"ul_as_float({argv})"
+            argv = f"ul_as_float({hvalue_return})"
         elif self._dtype == "double":
-            argv = f"ull_as_double({argv})"
+            argv = f"ull_as_double({hvalue_return})"
+        else:
+            argv = hvalue_return
 
         self.append("""
 %s bar (void) {
@@ -107,17 +106,17 @@ int main (void) {
 }
 """)
 
-    def generate_single_call(self):
+    def generate_single_call(self, hvalue_return):
         self.generate_converter()
 
         self.generate_single_call_prototypes()
-        self.generate_single_call_bar()
+        self.generate_single_call_bar(hvalue_return)
         self.generate_single_call_main()
 
         return self.get_result()
 
-def generate_single_call(Target, count, dtype, sizeof):
-    return ReturnGenerator(Target, count, dtype, sizeof).generate_single_call()
+def generate_single_call(Target, dtype, hvalue_return):
+    return ReturnGenerator(Target, dtype).generate_single_call(hvalue_return)
 
 if __name__ == "__main__":
     content = generate_single_call(None, None, 'int', 4)
