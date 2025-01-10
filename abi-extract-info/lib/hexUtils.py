@@ -104,8 +104,14 @@ class HexUtils:
                     # Convert hexadecimal values to binary.
                     bvalue_register = helper.hexa_to_binary(register_value)
                     bvalue          = helper.hexa_to_binary(value)
+                    # Convert expected value to zero extended.
+                    zero_register_value = self._zero_extend(value, self.sizeof(register_value))
+                    # Convert expected value to sign extended.
+                    sign_register_value = self._sign_extend(value, self.sizeof(register_value))
 
-                    if bvalue_register == bvalue:
+                    if bvalue_register == bvalue or \
+                       bvalue_register == helper.hexa_to_binary(zero_register_value) or \
+                       bvalue_register == helper.hexa_to_binary(sign_register_value):
                         tmp.append(bank_register_names[index])
                         registers[bank_register_names[index]] = value
 
@@ -125,7 +131,14 @@ class HexUtils:
             bvalue_stack = helper.hexa_to_binary(stack_value)
             bvalue       = helper.hexa_to_binary(value)
 
-            if bvalue_stack == bvalue:
+            # Convert expected value to zero extended.
+            zero_stack_value = self._zero_extend(value, self.sizeof(stack_value))
+            # Convert expected value to sign extended.
+            sign_stack_value = self._sign_extend(value, self.sizeof(stack_value))
+
+            if bvalue_stack == bvalue or \
+                bvalue_stack == helper.hexa_to_binary(zero_stack_value) or \
+                bvalue_stack == helper.hexa_to_binary(sign_stack_value):
                 for k,v in citeration["registers"].items():
                     if v == value:
                         inconsistencies.append((k,"[stack]"))
