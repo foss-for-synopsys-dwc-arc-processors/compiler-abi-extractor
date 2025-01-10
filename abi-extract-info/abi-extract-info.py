@@ -211,60 +211,61 @@ def do_empty_struct(Driver, Report, Target):
 def do_struct_boundaries(Driver, Report, Target):
     # TODO: Test for 64-bit scenarios.
 
-    int_size = Target.get_type_details("int")["size"]
-
-    # The max_boundary is calculated with the `char` datatype.
+    # The `char_limit` is calculated with the `char` datatype.
     # The test case will generate multiple C files to test the struct
     # boundaries, char by char. Once it reaches the stack as reference,
-    # the max_boundary is defined.
-    max_boundary = 0
-
-    # CHAR
+    # the `char_limit` is defined.
+    # Start the char limit count with 1.
+    char_limit = 1
     dtype = "char"
     results = {}
     results[dtype] = []
     sizeof = Target.get_type_details(dtype)["size"]
 
-    count = 0
+    # Reset the used generated values.
+    helper.reset_used_values()
     while (True):
-        Content = structGen.generate_single_call(Target, count, dtype, sizeof)
-        open(f"tmp/out_struct_boundaries_{dtype}_{count}.c", "w").write(Content)
+        # Generate a hexadecimal value list according to the current count.
+        hvalues = helper.generate_hexa_list(char_limit, sizeof)
 
+        # Generate and build/execute the test case.
+        Content = structGen.generate_single_call(Target, char_limit, dtype, \
+                                                 hvalues)
+        file_name = f"tmp/out_struct_boundaries_{dtype}_{char_limit}.c"
+        c_file_name = f"{file_name}.c"
+        open(c_file_name, "w").write(Content)
         stdout_file = Driver.run(
-            [f"tmp/out_struct_boundaries_{dtype}_{count}.c", "src/helper.c"],
-            ["src/arch/riscv.S"], f"out_struct_boundaries_{dtype}_{count}"
+            [c_file_name, "src/helper.c"],
+            ["src/arch/riscv.S"], file_name
         )
 
         struct_tests = structTests.StructTests(Target)
 
-        res = count + 1 # +1 to generate extra char at the end.
-        argv = helper.generate_hexa_list(res, sizeof, count)
-
+        # Parse the dump information.
         dump_information = dumpInformation.DumpInformation()
         dump_information.parse(stdout_file, True)
 
-        # Get stack and register bank information
+        # Get stack and register bank information.
         stack = dump_information.get_stack()
         reg_banks = dump_information.get_reg_banks()
 
-        # Retrive the stack addresses from the dump.
-        #stack_address = dump_information.get_header_info(0)
-        stack_address = None
-
         citeration = {}
-        struct_tests.run_test(citeration, dtype, stack, reg_banks, argv)
+        struct_tests.run_test(citeration, dtype, stack, reg_banks, hvalues)
         results[dtype].append(citeration)
         if citeration["passed_by_ref"] != None:
             break
 
-        count += 1
-
-        if count == 10:
+        # The struct has not been passed by reference yet, so increment
+        # the char limit by one.
+        char_limit += 1
+        if char_limit == 10:
             print("breaking for safe purposes [struct_boundaries]")
             break
 
-
-    max_boundary = count
+    # Reset used values.
+    helper.reset_used_values()
+    # Set back to the char's limit as its currently out of bounds.
+    char_limit -= 1
 
     struct_tests = structTests.StructTests(Target)
     # `long double` needs a different treating because its size
@@ -277,16 +278,41 @@ def do_struct_boundaries(Driver, Report, Target):
         results[dtype] = []
 
         # Get datatype size from stored information from previous test case.
-        sizeof = Target.get_type_details(dtype)["size"]
+        sizeof_dtype = Target.get_type_details(dtype)["size"]
 
-        # Calculate max datatype boundary according to sizeof
-        boundary_limit_count = max_boundary // sizeof
-        Content = structGen.generate_multiple_call(Target, boundary_limit_count, dtype, sizeof)
-        open(f"tmp/out_struct_boundaries_{dtype}.c", "w").write(Content)
+        # FIXME! It has been observed that with floating-point registers
+        # for double, the expected limit is different.
+        # I.e, 16 instead of8 bytes.
+        if dtype == "double":
+            char_limit = char_limit * 2
 
+        # Calculate max datatype boundary according to sizeof.
+        limit_dtype = char_limit // sizeof_dtype
+
+        # Generate the struct hexadecimal values with a list of data types.
+        argument_data = {}
+        for i in range(1, limit_dtype + 1):
+            dtypes_ = [dtype] * i
+            hvalues_ = helper.generate_hexa_list_from_datatypes(dtypes_, Target)
+            argument_data[i] = { "dtypes": dtypes_, "hvalues": hvalues_ }
+
+        # Plus one char to validate the limit.
+        count = limit_dtype + 1
+        dtypes_ = argument_data[limit_dtype]["dtypes"] + ["char"]
+        argument_data[count] = {
+            "dtypes": dtypes_,
+            "hvalues": helper.generate_hexa_list_from_datatypes(dtypes_, Target)
+        }
+
+        # Generate and build/execute the test case.
+        Content = structGen.generate_multiple_call(Target, count, dtype, \
+                                                   argument_data)
+        file_name = f"tmp/out_struct_boundaries_{dtype}"
+        c_file_name = f"{c_file_name}.c"
+        open(c_file_name, "w").write(Content)
         StdoutFile = Driver.run(
-            [f"tmp/out_struct_boundaries_{dtype}.c", "src/helper.c"],
-            ["src/arch/riscv.S"], f"out_struct_boundaries_{dtype}"
+            [c_file_name, "src/helper.c"],
+            ["src/arch/riscv.S"], file_name
         )
 
         # As multiple calls are made to the "callee()" external function,
@@ -295,9 +321,7 @@ def do_struct_boundaries(Driver, Report, Target):
         dump_sections = dumpInformation.split_dump_sections(StdoutFile)
         for index, dump in enumerate(dump_sections):
 
-            count = index + 1 # +1 to generate extra char at the end.
-            argv = helper.generate_hexa_list(count, sizeof, 10 if count == 1 else None)
-
+            # Parse the dump information.
             dump_information = dumpInformation.DumpInformation()
             dump_information.parse(dump)
 
@@ -305,12 +329,9 @@ def do_struct_boundaries(Driver, Report, Target):
             stack = dump_information.get_stack()
             reg_banks = dump_information.get_reg_banks()
 
-            # Retrive the stack addresses from the dump.
-            #stack_address = dump_information.get_header_info(0)
-            stack_address = None
-
             citeration = {}
-            struct_tests.run_test(citeration, dtype, stack, reg_banks, argv)
+            hvalues = argument_data[index + 1]["hvalues"]
+            struct_tests.run_test(citeration, dtype, stack, reg_banks, hvalues)
             results[dtype].append(citeration)
             if citeration["passed_by_ref"] != None:
                 break
@@ -319,6 +340,7 @@ def do_struct_boundaries(Driver, Report, Target):
         _boundary += -1 if _boundary > 0 else 0
 
     content = struct_tests.prepare_summary(results)
+    # Run the empty struct test case.
     content += do_empty_struct(Driver, Report, Target)
     open("tmp/out_structs.sum", "w").write(content)
 
