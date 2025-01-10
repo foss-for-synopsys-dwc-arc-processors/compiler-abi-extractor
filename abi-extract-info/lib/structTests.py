@@ -22,11 +22,17 @@ class StructTests:
     def process_results(self, results):
         types = []
         passed_by_ref = {}
-        boundary = {}
+        boundaries = {}
 
-        # Get the size of a registers.
-        register_size = self.Target.get_type_details("int")["size"]
         for dtype, iterations in results.items():
+            # Floating-point registers in RISC-V are 64-bit in size,
+            # so we cannot consider the size of an int. If an int is 32-bit,
+            # it would split the value, which is incorrect the double data type.
+            if dtype == "double":
+                register_size = self.Target.get_type_details("double")["size"]
+            else:
+                register_size = self.Target.get_type_details("int")["size"]
+
             if len(iterations) > 1:
                 iteration = iterations[-2]
 
@@ -35,11 +41,11 @@ class StructTests:
 
                 if not types:
                     if sizeof_dtype == register_size:
-                        types.append({ "dtypes": [dtype], "regs": list(iteration["registers_fill"].keys()), "pairs": ""})
+                        types.append({ "sizeof(S)": iteration["sizeof(S)"], "dtypes": [dtype], "regs": list(iteration["registers_fill"].keys()), "pairs": ""})
                     elif sizeof_dtype < register_size:
-                        types.append({ "dtypes": [dtype], "regs": list(iteration["registers_combined"].keys()), "pairs": ""})
+                        types.append({ "sizeof(S)": iteration["sizeof(S)"], "dtypes": [dtype], "regs": list(iteration["registers_combined"].keys()), "pairs": ""})
                     elif sizeof_dtype > register_size:
-                        types.append({ "dtypes": [dtype], "regs": list(iteration["registers_pairs"].keys()), "pairs": iteration["pairs_order"]})
+                        types.append({ "sizeof(S)": iteration["sizeof(S)"], "dtypes": [dtype], "regs": list(iteration["registers_pairs"].keys()), "pairs": iteration["pairs_order"]})
                     continue
 
                 # Get the registers according to the size type.
@@ -55,49 +61,58 @@ class StructTests:
                 for x in types.copy():
                     # Aggregate the dtype according to their registers
                     # used and if they are in pairs.
-                    if regs == x["regs"] and pairs == x["pairs"]:
+                    if regs == x["regs"] and pairs == x["pairs"] and iteration["sizeof(S)"] == x["sizeof(S)"]:
                         x["dtypes"].append(dtype)
                         found = True
                         break
 
                 if not found:
-                    types.append({ "dtypes": [dtype], "regs": regs, "pairs": pairs })
+                    types.append({ "sizeof(S)": iteration["sizeof(S)"], "dtypes": [dtype], "regs": regs, "pairs": pairs })
 
-            # Track the boundary values based on the sizeof(S) for the second last iteration.
+            # Check if there are at least two iterations
             if len(iterations) >= 2:
-                boundary[iterations[-2]["sizeof(S)"]] = ""
-                passed_by_ref[iterations[-1]["passed_by_ref"]] = ""
+                second_last_iter = iterations[-2]
+                last_iter = iterations[-1]
+
+                # Track the boundary values based on the sizeof(S) for the second last iteration
+                sizeof_S = second_last_iter["sizeof(S)"]
+                boundaries.setdefault(sizeof_S, []).append(dtype)
+
+                # Record the passed_by_ref status for the last iteration
+                passed_by_ref[last_iter["passed_by_ref"]] = ""
 
         # Get the voundary value and the pass-by-ref value.
-        boundary_value = next(iter(boundary.keys()), None)
         passed_by_ref_value = next(iter(passed_by_ref.keys()), None)
 
-
-        return types, boundary_value, passed_by_ref_value
+        return types, boundaries, passed_by_ref_value
 
     # Create a summary
-    def summary_results(self, types, boundary_value, passed_by_ref_value):
-        summary = [
-            "Struct argument passing test:",
-            f"- sizeof(S) <= {boundary_value} : passed in registers",
-            f"- sizeof(S) >  {boundary_value} : passed by ref: {passed_by_ref_value}"
-        ]
-        for i in types:
-            dtypes_str = ' : '.join(i["dtypes"])
-            regs_str   = ', '.join(i["regs"])
-            pairs_str  = i["pairs"]
-            summary.append(f"  - {dtypes_str} {pairs_str}: {regs_str}")
+    def summary_results(self, types, boundaries, passed_by_ref_value):
+        types_dict = {}
+        for type_ in types:
+            sizeof = type_["sizeof(S)"]
+            types_dict.setdefault(sizeof, []).append(type_)
 
+        summary = ["Struct argument passing test:"]
+        for sizeof, types in types_dict.items():
+            summary.append(f"- sizeof(S) <= {sizeof} : passed in registers")
+            summary.append(f"- sizeof(S) >  {sizeof} : passed by ref: {passed_by_ref_value}")
+
+            for i in types:
+                dtypes_str = ' : '.join(i["dtypes"])
+                regs_str   = ', '.join(i["regs"])
+                pairs_str  = i["pairs"]
+                summary.append(f"  - {dtypes_str} {pairs_str}: {regs_str}")
         summary.append("")
         return summary
 
     # Prepare the summary based on the test case results.
     def prepare_summary(self, results):
         # process the results
-        types, boundary_value, passed_by_ref_value = self.process_results(results)
+        types, boundaries, passed_by_ref_value = self.process_results(results)
 
         # Summarize and output the results
-        summary = self.summary_results(types, boundary_value, passed_by_ref_value)
+        summary = self.summary_results(types, boundaries, passed_by_ref_value)
         return "\n".join(summary)
 
     # Run the test to check if the value is in registers or the stack.
