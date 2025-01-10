@@ -347,7 +347,9 @@ class HexUtils:
         # FIXME Assume sizeof(int) is 4  bytes; this should be dynamic if the size can change (i.e 64bits).
         sizeof_int = 4
 
-        argument_registers = self.Target.get_argument_registers_2(dtype)
+        # The reg_bank0 registers are used for the passed by reference,
+        # even with floating-point register values.
+        argument_registers = self.Target.get_argument_registers()
 
         # Build a dictionary of register-values from the register banks.
         register_values_dict = dict()
