@@ -76,6 +76,16 @@ class HexUtils:
         value = self._add_identifier(value)
         return value
 
+    def _zero_extend(self, value, sizeof):
+        is_zero = True
+        hvalue = self._zero_or_sign_extend(value, sizeof, is_zero)
+        return hvalue
+
+    def _sign_extend(self, value, sizeof):
+        is_zero = False
+        hvalue = self._zero_or_sign_extend(value, sizeof, is_zero)
+        return hvalue
+
     # Finds the complete argument values in the register banks.
     def find_registers_fill(self, argv, register_banks):
         registers = {}
