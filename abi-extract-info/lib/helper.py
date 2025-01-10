@@ -133,14 +133,13 @@ def generate_hexa_list(length, sizeof):
     return hvalues
 
 # Generate a list of unique hexadecimal values based on datatypes.
-def generate_hexa_list_from_datatypes(dtypes, Target, reset = None):
-    values = []
+def generate_hexa_list_from_datatypes(dtypes, Target):
+    hvalues = []
     for dtype in dtypes:
         sizeof = Target.get_type_details(dtype)["size"]
-        values.append(generate_hexa_values_2(sizeof, reset))
-        reset = None
+        hvalues.append(generate_hexa_value(sizeof))
 
-    return values
+    return hvalues
 
 import random
 def generate_binary_value(sizeof, reset=False):
