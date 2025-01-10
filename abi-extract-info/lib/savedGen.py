@@ -27,10 +27,9 @@ This process may need further refinement.
 """
 
 class ReturnGenerator:
-    def __init__(self, Target, sizeof):
+    def __init__(self, Target):
         self._result = []
         self.Target = Target
-        self._sizeof = sizeof
 
     def append(self, W):
         self._result.append(W)
@@ -49,8 +48,7 @@ class ReturnGenerator:
         self.append("#define dump callee // this is temporary.")
         self.append("int* aux (void);")
 
-    def generate_func_aux(self):
-        argv = helper.generate_hexa_values_2(self._sizeof, 30)
+    def generate_func_aux(self, hvalue_callee_saved):
 
         register_names = []
         for value in self.Target.get_registers().values():
@@ -71,10 +69,9 @@ void aux (void) {
     /* Preventing the compiler from optimizing. */
     asm volatile("":::);
 }
-""" % (register_names_str, argv))
+""" % (register_names_str, hvalue_callee_saved))
 
-    def generate_func_main(self):
-        argv = helper.generate_hexa_values_2(self._sizeof)
+    def generate_func_main(self, hvalue_caller_saved):
         self.append("""
 int main (void) {
     reset_registers();
@@ -84,26 +81,24 @@ int main (void) {
 
     return 0;
 }
-""" % (argv))
-
-    def generate_main(self):
+""" % (hvalue_caller_saved))
+    def generate_main(self, hvalue_caller_saved):
         self.generate_prototypes_main()
-        self.generate_func_main()
+        self.generate_func_main(hvalue_caller_saved)
 
         return self.get_result()
 
-    def generate_aux(self):
+    def generate_aux(self, hvalue_callee_saved):
         self.generate_prototypes_aux()
-        self.generate_func_aux()
+        self.generate_func_aux(hvalue_callee_saved)
 
         return self.get_result()
 
+def generate_main(Target, hvalue_caller_saved):
+    return ReturnGenerator(Target).generate_main(hvalue_caller_saved)
 
-def generate_main(Target, sizeof):
-    return ReturnGenerator(Target, sizeof).generate_main()
-
-def generate_aux(Target, sizeof):
-    return ReturnGenerator(Target, sizeof).generate_aux()
+def generate_aux(Target, hvalue_callee_saved):
+    return ReturnGenerator(Target).generate_aux(hvalue_callee_saved)
 
 if __name__ == "__main__":
     content = generate(None, None, 'int', 4)

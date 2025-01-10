@@ -11,7 +11,6 @@ and the proper calls to validate each dump information.
 """
 
 from lib import hexUtils
-from lib import helper
 
 class SavedTests:
     def __init__(self, Target):
@@ -30,16 +29,13 @@ class SavedTests:
 
         return "\n".join(summary)
 
-    def run_test(self, register_banks, sizeof):
+    def run_test(self, register_banks, hvalue_caller_saved, hvalue_callee_saved):
         hutils = hexUtils.HexUtils(self.Target)
 
-        caller_saved_argv = helper.generate_hexa_values_2(sizeof, 30)
-        tmp = hutils.find_registers_fill([caller_saved_argv], register_banks)
+        tmp = hutils.find_registers_fill([hvalue_caller_saved], register_banks)
         caller_saved_registers, _  = tmp
 
-        callee_saved_argv = helper.generate_hexa_values_2(sizeof)
-
-        tmp = hutils.find_registers_fill([callee_saved_argv], register_banks)
+        tmp = hutils.find_registers_fill([hvalue_callee_saved], register_banks)
         callee_saved_registers, _ = tmp
 
         return self.generate_summary(caller_saved_registers, callee_saved_registers)
