@@ -87,11 +87,14 @@ def decimal_to_hex(decimal, width=2):
 
     return hex_str.zfill(width)
 
+def reset_used_values():
+    generate_binary_value.used_values = []
+
 import random
 def generate_binary_value(sizeof):
     # Initialize static variable.
     if not hasattr(generate_binary_value, "used_values"):
-        generate_binary_value.used_values = []
+        reset_used_values()
 
     bvalue = "".join(random.choice("01") for _ in range(length))
     # The generated value cannot:
