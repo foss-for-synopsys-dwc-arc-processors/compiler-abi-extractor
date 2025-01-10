@@ -114,6 +114,15 @@ def generate_binary_value(sizeof):
 
     return bvalue
 
+def generate_hexa_value(sizeof):
+    # The `sizeof`` represents the size of the value in hexadecimal.
+    # We need to convert this to the equivalent bit size.
+    # FIXME! This assumes each byte is 8 bits.
+    sizeof = sizeof * 8
+    bvalue = generate_binary_value(sizeof)
+    hvalue = binary_to_hexa(bvalue)
+    return hvalue
+
 # Generate a list of unique hexadecimal values.
 def generate_hexa_list(length, sizeof, reset = None):
     values = []
