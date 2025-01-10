@@ -100,8 +100,12 @@ class HexUtils:
             for bank_name, bank_register in register_banks.items():
                 bank_register_names = self.Target.get_registers(bank_name)
                 for index, register_value in enumerate(bank_register):
-                    if register_value == value:
-                        # Append register.
+
+                    # Convert hexadecimal values to binary.
+                    bvalue_register = helper.hexa_to_binary(register_value)
+                    bvalue          = helper.hexa_to_binary(value)
+
+                    if bvalue_register == bvalue:
                         tmp.append(bank_register_names[index])
                         registers[bank_register_names[index]] = value
 
@@ -117,7 +121,11 @@ class HexUtils:
 
         value = argv[-1]
         for stack_address, stack_value in stack:
-            if stack_value == value:
+            # Convert hexadecimal values to binary.
+            bvalue_stack = helper.hexa_to_binary(stack_value)
+            bvalue       = helper.hexa_to_binary(value)
+
+            if bvalue_stack == bvalue:
                 for k,v in citeration["registers"].items():
                     if v == value:
                         inconsistencies.append((k,"[stack]"))
@@ -205,12 +213,16 @@ class HexUtils:
                             elif register_value == second_half and bank_register[index+1] == first_half:
                                 order = "[low], [high]"
 
-                        if register_value == first_half:
+                        # Convert hexadecimal values to binary.
+                        bvalue_register   = helper.hexa_to_binary(register_value)
+                        bvalue_first_half = helper.hexa_to_binary(first_half)
+                        bvalue_second_half = helper.hexa_to_binary(second_half)
+
+                        if bvalue_register == bvalue_first_half:
                             # Append register
                             tmp.append(bank_register_names[index])
                             registers[bank_register_names[index]] = first_half
-
-                        elif register_value == second_half:
+                        elif bvalue_register == bvalue_second_half:
                             # Append register
                             tmp.append(bank_register_names[index])
                             registers[bank_register_names[index]] = second_half
@@ -266,7 +278,11 @@ class HexUtils:
             for bank_name, bank_register in register_banks.items():
                 bank_register_names = self.Target.get_registers(bank_name)
                 for index, register_value in enumerate(bank_register):
-                    if register_value == combined_hex:
+                    # Convert hexadecimal values to binary.
+                    bvalue_register = helper.hexa_to_binary(register_value)
+                    bvalue_combined = helper.hexa_to_binary(combined_hex)
+
+                    if bvalue_register == bvalue_combined:
                         # Append register
                         tmp.append(bank_register_names[index])
                         registers[bank_register_names[index]] = combined_hex
