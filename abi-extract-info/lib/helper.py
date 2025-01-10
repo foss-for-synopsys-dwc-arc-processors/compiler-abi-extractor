@@ -141,25 +141,6 @@ def generate_hexa_list_from_datatypes(dtypes, Target):
 
     return hvalues
 
-import random
-def generate_binary_value(sizeof, reset=False):
-    # Initialize static variable
-    if not hasattr(generate_binary_value, "used_values") or reset:
-        generate_binary_value.used_values = []
-
-    # The most significant bit must be 1. So we
-    # subtract 1 in its sizeof and add 1 later.
-    length = sizeof - 1
-
-    bvalue = "".join(random.choice("01") for _ in range(length))
-    while bvalue in generate_binary_value.used_values:
-        bvalue = "".join(random.choice("01") for _ in range(length))
-
-    generate_binary_value.used_values.append(bvalue)
-    bvalue = f"1{bvalue}"
-
-    return bvalue
-
 # Convert binary to hexa
 def binary_to_hexa(bvalue):
     # Remove any spaces in the binary value
