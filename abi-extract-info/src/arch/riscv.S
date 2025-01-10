@@ -15,7 +15,7 @@ regs_bank0:
 
 regs_bank1:
     .rept 32
-    .word 0
+    .dword 0
     .endr
 
 .text
@@ -67,37 +67,37 @@ callee:
 .if CONFIG_FPU
     la t6, regs_bank1
     fsd f0, 0(t6)
-    fsd f1, 4(t6)
-    fsd f2, 8(t6)
-    fsd f3, 12(t6)
-    fsd f4, 16(t6)
-    fsd f5, 20(t6)
-    fsd f6, 24(t6)
-    fsd f7, 28(t6)
-    fsd f8, 32(t6)
-    fsd f9, 36(t6)
-    fsd f10, 40(t6)
-    fsd f11, 44(t6)
-    fsd f12, 48(t6)
-    fsd f13, 52(t6)
-    fsd f14, 56(t6)
-    fsd f15, 60(t6)
-    fsd f16, 64(t6)
-    fsd f17, 68(t6)
-    fsd f18, 72(t6)
-    fsd f19, 76(t6)
-    fsd f20, 80(t6)
-    fsd f21, 84(t6)
-    fsd f22, 88(t6)
-    fsd f23, 92(t6)
-    fsd f24, 96(t6)
-    fsd f25, 100(t6)
-    fsd f26, 104(t6)
-    fsd f27, 108(t6)
-    fsd f28, 112(t6)
-    fsd f29, 116(t6)
-    fsd f30, 120(t6)
-    fsd f31, 124(t6)
+    fsd f1, 8(t6)
+    fsd f2, 16(t6)
+    fsd f3, 24(t6)
+    fsd f4, 32(t6)
+    fsd f5, 40(t6)
+    fsd f6, 48(t6)
+    fsd f7, 56(t6)
+    fsd f8, 64(t6)
+    fsd f9, 72(t6)
+    fsd f10, 80(t6)
+    fsd f11, 88(t6)
+    fsd f12, 96(t6)
+    fsd f13, 104(t6)
+    fsd f14, 112(t6)
+    fsd f15, 120(t6)
+    fsd f16, 128(t6)
+    fsd f17, 136(t6)
+    fsd f18, 144(t6)
+    fsd f19, 152(t6)
+    fsd f20, 160(t6)
+    fsd f21, 168(t6)
+    fsd f22, 176(t6)
+    fsd f23, 184(t6)
+    fsd f24, 192(t6)
+    fsd f25, 200(t6)
+    fsd f26, 208(t6)
+    fsd f27, 216(t6)
+    fsd f28, 224(t6)
+    fsd f29, 232(t6)
+    fsd f30, 240(t6)
+    fsd f31, 248(t6)
 .endif
     la t6, regs_bank0
 

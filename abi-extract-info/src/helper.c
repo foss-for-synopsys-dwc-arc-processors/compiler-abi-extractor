@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 extern unsigned regs_bank0[32];
-extern unsigned regs_bank1[32];
+extern unsigned long long regs_bank1[32];
 
 #define ARRAY_LENGTH(x) sizeof(x)/sizeof(x[0])
 
@@ -33,7 +33,7 @@ void dump_information(unsigned* Stack) {
     // Dump register bank1: regs_bank1
     printf("// regs_bank1\n");
     for(unsigned i=0; i<ARRAY_LENGTH(regs_bank1); ++i)
-       printf("0x%x\n", regs_bank1[i]);
+       printf("0x%llx\n", regs_bank1[i]);
 
     // stack: 32 entries (128 bytes on 32bit system)
     printf("// Start of stack dump: %p\n", Stack);
