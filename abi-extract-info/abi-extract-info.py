@@ -48,9 +48,15 @@ def do_datatypes(Driver, Report, Target):
 
 def do_saved(Driver, Report, Target):
     sizeof = Target.get_type_details("int")["size"]
-    content = savedGen.generate_main(Target, sizeof)
+
+    # Generate value for callee/caller saved registers.
+    helper.reset_used_values()
+    hvalue_caller_saved = helper.generate_hexa_value(sizeof)
+    hvalue_callee_saved = helper.generate_hexa_value(sizeof)
+
+    content = savedGen.generate_main(Target, hvalue_caller_saved)
     open("tmp/out_saved_main.c", "w").write(content)
-    content = savedGen.generate_aux(Target, sizeof)
+    content = savedGen.generate_aux(Target, hvalue_callee_saved)
     open("tmp/out_saved_aux.c", "w").write(content)
     stdout_file = Driver.run(
         ["tmp/out_saved_main.c", "tmp/out_saved_aux.c", "src/helper.c"],
@@ -62,7 +68,8 @@ def do_saved(Driver, Report, Target):
     register_banks = dump_information.get_reg_banks()
 
     saved_tests = savedTests.SavedTests(Target)
-    summary_content = saved_tests.run_test(register_banks, sizeof)
+    summary_content = saved_tests.run_test(register_banks, \
+                                hvalue_caller_saved, hvalue_callee_saved)
 
     summary_file = "tmp/out_saved.sum"
     open(summary_file, "w").write(summary_content)
