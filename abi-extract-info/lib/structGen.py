@@ -18,12 +18,11 @@ responsible for dumping the registger and stack values.
 """
 
 class StructGenerator:
-    def __init__(self, Target, count, dtype, sizeof):
+    def __init__(self, Target, count, dtype):
         self._result = []
         self.Target = Target
         self._count = count
         self._dtype = dtype
-        self._sizeof = sizeof
 
     def append(self, W):
         self._result.append(W)
@@ -76,31 +75,27 @@ struct structType {
         self.append("extern void callee(struct structType);")
         self.append("extern void reset_registers();")
 
-    def generate_single_call_main(self):
+    def generate_single_call_main(self, hvalues):
         dtypes = [self._dtype] * self._count + ["char"]
-        argv = helper.generate_hexa_list_from_datatypes(dtypes, self.Target, self._count)
         self.append("""
 int main (void) {
     reset_registers();
     struct structType structTypeObject = { %s };
     callee(structTypeObject);
 }
-""" % (", ".join(argv)))
+""" % (", ".join(hvalues)))
 
-    def generate_single_call(self):
+    def generate_single_call(self, hvalues):
         self.generate_single_call_declare()
         self.generate_single_call_prototypes()
-        self.generate_single_call_main()
+        self.generate_single_call_main(hvalues)
 
         return self.get_result()
 
-
-    def generate_multiple_call_declare(self):
-        for c in range(self._count + 1):
-            declare_str = [f"{self._dtype} a{j};" for j in range(c+1)]
-            if c == self._count:
-                declare_str.append(f"char a{self._count + 1};")
-
+    def generate_multiple_call_declare(self, argument_data):
+        for c in range(1, self._count + 1):
+            dtypes = argument_data[c]["dtypes"]
+            declare_str = [f"{dtype} a{index};" for index, dtype in enumerate(dtypes)]
             declare_str = "\n".join(declare_str)
             self.append("""
 struct structType%d {
@@ -112,24 +107,20 @@ struct structType%d {
         self.append("extern void callee();")
         self.append("extern void reset_registers(void);")
 
-    def generate_multiple_call_main(self):
+    def generate_multiple_call_main(self, argument_data):
         self.append("int main (void) {")
-        for c in range(self._count + 1): # +1 for the extra char call.
-            dtypes = [self._dtype] * (c+1)
-            reset = 10 if c == 0 else None
-            argv   = helper.generate_hexa_list_from_datatypes(dtypes, self.Target, reset)
-
-            if self._dtype == "float":
-                argv = [f"ul_as_float({x})" for x in argv]
-            elif self._dtype == "double":
-                argv = [f"ull_as_double({x})" for x in argv]
-
-            if c == self._count:
-                sizeof_char = self.Target.get_type_details("char")["size"]
-                char_value = helper.generate_hexa_values_2(sizeof_char)
-                argv_str = f"{', '.join(argv)}, {char_value}"
-            else:
-                argv_str = ", ".join(argv)
+        for c in range(1, self._count + 1):
+            argv     = []
+            dtypes_  = argument_data[c]["dtypes"]
+            hvalues_ =  argument_data[c]["hvalues"]
+            for dtype, hvalue in zip(dtypes_, hvalues_):
+                if dtype == "float":
+                    argv.append(f"ul_as_float({hvalue})")
+                elif dtype == "double":
+                    argv.append(f"ull_as_double({hvalue})")
+                else:
+                    argv.append(hvalue)
+            argv_str = ", ".join(argv)
 
             self.append("""
     reset_registers();
@@ -139,20 +130,20 @@ struct structType%d {
 
         self.append("}")
 
-    def generate_multiple_call(self):
+    def generate_multiple_call(self, argument_data):
         self.generate_converter()
 
-        self.generate_multiple_call_declare()
+        self.generate_multiple_call_declare(argument_data)
         self.generate_multiple_call_prototypes()
-        self.generate_multiple_call_main()
+        self.generate_multiple_call_main(argument_data)
 
         return self.get_result()
 
-def generate_single_call(Target, count, dtype, sizeof):
-    return StructGenerator(Target, count, dtype, sizeof).generate_single_call()
+def generate_single_call(Target, count, dtype, hvalues):
+    return StructGenerator(Target, count, dtype).generate_single_call(hvalues)
 
-def generate_multiple_call(Target, count, dtype, sizeof):
-    return StructGenerator(Target, count, dtype, sizeof).generate_multiple_call()
+def generate_multiple_call(Target, count, dtype, argument_data):
+    return StructGenerator(Target, count, dtype).generate_multiple_call(argument_data)
 
 import sys
 if __name__ == "__main__":
