@@ -96,7 +96,7 @@ def generate_binary_value(sizeof, replace_msb_by_one = False):
     if not hasattr(generate_binary_value, "used_values"):
         reset_used_values()
 
-    bvalue = "".join(random.choice("01") for _ in range(length))
+    bvalue = "".join(random.choice("01") for _ in range(sizeof))
 
     # Certain cases we need the most significant bit
     # to be set to one. (e.g, bitfields)
@@ -109,11 +109,11 @@ def generate_binary_value(sizeof, replace_msb_by_one = False):
     #   - have the middle 4 bits (in this case where sizeof >= 8 ) set to 0;
     #   (Used when a value is split in two)
     #   - be reused.
-    while (bvalue == "0" * length) or \
+    while (bvalue == "0" * sizeof) or \
           (sizeof >= 4 and bvalue[:4] == "0000") or \
           (sizeof >= 8 and bvalue[sizeof//2:sizeof//2+4] == "0000") or \
           (bvalue in generate_binary_value.used_values):
-        bvalue = "".join(random.choice("01") for _ in range(length))
+        bvalue = "".join(random.choice("01") for _ in range(sizeof))
         if replace_msb_by_one:
             bvalue = "1" + bvalue[1:]
 
