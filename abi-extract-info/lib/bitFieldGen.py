@@ -248,7 +248,8 @@ class BitFieldGenerator:
         tmp_str = ""
         hvalues = []
         for i, bfield in enumerate(bitfields):
-            bvalue = helper.generate_binary_value(bfield, True)
+            replace_msb_by_one = True
+            bvalue = helper.generate_binary_value(bfield, replace_msb_by_one)
             hvalue = helper.binary_to_hexa(bvalue)
             tmp_str += f".x{i} = {hvalue}, "
             hvalues.append(hvalue)
