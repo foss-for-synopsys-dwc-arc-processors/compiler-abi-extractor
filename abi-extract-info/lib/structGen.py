@@ -62,8 +62,7 @@ inline static double ull_as_double(unsigned long long lhs)
             self.generate_as_double()
 
     def generate_single_call_declare(self):
-        declare_str = [f"char a{c};" for c in range(self._count)]
-        declare_str.append(f"char a{self._count};")
+        declare_str = [f"char a{c};" for c in range(1, self._count + 1)]
         declare_str = "\n".join(declare_str)
         self.append("""
 struct structType {
