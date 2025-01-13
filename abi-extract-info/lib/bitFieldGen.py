@@ -249,6 +249,7 @@ class BitFieldGenerator:
         hvalues = []
         for i, bfield in enumerate(bitfields):
             replace_msb_by_one = True
+            helper.reset_used_values()
             bvalue = helper.generate_binary_value(bfield, replace_msb_by_one)
             hvalue = helper.binary_to_hexa(bvalue)
             tmp_str += f".x{i} = {hvalue}, "
