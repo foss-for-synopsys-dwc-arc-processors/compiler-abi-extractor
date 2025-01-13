@@ -231,8 +231,8 @@ def do_struct_boundaries(Driver, Report, Target):
         # Generate and build/execute the test case.
         Content = structGen.generate_single_call(Target, char_limit, dtype, \
                                                  hvalues)
-        file_name = f"tmp/out_struct_boundaries_{dtype}_{char_limit}.c"
-        c_file_name = f"{file_name}.c"
+        file_name = f"out_struct_boundaries_{dtype}_{char_limit}"
+        c_file_name = f"tmp/{file_name}.c"
         open(c_file_name, "w").write(Content)
         stdout_file = Driver.run(
             [c_file_name, "src/helper.c"],
@@ -307,8 +307,8 @@ def do_struct_boundaries(Driver, Report, Target):
         # Generate and build/execute the test case.
         Content = structGen.generate_multiple_call(Target, count, dtype, \
                                                    argument_data)
-        file_name = f"tmp/out_struct_boundaries_{dtype}"
-        c_file_name = f"{c_file_name}.c"
+        file_name = f"out_struct_boundaries_{dtype}"
+        c_file_name = f"tmp/{file_name}.c"
         open(c_file_name, "w").write(Content)
         StdoutFile = Driver.run(
             [c_file_name, "src/helper.c"],
