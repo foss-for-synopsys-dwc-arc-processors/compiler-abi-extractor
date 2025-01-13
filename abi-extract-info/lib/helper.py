@@ -91,12 +91,18 @@ def reset_used_values():
     generate_binary_value.used_values = []
 
 import random
-def generate_binary_value(sizeof):
+def generate_binary_value(sizeof, replace_msb_by_one = False):
     # Initialize static variable.
     if not hasattr(generate_binary_value, "used_values"):
         reset_used_values()
 
     bvalue = "".join(random.choice("01") for _ in range(length))
+
+    # Certain cases we need the most significant bit
+    # to be set to one. (e.g, bitfields)
+    if replace_msb_by_one:
+        bvalue = "1" + bvalue[1:]
+
     # The generated value cannot:
     #   - be all zeros;
     #   - have the 4 most significant bits set to 0.
@@ -108,6 +114,8 @@ def generate_binary_value(sizeof):
           (sizeof >= 8 and bvalue[sizeof//2:sizeof//2+4] == "0000") or \
           (bvalue in generate_binary_value.used_values):
         bvalue = "".join(random.choice("01") for _ in range(length))
+        if replace_msb_by_one:
+            bvalue = "1" + bvalue[1:]
 
     # Append to used_values list.
     generate_binary_value.used_values.append(bvalue)
