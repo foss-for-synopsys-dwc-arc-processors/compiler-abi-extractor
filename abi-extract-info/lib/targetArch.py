@@ -8,7 +8,7 @@
 class TargetArch:
     def __init__(self):
         self.type_details = dict()
-        self.argument_registers_2 = dict()
+        self.argument_registers = []
         self.register_bank_count = 0
 
     def set_type_details(self, type_details):
@@ -17,11 +17,11 @@ class TargetArch:
     def get_type_details(self, datatype):
         return self.type_details[datatype]
 
-    def set_argument_registers_2(self, dtype, registers):
-        self.argument_registers_2[dtype] = registers
+    def set_argument_registers(self, registers):
+         self.argument_registers = registers
 
-    def get_argument_registers_2(self, dtype):
-        return self.argument_registers_2[dtype]
+    def get_argument_registers(self):
+        return self.argument_registers
 
     def set_register_bank_count(self, register_bank_count):
         self.register_bank_count = register_bank_count
@@ -30,9 +30,6 @@ class TargetArch:
         return self.register_bank_count
 
     def get_registers(self):
-        raise NotImplementedError("Subclasses should implement this!")
-
-    def get_argument_registers(self):
         raise NotImplementedError("Subclasses should implement this!")
 
     def get_type(self):
@@ -63,15 +60,8 @@ class RISCV(TargetArch):
             ]
         }
 
-        # According to RISCV ABI.
-        self.ArgumentRegisters = ["a0", "a1", "a2", "a3",
-                                  "a4", "a5", "a6", "a7"]
-
     def get_registers(self, key = None):
         if key and key in self.Registers:
             return self.Registers[key]
 
         return self.Registers
-
-    def get_argument_registers(self):
-        return self.ArgumentRegisters

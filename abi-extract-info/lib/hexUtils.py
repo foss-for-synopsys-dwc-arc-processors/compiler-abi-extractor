@@ -309,7 +309,7 @@ class HexUtils:
         passed_by_ref = None
         passed_by_ref_register = None
 
-        argument_registers = self.Target.get_argument_registers_2(dtype)
+        argument_registers = self.Target.get_argument_registers()
 
         # Build a dictionary of register-values from the register banks.
         register_values_dict = dict()
@@ -398,7 +398,7 @@ class HexUtils:
         # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
         sizeof_int = 4
 
-        argument_registers = self.Target.get_argument_registers_2(dtype)
+        argument_registers = self.Target.get_argument_registers()
 
         # Build a dictionary of register-values from the register banks.
         register_values_dict = dict()

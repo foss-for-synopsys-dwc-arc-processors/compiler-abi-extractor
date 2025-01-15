@@ -188,7 +188,8 @@ def do_argpass(Driver, Report, Target):
 
             argc += 1
 
-        Target.set_argument_registers_2(dtype, citeration["registers"])
+        if dtype == "int":
+            Target.set_argument_registers(citeration["registers"])
 
     # Process the results
     Content = arg_pass_tests.process_stages(results)
