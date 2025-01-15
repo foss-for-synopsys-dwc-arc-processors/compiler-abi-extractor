@@ -322,9 +322,6 @@ def do_struct_boundaries(Driver, Report, Target):
             if citeration["passed_by_ref"] != None:
                 break
 
-        _boundary = len(results[dtype])
-        _boundary += -1 if _boundary > 0 else 0
-
     content = struct_tests.prepare_summary(results)
     # Run the empty struct test case.
     content += do_empty_struct(Driver, Report, Target)
