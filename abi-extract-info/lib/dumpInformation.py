@@ -27,7 +27,8 @@ class DumpInformation:
     # Read Header from the "dump_information" provided by "src/helper.c"
     def read_header(self, content):
         if "// Header info" not in content[0]:
-            return content
+#            return content
+            return self.read_header(content[1:])
 
         # Delete comment - "// Header info"
         content.pop(0)
