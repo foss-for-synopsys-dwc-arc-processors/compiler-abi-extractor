@@ -28,7 +28,8 @@ class StructTests:
             # Floating-point registers in RISC-V are 64-bit in size,
             # so we cannot consider the size of an int. If an int is 32-bit,
             # it would split the value, which is incorrect the double data type.
-            if dtype == "double":
+            register_bank_count = self.Target.get_register_bank_count()
+            if dtype == "double" and register_bank_count == "0x2":
                 register_size = self.Target.get_type_details("double")["size"]
             else:
                 register_size = self.Target.get_type_details("int")["size"]

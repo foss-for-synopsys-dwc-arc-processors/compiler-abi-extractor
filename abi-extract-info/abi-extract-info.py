@@ -282,6 +282,9 @@ def do_struct_boundaries(Driver, Report, Target):
     # is yet to be added. FIXME
     types = ["short", "int", "long",
              "long long", "float", "double"]
+    # HACK: This value will be replaced by a architecture validation
+    # in the beginning of the framework execution.
+    register_bank_count = 0
     for dtype in types:
         results[dtype] = []
 
@@ -322,6 +325,8 @@ def do_struct_boundaries(Driver, Report, Target):
                 # Get stack and register bank information
                 stack = dump_information.get_stack()
                 reg_banks = dump_information.get_reg_banks()
+                # Get the register bank count from the header dump information.
+                register_bank_count = dump_information.get_header_info(2)
 
                 # Extract the struct sizeof from C test case.
                 input_str = helper.read_file(stdout_file)
@@ -338,6 +343,9 @@ def do_struct_boundaries(Driver, Report, Target):
                     reached_boundary = True
                     break
             limit_dtype = limit_dtype + 1
+
+    # Store the register bank count.
+    Target.set_register_bank_count(register_bank_count)
 
     content = struct_tests.prepare_summary(results)
     # Run the empty struct test case.
