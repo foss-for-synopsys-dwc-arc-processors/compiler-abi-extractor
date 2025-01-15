@@ -96,31 +96,27 @@ def generate_binary_value(sizeof, replace_msb_by_one = False):
     if not hasattr(generate_binary_value, "used_values"):
         reset_used_values()
 
-    bvalue = "".join(random.choice("01") for _ in range(sizeof))
-
-    # Certain cases we need the most significant bit
-    # to be set to one. (e.g, bitfields)
-    if replace_msb_by_one:
-        bvalue = "1" + bvalue[1:]
-
-    # The generated value cannot:
-    #   - be all zeros;
-    #   - have the 4 most significant bits set to 0.
-    #   - have the middle 4 bits (in this case where sizeof >= 8 ) set to 0;
-    #   (Used when a value is split in two)
-    #   - be reused.
-    while (bvalue == "0" * sizeof) or \
-          (sizeof >= 4 and bvalue[:4] == "0000") or \
-          (sizeof >= 8 and bvalue[sizeof//2:sizeof//2+4] == "0000") or \
-          (bvalue in generate_binary_value.used_values):
+    while True:
         bvalue = "".join(random.choice("01") for _ in range(sizeof))
+
+        # Certain cases we need the most significant bit
+        # to be set to one. (e.g, bitfields)
         if replace_msb_by_one:
             bvalue = "1" + bvalue[1:]
 
-    # Append to used_values list.
-    generate_binary_value.used_values.append(bvalue)
-
-    return bvalue
+        # The generated value cannot:
+        #   - be all zeros;
+        #   - have the 4 most significant bits set to 0.
+        #   - have the middle 4 bits (in this case where sizeof >= 8 ) set to 0;
+        #   (Used when a value is split in two)
+        #   - be reused.
+        if (bvalue != "0" * sizeof) and \
+           (sizeof < 4 or bvalue[:4] != "0000") and \
+           (sizeof < 8 or bvalue[sizeof//2:sizeof//2+4] != "0000") and \
+           (bvalue not in generate_binary_value.used_values):
+            # Append to used_values list.
+            generate_binary_value.used_values.append(bvalue)
+            return bvalue
 
 def generate_hexa_value(sizeof):
     # The `sizeof`` represents the size of the value in hexadecimal.
