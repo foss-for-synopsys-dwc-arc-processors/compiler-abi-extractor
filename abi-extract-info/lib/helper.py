@@ -62,6 +62,14 @@ def parse_type_info(text):
 
     return type_details
 
+# Parse a string input with regular expression.
+def parse_regex(regex, input_str):
+    match = re.search(regex, input_str)
+    res = None
+    if match:
+        res = match.group(1)
+    return res
+
 # Create a mapping between the register set and their values.
 def make_mapping(regs, values):
     reg_values = dict()
