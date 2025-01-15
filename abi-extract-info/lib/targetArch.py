@@ -9,6 +9,7 @@ class TargetArch:
     def __init__(self):
         self.type_details = dict()
         self.argument_registers_2 = dict()
+        self.register_bank_count = 0
 
     def set_type_details(self, type_details):
         self.type_details = type_details
@@ -21,6 +22,12 @@ class TargetArch:
 
     def get_argument_registers_2(self, dtype):
         return self.argument_registers_2[dtype]
+
+    def set_register_bank_count(self, register_bank_count):
+        self.register_bank_count = register_bank_count
+
+    def get_register_bank_count(self):
+        return self.register_bank_count
 
     def get_registers(self):
         raise NotImplementedError("Subclasses should implement this!")
