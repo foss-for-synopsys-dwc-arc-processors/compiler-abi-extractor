@@ -291,47 +291,32 @@ def do_struct_boundaries(Driver, Report, Target):
         limit_dtype = char_limit // sizeof_dtype
 
         # Generate the struct hexadecimal values with a list of data types.
-        argument_data = {}
-        for i in range(1, limit_dtype + 1):
-            dtypes_ = [dtype] * i
-            hvalues_ = helper.generate_hexa_list_from_datatypes(dtypes_, Target)
-            argument_data[i] = { "dtypes": dtypes_, "hvalues": hvalues_ }
-
         # Plus one char to validate the limit.
-        count = limit_dtype + 1
-        dtypes_ = argument_data[limit_dtype]["dtypes"] + ["char"]
-        argument_data[count] = {
-            "dtypes": dtypes_,
-            "hvalues": helper.generate_hexa_list_from_datatypes(dtypes_, Target)
-        }
+        for index, i in enumerate([[], ["char"]]):
+            dtypes_ = [dtype] * limit_dtype + i
+            hvalues_ = helper.generate_hexa_list_from_datatypes(dtypes_, Target)
 
-        # Generate and build/execute the test case.
-        Content = structGen.generate_multiple_call(Target, count, dtype, \
-                                                   argument_data)
-        file_name = f"out_struct_boundaries_{dtype}"
-        c_file_name = f"tmp/{file_name}.c"
-        open(c_file_name, "w").write(Content)
-        StdoutFile = Driver.run(
-            [c_file_name, "src/helper.c"],
-            ["src/arch/riscv.S"], file_name
-        )
-
-        # As multiple calls are made to the "callee()" external function,
-        # we need to split the information in multiple dumps and for over
-        # each one of them.
-        dump_sections = dumpInformation.split_dump_sections(StdoutFile)
-        for index, dump in enumerate(dump_sections):
+            # Generate and build/execute the test case.
+            Content = structGen.generate_single_call(Target, None, dtypes_, \
+                                                     hvalues_)
+            file_name = f"out_struct_boundaries_{dtype}_{index}"
+            c_file_name = f"tmp/{file_name}.c"
+            open(c_file_name, "w").write(Content)
+            StdoutFile = Driver.run(
+                [c_file_name, "src/helper.c"],
+                ["src/arch/riscv.S"], file_name
+            )
 
             # Parse the dump information.
             dump_information = dumpInformation.DumpInformation()
-            dump_information.parse(dump)
+            to_read = True
+            dump_information.parse(StdoutFile, to_read)
 
             # Get stack and register bank information
             stack = dump_information.get_stack()
             reg_banks = dump_information.get_reg_banks()
 
             citeration = {}
-            hvalues = argument_data[index + 1]["hvalues"]
             struct_tests.run_test(citeration, dtype, stack, reg_banks, hvalues)
             results[dtype].append(citeration)
             if citeration["passed_by_ref"] != None:
