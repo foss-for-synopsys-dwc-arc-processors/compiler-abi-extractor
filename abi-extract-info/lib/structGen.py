@@ -31,6 +31,7 @@ class StructGenerator:
         return "\n".join(self._result)
 
     def generate_include(self):
+        self.append("#include <stdio.h>")
         self.append("#include <string.h>")
 
     def generate_as_float(self):
@@ -55,10 +56,8 @@ inline static double ull_as_double(unsigned long long lhs)
 
     def generate_converter(self):
         if self._dtype == "float":
-            self.generate_include()
             self.generate_as_float()
         elif self._dtype == "double":
-            self.generate_include()
             self.generate_as_double()
 
     def generate_single_call_declare(self):
@@ -86,6 +85,7 @@ int main (void) {
 """ % (", ".join(hvalues)))
 
     def generate_single_call(self, hvalues):
+        self.generate_include()
         self.generate_single_call_declare()
         self.generate_single_call_prototypes()
         self.generate_single_call_main(hvalues)
