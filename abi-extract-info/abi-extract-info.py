@@ -344,10 +344,72 @@ def do_struct_boundaries(Driver, Report, Target):
                     break
             limit_dtype = limit_dtype + 1
 
+
+
+    # As per the RISC-V ABi:
+    # "A struct containing two floating-point reals is passed in two
+    #  floating-point registers, if neither real is more than ABI_FLEN
+    #   bits wide and at least two floating-registers are available."
+    # To handle this, a special case is necessary to validate that the following
+    # data type pairs are the struct boundary size limits:
+    #   - float/double
+    #   - double/float
+    #   - float/float
+    #   - double/double
+    sc_results = {}
+    special_cases = [["float", "double"], ["double", "float"],
+                    ["float", "float"], ["double", "double"]]
+    for dtypes in special_cases:
+        dtypes_str = "_".join(dtypes)
+        sc_results[dtypes_str] = []
+        for index, i in enumerate([[], ["char"]]):
+
+            dtypes = dtypes + i
+            hvalues = helper.generate_hexa_list_from_datatypes(dtypes, Target)
+
+            content = structGen.generate_single_call(Target, None, dtypes, \
+                                                        hvalues)
+
+            file_name = f"out_struct_boundaries_sc_{dtypes_str}_{index}"
+            c_file_name = f"tmp/{file_name}.c"
+            open(c_file_name, "w").write(content)
+            StdoutFile = Driver.run(
+                [c_file_name, "src/helper.c"],
+                ["src/arch/riscv.S"], file_name
+            )
+
+            # Parse the dump information.
+            dump_information = dumpInformation.DumpInformation()
+            read_file = True
+            dump_information.parse(StdoutFile, read_file)
+
+            # Get stack and register bank information
+            stack = dump_information.get_stack()
+            reg_banks = dump_information.get_reg_banks()
+
+            input_str = helper.read_file(StdoutFile)
+            # Regular expression to match the size
+            regex = r"Sizeof\(struct structType\): (\d+)"
+            size = helper.parse_regex(regex, input_str)
+
+            citeration = {}
+            citeration["sizeof(S)"] = size
+
+            # Create tuple list of data type and the corresponding hexadecimal
+            # values.
+            tmp = [(dtype, hvalues[index]) for index, dtype in enumerate(dtypes)]
+            citeration["dtypes,hvalues"] = tmp
+
+            struct_tests.run_test(citeration, dtype, stack, reg_banks, hvalues)
+            sc_results[dtypes_str].append(citeration)
+            if citeration["passed_by_ref"] != None:
+                break
+
     # Store the register bank count.
     Target.set_register_bank_count(register_bank_count)
 
     content = struct_tests.prepare_summary(results)
+    content += struct_tests.prepare_summary_special_case(sc_results)
     # Run the empty struct test case.
     content += do_empty_struct(Driver, Report, Target)
     open("tmp/out_structs.sum", "w").write(content)
