@@ -281,46 +281,49 @@ def do_struct_boundaries(Driver, Report, Target):
         # Get datatype size from stored information from previous test case.
         sizeof_dtype = Target.get_type_details(dtype)["size"]
 
-        # FIXME! It has been observed that with floating-point registers
-        # for double, the expected limit is different.
-        # I.e, 16 instead of8 bytes.
-        if dtype == "double":
-            char_limit = char_limit * 2
-
         # Calculate max datatype boundary according to sizeof.
         limit_dtype = char_limit // sizeof_dtype
 
-        # Generate the struct hexadecimal values with a list of data types.
-        # Plus one char to validate the limit.
-        for index, i in enumerate([[], ["char"]]):
-            dtypes_ = [dtype] * limit_dtype + i
-            hvalues_ = helper.generate_hexa_list_from_datatypes(dtypes_, Target)
+        # The expected boundary may not be reached with the previously
+        # calculated limit. In that case, we increment the limit_dtype by 1
+        # and recalculate for the given data type. A maximum of 10 iterations
+        # is enforced to prevent infinite loops.
+        reached_boundary = False
+        while not reached_boundary and limit_dtype < 10:
+            # Generate the struct hexadecimal values with a list of data types.
+            # Plus one char to validate the limit.
+            for index, i in enumerate([[], ["char"]]):
+                dtypes_ = [dtype] * limit_dtype + i
+                hvalues_ = helper.generate_hexa_list_from_datatypes(dtypes_, \
+                                                                    Target)
+                # Generate and build/execute the test case.
+                Content = structGen.generate_single_call(Target, None, \
+                                                         dtypes_, hvalues_)
+                file_name = f"out_struct_boundaries_{dtype}_{index}"
+                c_file_name = f"tmp/{file_name}.c"
+                open(c_file_name, "w").write(Content)
+                StdoutFile = Driver.run(
+                    [c_file_name, "src/helper.c"],
+                    ["src/arch/riscv.S"], file_name
+                )
 
-            # Generate and build/execute the test case.
-            Content = structGen.generate_single_call(Target, None, dtypes_, \
-                                                     hvalues_)
-            file_name = f"out_struct_boundaries_{dtype}_{index}"
-            c_file_name = f"tmp/{file_name}.c"
-            open(c_file_name, "w").write(Content)
-            StdoutFile = Driver.run(
-                [c_file_name, "src/helper.c"],
-                ["src/arch/riscv.S"], file_name
-            )
+                # Parse the dump information.
+                dump_information = dumpInformation.DumpInformation()
+                to_read = True
+                dump_information.parse(StdoutFile, to_read)
 
-            # Parse the dump information.
-            dump_information = dumpInformation.DumpInformation()
-            to_read = True
-            dump_information.parse(StdoutFile, to_read)
+                # Get stack and register bank information
+                stack = dump_information.get_stack()
+                reg_banks = dump_information.get_reg_banks()
 
-            # Get stack and register bank information
-            stack = dump_information.get_stack()
-            reg_banks = dump_information.get_reg_banks()
-
-            citeration = {}
-            struct_tests.run_test(citeration, dtype, stack, reg_banks, hvalues)
-            results[dtype].append(citeration)
-            if citeration["passed_by_ref"] != None:
-                break
+                citeration = {}
+                struct_tests.run_test(citeration, dtype, stack, reg_banks, \
+                                      hvalues)
+                results[dtype].append(citeration)
+                if citeration["passed_by_ref"] != None:
+                    reached_boundary = True
+                    break
+            limit_dtype = limit_dtype + 1
 
     content = struct_tests.prepare_summary(results)
     # Run the empty struct test case.
