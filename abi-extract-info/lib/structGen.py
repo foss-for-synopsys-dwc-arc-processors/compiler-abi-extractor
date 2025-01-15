@@ -78,6 +78,7 @@ struct structType {
         dtypes = [self._dtype] * self._count + ["char"]
         self.append("""
 int main (void) {
+    printf("Sizeof(struct structType): %%d\\n", sizeof(struct structType));
     reset_registers();
     struct structType structTypeObject = { %s };
     callee(structTypeObject);
