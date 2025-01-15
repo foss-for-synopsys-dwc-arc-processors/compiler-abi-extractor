@@ -312,7 +312,7 @@ def do_struct_boundaries(Driver, Report, Target):
                 file_name = f"out_struct_boundaries_{dtype}_{index}"
                 c_file_name = f"tmp/{file_name}.c"
                 open(c_file_name, "w").write(Content)
-                StdoutFile = Driver.run(
+                stdout_file = Driver.run(
                     [c_file_name, "src/helper.c"],
                     ["src/arch/riscv.S"], file_name
                 )
@@ -320,7 +320,7 @@ def do_struct_boundaries(Driver, Report, Target):
                 # Parse the dump information.
                 dump_information = dumpInformation.DumpInformation()
                 to_read = True
-                dump_information.parse(StdoutFile, to_read)
+                dump_information.parse(stdout_file, to_read)
 
                 # Get stack and register bank information
                 stack = dump_information.get_stack()
