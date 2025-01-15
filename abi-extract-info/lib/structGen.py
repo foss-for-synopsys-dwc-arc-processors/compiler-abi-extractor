@@ -8,13 +8,13 @@
 from lib import helper
 
 """
-The purpose of this generator is to create a test case
-that will validate the boundaries before a struct with
-values goes to the stack.
+The purpose of this generator is to create a C test case that validates the
+struct size boundaries during argument passing before being passed by
+reference on the stack.
 
-For a given datatype, will generate single or multiple
-structs being passed to an extern callee() function
-responsible for dumping the registger and stack values.
+Given a list of data types, it generates a struct that is passed to an
+external `callee()` function, which is responsible for dumping the register
+and stack values.
 """
 
 class StructGenerator:
