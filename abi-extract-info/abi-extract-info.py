@@ -250,7 +250,14 @@ def do_struct_boundaries(Driver, Report, Target):
         stack = dump_information.get_stack()
         reg_banks = dump_information.get_reg_banks()
 
+        # Extract the struct sizeof from C test case.
+        input_str = helper.read_file(stdout_file)
+        # Regular expression to match the size
+        regex = r"Sizeof\(struct structType\): (\d+)"
+        size = helper.parse_regex(regex, input_str)
+
         citeration = {}
+        citeration["sizeof(S)"] = size
         struct_tests.run_test(citeration, dtype, stack, reg_banks, hvalues)
         results[dtype].append(citeration)
         if citeration["passed_by_ref"] != None:
@@ -316,7 +323,14 @@ def do_struct_boundaries(Driver, Report, Target):
                 stack = dump_information.get_stack()
                 reg_banks = dump_information.get_reg_banks()
 
+                # Extract the struct sizeof from C test case.
+                input_str = helper.read_file(stdout_file)
+                # Regular expression to match the size
+                regex = r"Sizeof\(struct structType\): (\d+)"
+                size = helper.parse_regex(regex, input_str)
+
                 citeration = {}
+                citeration["sizeof(S)"] = size
                 struct_tests.run_test(citeration, dtype, stack, reg_banks, \
                                       hvalues)
                 results[dtype].append(citeration)
