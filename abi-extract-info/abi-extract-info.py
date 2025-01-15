@@ -229,7 +229,8 @@ def do_struct_boundaries(Driver, Report, Target):
         hvalues = helper.generate_hexa_list(char_limit, char_sizeof)
 
         # Generate and build/execute the test case.
-        Content = structGen.generate_single_call(Target, char_limit, dtype, \
+        dtypes = [dtype] * char_limit
+        Content = structGen.generate_single_call(Target, char_limit, dtypes, \
                                                  hvalues)
         file_name = f"out_struct_boundaries_{dtype}_{char_limit}"
         c_file_name = f"tmp/{file_name}.c"
