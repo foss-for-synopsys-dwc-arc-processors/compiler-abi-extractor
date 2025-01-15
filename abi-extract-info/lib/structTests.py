@@ -87,6 +87,82 @@ class StructTests:
 
         return types, boundaries, passed_by_ref_value
 
+
+    def process_special_case(self, results):
+        res = {}
+        # Iterate through each dtype and corresponding iterations
+        for dtype, iterations in results.items():
+            dtype_str = dtype.replace("_", ",")
+
+            # Determine the limit
+            iterations_length = len(iterations)
+            if iterations[-1].get("passed_by_ref") and \
+               iterations_length >= 2 and not iterations[-2]["passed_by_ref"]:
+                limit = len(iterations[-2]["dtypes,hvalues"])
+            else:
+                limit = 0
+
+            limit_str = str(limit)
+
+            # Initialize the data structure if not already present
+            if limit_str not in res:
+                res[limit_str] = {"<=": "", ">": "", "dtypes": []}
+
+            # Access res[limit_str] once
+            data = res[limit_str]
+
+            # Process each iteration
+            for iteration in iterations:
+                argc = len(iteration["dtypes,hvalues"])
+
+                # Handle dtypes and conditionally update "<=" and ">"
+                if argc <= limit:
+                    if dtype_str not in data["dtypes"]:
+                        data["dtypes"].append(dtype_str)
+                    if iteration["registers_fill"]    or \
+                       iteration["register_combined"] or \
+                       iteration["registers_pairs"]:
+                        data["<="] = "in registers"
+                    else:
+                        data["<="] = "unknown"
+                else:
+                    if dtype_str not in data["dtypes"]:
+                        data["dtypes"].append(dtype_str)
+                    data[">"] = f"by ref: {iteration['passed_by_ref']}"
+
+            # Second loop to check for matches if limit_str already exists
+            if limit_str in res:
+                for iteration in iterations:
+                    argc = len(iteration["dtypes,hvalues"])
+                    match = False
+
+                    if argc <= limit:
+                        if iteration["registers_fill"] or \
+                           iteration["register_combined"] or \
+                           iteration["registers_pairs"]:
+                            if data["<="] == "in registers":
+                                match = True
+                    else:
+                        if data[">"] == f"by ref: {iteration['passed_by_ref']}":
+                            match = True
+
+                    if match and dtype_str not in data["dtypes"]:
+                        data["dtypes"].append(dtype_str)
+
+        return res
+
+    def summary_results_special_case(self, res):
+        summary = []
+        for limit, data in res.items():
+            if len(data["dtypes"]) != 4:
+                break
+            summary.append(f"- argc <= {limit} : passed {data['<=']}")
+            summary.append(f"- argc >  {limit} : passed {data['>']}")
+            dtypes_str = " : ".join(data['dtypes'])
+            summary.append(f"  - {dtypes_str}")
+        summary.append("")
+        return summary
+
     # Create a summary
     def summary_results(self, types, boundaries, passed_by_ref_value):
         types_dict = {}
@@ -114,6 +190,14 @@ class StructTests:
 
         # Summarize and output the results
         summary = self.summary_results(types, boundaries, passed_by_ref_value)
+        return "\n".join(summary)
+
+    def prepare_summary_special_case(self, results):
+        # Process the results
+        res = self.process_special_case(results)
+
+        # Summary and output the results
+        summary = self.summary_results_special_case(res)
         return "\n".join(summary)
 
     # Run the test to check if the value is in registers or the stack.
