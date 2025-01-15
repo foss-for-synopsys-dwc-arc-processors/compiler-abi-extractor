@@ -102,58 +102,8 @@ int main (void) {
 
         return self.get_result()
 
-    def generate_multiple_call_declare(self, argument_data):
-        for c in range(1, self._count + 1):
-            dtypes = argument_data[c]["dtypes"]
-            declare_str = [f"{dtype} a{index};" for index, dtype in enumerate(dtypes)]
-            declare_str = "\n".join(declare_str)
-            self.append("""
-struct structType%d {
-%s
-};
-""" % (c, declare_str))
-
-    def generate_multiple_call_prototypes(self):
-        self.append("extern void callee();")
-        self.append("extern void reset_registers(void);")
-
-    def generate_multiple_call_main(self, argument_data):
-        self.append("int main (void) {")
-        for c in range(1, self._count + 1):
-            argv     = []
-            dtypes_  = argument_data[c]["dtypes"]
-            hvalues_ =  argument_data[c]["hvalues"]
-            for dtype, hvalue in zip(dtypes_, hvalues_):
-                if dtype == "float":
-                    argv.append(f"ul_as_float({hvalue})")
-                elif dtype == "double":
-                    argv.append(f"ull_as_double({hvalue})")
-                else:
-                    argv.append(hvalue)
-            argv_str = ", ".join(argv)
-
-            self.append("""
-    reset_registers();
-    struct structType%d structTypeObject%d = { %s };
-    callee(structTypeObject%d);
-""" % (c, c, argv_str, c))
-
-        self.append("}")
-
-    def generate_multiple_call(self, argument_data):
-        self.generate_converter()
-
-        self.generate_multiple_call_declare(argument_data)
-        self.generate_multiple_call_prototypes()
-        self.generate_multiple_call_main(argument_data)
-
-        return self.get_result()
-
 def generate_single_call(Target, count, dtypes, hvalues):
     return StructGenerator(Target, count, dtypes).generate_single_call(hvalues)
-
-def generate_multiple_call(Target, count, dtype, argument_data):
-    return StructGenerator(Target, count, dtype).generate_multiple_call(argument_data)
 
 import sys
 if __name__ == "__main__":
