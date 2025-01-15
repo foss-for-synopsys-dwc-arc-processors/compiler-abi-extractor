@@ -108,7 +108,7 @@ callee:
     # Note: t6 register itself (x31) is not stored to regs_bank0 array
 
     # save the callee-saved register
-    sw s2, 8(sp)
+    sw s2, -8(sp)
 
     # save the return address to a callee-saved register
     lw s2, 4(t6)
@@ -121,7 +121,7 @@ callee:
     addi ra, s2, 0
 
     # restore the calee-saved register
-    lw s2, 8(sp)
+    lw s2, -8(sp)
 
     ret
 
