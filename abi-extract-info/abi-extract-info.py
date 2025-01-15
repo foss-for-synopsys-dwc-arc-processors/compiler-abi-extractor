@@ -293,12 +293,12 @@ def do_struct_boundaries(Driver, Report, Target):
             # Generate the struct hexadecimal values with a list of data types.
             # Plus one char to validate the limit.
             for index, i in enumerate([[], ["char"]]):
-                dtypes_ = [dtype] * limit_dtype + i
-                hvalues_ = helper.generate_hexa_list_from_datatypes(dtypes_, \
+                dtypes = [dtype] * limit_dtype + i
+                hvalues = helper.generate_hexa_list_from_datatypes(dtypes, \
                                                                     Target)
                 # Generate and build/execute the test case.
                 Content = structGen.generate_single_call(Target, None, \
-                                                         dtypes_, hvalues_)
+                                                         dtypes, hvalues)
                 file_name = f"out_struct_boundaries_{dtype}_{index}"
                 c_file_name = f"tmp/{file_name}.c"
                 open(c_file_name, "w").write(Content)
