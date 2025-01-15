@@ -220,13 +220,13 @@ def do_struct_boundaries(Driver, Report, Target):
     dtype = "char"
     results = {}
     results[dtype] = []
-    sizeof = Target.get_type_details(dtype)["size"]
+    char_sizeof = Target.get_type_details(dtype)["size"]
 
     # Reset the used generated values.
     helper.reset_used_values()
     while (True):
         # Generate a hexadecimal value list according to the current count.
-        hvalues = helper.generate_hexa_list(char_limit, sizeof)
+        hvalues = helper.generate_hexa_list(char_limit, char_sizeof)
 
         # Generate and build/execute the test case.
         Content = structGen.generate_single_call(Target, char_limit, dtype, \
