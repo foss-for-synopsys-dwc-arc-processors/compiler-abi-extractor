@@ -18,11 +18,11 @@ responsible for dumping the registger and stack values.
 """
 
 class StructGenerator:
-    def __init__(self, Target, count, dtype):
+    def __init__(self, Target, count, dtypes):
         self._result = []
         self.Target = Target
         self._count = count
-        self._dtype = dtype
+        self.dtypes = dtypes
 
     def append(self, W):
         self._result.append(W)
@@ -55,13 +55,13 @@ inline static double ull_as_double(unsigned long long lhs)
 """)
 
     def generate_converter(self):
-        if self._dtype == "float":
+        if "float" in self.dtypes:
             self.generate_as_float()
-        elif self._dtype == "double":
+        if "double" in self.dtypes:
             self.generate_as_double()
 
     def generate_single_call_declare(self):
-        declare_str = [f"char a{c};" for c in range(1, self._count + 1)]
+        declare_str = [f"    {dtype} a{i + 1};" for i, dtype in enumerate(self.dtypes)]
         declare_str = "\n".join(declare_str)
         self.append("""
 struct structType {
@@ -74,7 +74,14 @@ struct structType {
         self.append("extern void reset_registers();")
 
     def generate_single_call_main(self, hvalues):
-        dtypes = [self._dtype] * self._count + ["char"]
+        hvalues_str = []
+        for index, dtype in enumerate(self.dtypes):
+            if dtype == "float":
+                hvalues_str.append(f"ul_as_float({hvalues[index]})")
+            elif dtype == "double":
+                hvalues_str.append(f"ull_as_double({hvalues[index]})")
+            else:
+                hvalues_str.append(hvalues[index])
         self.append("""
 int main (void) {
     printf("Sizeof(struct structType): %%d\\n", sizeof(struct structType));
@@ -84,10 +91,11 @@ int main (void) {
 
     return 0;
 }
-""" % (", ".join(hvalues)))
+""" % (", ".join(hvalues_str)))
 
     def generate_single_call(self, hvalues):
         self.generate_include()
+        self.generate_converter()
         self.generate_single_call_declare()
         self.generate_single_call_prototypes()
         self.generate_single_call_main(hvalues)
@@ -141,8 +149,8 @@ struct structType%d {
 
         return self.get_result()
 
-def generate_single_call(Target, count, dtype, hvalues):
-    return StructGenerator(Target, count, dtype).generate_single_call(hvalues)
+def generate_single_call(Target, count, dtypes, hvalues):
+    return StructGenerator(Target, count, dtypes).generate_single_call(hvalues)
 
 def generate_multiple_call(Target, count, dtype, argument_data):
     return StructGenerator(Target, count, dtype).generate_multiple_call(argument_data)
