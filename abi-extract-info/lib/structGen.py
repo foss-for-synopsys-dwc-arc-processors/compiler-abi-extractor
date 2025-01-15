@@ -81,6 +81,8 @@ int main (void) {
     reset_registers();
     struct structType structTypeObject = { %s };
     callee(structTypeObject);
+
+    return 0;
 }
 """ % (", ".join(hvalues)))
 
