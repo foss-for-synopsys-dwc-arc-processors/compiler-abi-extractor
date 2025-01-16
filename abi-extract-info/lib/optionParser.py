@@ -63,6 +63,8 @@ Options:
         exit(0)
 
     def set_default(self):
+        self.set("cc",  "gcc-rv32gc-ilp32d")
+        self.set("sim", "qemu-riscv32")
         self.set("verbose", False)
 
     def option_parser(self, args = sys.argv[1:]):
