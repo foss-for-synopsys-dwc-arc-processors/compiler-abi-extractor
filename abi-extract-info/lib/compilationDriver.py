@@ -51,7 +51,9 @@ class CompilationDriver:
         for srcFile in srcFiles:
             asmFile = tmp + os.path.basename(srcFile)
             asmFile = asmFile.replace(".c", ".s")
-            self.compile(srcFile, asmFile)
+            res = self.compile(srcFile, asmFile)
+            if res != 0:
+                return 1, None
             asmFiles.append(asmFile)
 
         objFiles = []
@@ -59,23 +61,30 @@ class CompilationDriver:
             objFile = tmp + os.path.basename(asmFile)
             objFile = objFile.replace(".s", ".o")
             objFile = objFile.replace(".S", ".o")
-            self.assemble(asmFile, objFile)
+            res = self.assemble(asmFile, objFile)
+            if res != 0:
+                return 1, None
             objFiles.append(objFile)
 
         outputFile = tmp + outFile + ".elf"
-        self.link(objFiles, outputFile)
+        res = self.link(objFiles, outputFile)
+        if res != 0:
+            return 1, None
+
 
         stdoutFile = tmp + outFile + ".stdout"
-        self.simulate("", outputFile, stdoutFile)
+        res = self.simulate("", outputFile, stdoutFile)
+        if res != 0:
+            return 1, None
 
-        return stdoutFile
+        return 0, stdoutFile
 
     # Compiler the specified program into an object file
     def compile(self, InputFile, OutputFile):
-        self.cmd([self.cc] + self.cflags + [InputFile, "-S", "-o", OutputFile])
+        return self.cmd([self.cc] + self.cflags + [InputFile, "-S", "-o", OutputFile])
 
     def assemble(self, InputFile, OutputFile):
-        self.cmd([self.assembler] + self.cflags + [InputFile, "-c", "-o", OutputFile])
+        return self.cmd([self.assembler] + self.cflags + [InputFile, "-c", "-o", OutputFile])
 
     # Initialy, only one input file was needed, but now multiple files are required
     # for expanded tests. A mechanism was added to handle multiple files, converting
@@ -83,8 +92,9 @@ class CompilationDriver:
     def link(self, InputFile, OutputFile):
         if isinstance(InputFile, str):
             InputFile = [InputFile]
-        self.cmd([self.linker] + self.cflags + InputFile + ["-o", OutputFile])
+        return self.cmd([self.linker] + self.cflags + InputFile + ["-o", OutputFile])
 
     def simulate(self, args, InputFile, OutputFile):
         Content = self.cmdWithResult([self.simulator] + [InputFile]).decode()
         open(OutputFile, "w").write(Content)
+        return 0
