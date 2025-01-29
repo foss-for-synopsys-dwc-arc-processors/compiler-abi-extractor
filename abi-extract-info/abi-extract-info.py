@@ -79,10 +79,7 @@ def do_saved(Driver, Report, Target):
 
 def do_return(Driver, Report, Target):
     dtypes = ["char", "short", "int", "long",
-             "long long", "float", "double", "long double"]
-
-    # TODO You need to handle `long double` differently if its
-    # 16 bytes in a 32 bit machine.
+             "long long", "float", "double"]
 
     return_tests = returnTests.ReturnTests(Target)
     results = {}
@@ -139,14 +136,10 @@ def do_bitfield(Driver, Report, Target):
 def do_argpass(Driver, Report, Target):
     # List of datatypes to be tested.
     types = [ "char", "short", "int", "long", "long long",
-              "float", "double", "long double"]
+              "float", "double"]
 
     results = {}
     for dtype in types:
-        # Skip `long double` due to its size limitations. FIXME
-        if dtype == "long double":
-            continue
-
         # Create an instance of `ArgPassTests` for the current Target
         arg_pass_tests = argPassTests.ArgPassTests(Target)
 
