@@ -451,12 +451,12 @@ def do_struct_boundaries(Driver, Report, Target):
     Report.append("tmp/out_structs.sum")
 
 def do_endianness(Driver, Report):
-    source_files   = ["src/endianness/endiannss.c"]
+    source_files   = ["src/endianness/endianness.c"]
     assembly_files = []
     output_name = "out_endianness"
     res, stdoutFile = Driver.run(source_files, assembly_files, output_name)
     if res != 0:
-        print("Skip: Struct Argument Passing test case failed.")
+        print("Skip: Endianness test case failed.")
         return
     Report.append(stdoutFile)
 
