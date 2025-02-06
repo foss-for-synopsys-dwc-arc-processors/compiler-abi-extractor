@@ -42,9 +42,13 @@ class CompilationDriver:
             # If the verbose flag (-v) is detected, executed commands will be displayed.
             if self.is_verbose:
                 self.info("EXECUTING: %s" % (" ".join(c)))
-            return subprocess.Popen(c, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+                process = subprocess.Popen(c, stdout=subprocess.PIPE)
+            else:
+                process = subprocess.Popen(c, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            stdout, stderr = process.communicate()
+            return stdout, process.returncode
         except OSError as oserror:
-            return None
+            return None, 1
 
     # Compile, assemble, link and simulate wrapper to reduce extensive code.
     def run(self, srcFiles, asmFiles, outFile, tmp="tmp/"):
@@ -95,6 +99,7 @@ class CompilationDriver:
         return self.cmd([self.linker] + self.cflags + InputFile + ["-o", OutputFile])
 
     def simulate(self, args, InputFile, OutputFile):
-        Content = self.cmdWithResult([self.simulator] + [InputFile]).decode()
+        Content, return_code = self.cmdWithResult([self.simulator] + [InputFile])
+        Content = Content.decode()
         open(OutputFile, "w").write(Content)
-        return 0
+        return return_code
