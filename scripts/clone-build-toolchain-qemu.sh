@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2025-present, Synopsys, Inc.
 # All rights reserved.
 #
@@ -35,40 +35,36 @@
 #   - 2.2G for the installation directory (toolchain/inst/).
 #   - 11.8G for build files (toolchain/bld).
 
+set -eux
+
 # Create a toolchain directory.
-echo "EXECUTING: mkdir toolchain && cd toolchain"
-mkdir toolchain && cd toolchain
+mkdir -p toolchain
+pushd toolchain
 
 # Clone the repository.
-echo "EXECUTING: git clone https://github.com/riscv/riscv-gnu-toolchain.git --depth 1 --single-branch"
 git clone https://github.com/riscv/riscv-gnu-toolchain.git --depth 1 --single-branch
 
 # Create a build directory and configure the toolchain.
-echo "EXECUTING: mkdir bld && cd bld"
-mkdir bld && cd bld
-echo "EXECUTING: ../riscv-gnu-toolchain/configure --prefix=$(pwd)/../inst/ --with-arch=rv32gc --enable-multilib --disable-linux"
-../riscv-gnu-toolchain/configure --prefix=$(pwd)/../inst/ --with-arch=rv32gc --enable-multilib --disable-linux
+mkdir -p bld
+pushd bld
+../riscv-gnu-toolchain/configure --prefix="$(pwd)/../inst/" --with-arch=rv32gc --enable-multilib --disable-linux
 
 # Building the RISC-V GCC GNU Toolchain.
 # Check the repository for package dependencies: https://github.com/riscv-collab/riscv-gnu-toolchain
-echo "EXECUTING: make newlib -j$(nproc)"
 make newlib -j$(nproc)
 
 # Building the RISC-V QEMU.
 # Check the repository for package dependencies: https://gitlab.com/qemu-project/qemu
-echo "EXECUTING: make build-qemu -j$(nproc)"
 make build-qemu -j$(nproc)
 
 # Return to the toolchain directory.
-echo "EXECUTING: cd .."
-cd ..
+popd
 
 # Configure the environment.
-echo "EXECUTING: export PATH=$(pwd)/inst/bin:$PATH"
-export PATH=$(pwd)/inst/bin:$PATH
-echo "EXECUTING: export LD_LIBRARY_PATH=$(pwd)/inst/lib:$LD_LIBRARY_PATH"
-export LD_LIBRARY_PATH=$(pwd)/inst/lib:$LD_LIBRARY_PATH
-echo "EXECUTING: which riscv32-unknown-elf-gcc"
+export PATH="$(pwd)/inst/bin:$PATH"
+
+# Return to original directory.
+popd
+
 which riscv32-unknown-elf-gcc
-echo "EXECUTING: which qemu-riscv32"
 which qemu-riscv32
