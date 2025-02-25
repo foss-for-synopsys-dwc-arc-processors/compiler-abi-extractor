@@ -1,9 +1,88 @@
-#! /bin/env python
 # Copyright 2025-present, Synopsys, Inc.
 # All rights reserved.
 #
 # This source code is licensed under the GPL-3.0 license found in
 # the LICENSE file in the root directory of this source tree.
+
+import dumpInformation
+
+"""
+The purpose of this generator is to create a test case
+that will validate if empty structs are ignored by the C
+compiler as stated in RISCV ABI document.
+
+RISC-V ABIs Specification v1.1
+* Chapter 2. Procedure Calling Convention
+** 2.1. Integer Calling Convention
+***  "Empty structs (...) are ignored by C compilers (...)"
+"""
+class EmptyStructGenerator:
+    def __init__(self, MaxCallCount):
+        self.Result = []
+        # CallCount is the max number for argument passing in registers,
+        # plus 1 because we also want to validate the empty struct at the
+        # last argument passing register.
+        self.MaxCallCount = MaxCallCount + 1
+
+        # Default to 2 as there gotta be place for the struct and a sentinel
+        # defining the end limits of the argument passing.
+        self.CallCount = 2
+
+    def append(self, W):
+        self.Result.append(W)
+
+    def generateBase(self):
+        self.append("""
+struct emptyStruct {
+};
+
+extern void callee();
+""")
+
+    def generateCalls(self):
+        call_arguments = []
+        I = "I"
+        S = "S"
+
+        for i in range(self.CallCount):
+            if i == self.CallCount - 2:
+                call_arguments.append(S)
+            else:
+                call_arguments.append(I)
+
+        self.append(f"    callee({', '.join(call_arguments)});")
+
+        # Increment the call count for the next generation.
+        self.CallCount += 1
+
+    def generateMain(self):
+        call_arguments = []
+
+
+        self.append("""
+int main (void) {
+    int I = 0xdead;
+    struct emptyStruct S;
+""")
+
+        for i in range(self.CallCount, self.MaxCallCount + 1):
+            self.generateCalls()
+
+        self.append("}")
+
+    def Reset(self):
+        self.Result = []
+
+    def getResult(self):
+        return "\n".join(self.Result)
+
+    def generate(self):
+        self.generateBase()
+        self.generateMain()
+
+        result = self.getResult()
+        self.Reset()
+        return result
 
 """
 The logic relies on validating the presence of the keyword ("0xdead") in the
@@ -28,10 +107,6 @@ For each information dump (each "callee" call), it is verified that only the
 value of "I" ("0xdead") is present in the argument passing registers. This
 confirms that the empty struct is indeed being ignored by the C compiler.
 """
-
-import sys
-from lib import dumpInformation
-
 class EmptyStructValidator:
     def __init__(self, Target):
         self.Result = list()
@@ -89,9 +164,20 @@ class EmptyStructValidator:
         else:
             return "- empty struct is not ignored by C compiler.\n"
 
-def split_sections(StdoutFile, Target):
-    return EmptyStructValidator(Target).split_sections(StdoutFile)
+def do_empty_struct(Driver, Report, Target):
+    # This value is to be defined according to number for
+    # argument passing in registers from "do_argpass" test case.
+    MaxCallCount = 8 # Current static value. FIXME
+    Content = EmptyStructGenerator(MaxCallCount).generate()
+    open("tmp/out_emptyStruct.c", "w").write(Content)
 
-if __name__ == "__main__":
-    StdoutFile = sys.argv[1]
-    EmptyStructValidator().split_sections(StdoutFile)
+    source_files   = ["tmp/out_emptyStruct.c", "src/helper.c"]
+    assembly_files = ["src/arch/riscv.S"]
+    output_name = "out_emptyStruct"
+    res, StdoutFile = Driver.run(source_files, assembly_files, output_name)
+    if res != 0:
+        print("Skip: Empty Struct test case failed.")
+        return
+
+    content = EmptyStructValidator(Target).split_sections(StdoutFile)
+    return content

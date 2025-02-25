@@ -62,8 +62,7 @@ Check the [riscv-gnu-toolchain](https://github.com/riscv-collab/riscv-gnu-toolch
 To run the tool with default settings, use:
 
 ```bash
-$ cd abi-extract-info
-$ python3 abi-extract-info.py
+$ python3 abi-extract-info
 Running gcc-riscv32 with qemu-riscv32...
 Report file generated at gcc-riscv32_qemu-riscv32.report
 ```
@@ -73,7 +72,7 @@ By default, the tool expects a RISC-V 32-bit GCC compiler (`riscv32-unknown-elf-
 For more options, refer to the helper manual with `--help`:
 
 ```bash
-Usage python3 abi-extract-info.py [options]
+Usage python3 abi-extract-info [options]
 Options:
   -cc <compiler wrapper>        Select the compiler.
   -sim <simulator wrapper>      Select the simulator.
@@ -88,7 +87,7 @@ Options:
 To list available configurations, run:
 
 ```bash
-$ python3 abi-extract-info.py --help=cc --help=sim
+$ python3 abi-extract-info --help=cc --help=sim
 Available configurations for CC:
 - gcc-riscv32
 - clang-riscv32

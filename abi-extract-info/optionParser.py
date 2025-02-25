@@ -48,7 +48,7 @@ class OptionParser:
 
     def helper(self):
         helper_message = \
-"""Usage python3 abi-extract-info.py [options]
+"""Usage python3 abi-extract-info [options]
 Options:
   -cc <compiler wrapper>        Select the compiler.
   -sim <simulator wrapper>      Select the simulator.
