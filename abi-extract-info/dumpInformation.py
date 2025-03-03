@@ -106,14 +106,15 @@ class DumpInformation:
 
         return result
 
-    def parse(self, Content, to_read=False):
-        if to_read:
-            Content = self.read_file(Content)
-        Content = self.read_header(Content)
-        Content = self.read_reg_banks(Content)
-        Content = self.read_stack(Content)
+    def parse_lines(self, lines):
+        lines = self.read_header(lines)
+        lines = self.read_reg_banks(lines)
+        lines = self.read_stack(lines)
 
-        return Content
+        return lines
+
+    def parse(self, Content):
+        return self.parse_lines(Content.splitlines())
 
 
 def get_header_info(index):

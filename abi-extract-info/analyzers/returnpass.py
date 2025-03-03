@@ -4,6 +4,7 @@
 # This source code is licensed under the GPL-3.0 license found in
 # the LICENSE file in the root directory of this source tree.
 
+import analyzer
 import helper
 import hexUtils
 import dumpInformation
@@ -202,51 +203,57 @@ class ReturnTests:
         return citeration
 
 
-def do_return(Driver, Report, Target):
-    dtypes = ["char", "short", "int", "long", "long long", "float", "double"]
+class ReturnAnalyzer(analyzer.Analyzer):
+    def __init__(self, Driver, Report, Target):
+        super().__init__(Driver, Report, Target, "return")
+        self.assembly_files += ["src/arch/riscv2.s"]
+        self.return_tests = ReturnTests(Target)
 
-    return_tests = ReturnTests(Target)
-    results = {}
-    for dtype in dtypes:
-        results[dtype] = []
-
+    def analyze_for_dtype(self, dtype):
         # Get the sizeof the current data type.
-        sizeof = Target.get_type_details(dtype)["size"]
+        sizeof = self.Target.get_type_details(dtype)["size"]
+
         # Reset the already used values.
         helper.reset_used_values()
+
         # Generate a single hexadecimal value.
         hvalue_return = helper.generate_hexa_value(sizeof)
 
         # Generate and build/execute the test case.
-        content = ReturnGenerator(Target, dtype).generate_single_call(
-            hvalue_return
+        stdout = self.generate(
+            ReturnGenerator(self.Target, dtype).generate_single_call(
+                hvalue_return
+            )
         )
-        dtype_ = dtype.replace(" ", "_")
-        open(f"tmp/out_return_{dtype_}.c", "w").write(content)
-
-        source_files = [f"tmp/out_return_{dtype_}.c", "src/helper.c"]
-        assembly_files = ["src/arch/riscv.S", "src/arch/riscv2.s"]
-        output_name = f"out_return_{dtype_}"
-        res, stdout_file = Driver.run(source_files, assembly_files, output_name)
-        if res != 0:
-            print("Skip: Return test case failed.")
-            return
 
         # Parse the dump information.
         dump_information = dumpInformation.DumpInformation()
-        dump_information.parse(stdout_file, True)
+        dump_information.parse(stdout)
 
         # Get stack and register bank information
         stack = dump_information.get_stack()
         register_banks = dump_information.get_reg_banks()
 
         citeration = {}
-        return_tests.run_test(citeration, stack, register_banks, hvalue_return)
-        results[dtype].append(citeration)
+        self.return_tests.run_test(
+            citeration, stack, register_banks, hvalue_return
+        )
+        return citeration
 
-    summary_content = return_tests.generate_summary(results)
-    summary_file = "tmp/out_return.sum"
-    open(summary_file, "w").write(summary_content)
+    def analyze(self):
+        dtypes = [
+            "char",
+            "short",
+            "int",
+            "long",
+            "long long",
+            "float",
+            "double",
+        ]
 
-    # Store the generated report file for return test case.
-    Report.append(summary_file)
+        results = {}
+        for dtype in dtypes:
+            results[dtype] = []
+            results[dtype].append(self.analyze_for_dtype(dtype))
+
+        return self.return_tests.generate_summary(results)

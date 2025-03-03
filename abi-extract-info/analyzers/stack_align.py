@@ -4,6 +4,8 @@
 # This source code is licensed under the GPL-3.0 license found in
 # the LICENSE file in the root directory of this source tree.
 
+import analyzer
+
 N = [i for i in range(1, 65)]
 # N = [i for i in range(1, 10) if i % 2 != 0]
 
@@ -21,7 +23,6 @@ class DriverGenerator:
     def generateBase(self):
         self.append("#include <stdio.h>")
         self.append("#include <stdint.h>")
-        self.append('#include "out_functions.h"')
         self.append(
             """
 /*
@@ -96,7 +97,6 @@ class FunctionsGenerator:
     def generateBase(self):
         self.append("#include <stdio.h>")
         self.append("#include <stdint.h>")
-        self.append('#include "out_functions.h"')
 
     def generateFunctions(self):
         for n in N:
@@ -177,22 +177,15 @@ typedef struct p_functions_struct {
         return self.getResult()
 
 
-def do_stack_align(Driver, Report):
-    Content = DriverGenerator().generate()
-    open("tmp/out_driver.c", "w").write(Content)
-    Content = FunctionsGenerator().generate()
-    open("tmp/out_functions.c", "w").write(Content)
-    Content = FunctionsHeaderGenerator().generate()
-    open("tmp/out_functions.h", "w").write(Content)
+class StackAlignAnalyzer(analyzer.Analyzer):
+    def __init__(self, Driver, Report, Target):
+        super().__init__(Driver, Report, Target, "stack_align")
 
-    # `src/heler.c` has been added as a placeholder for the dump_information function
-    # as it is called within the `callee` function in `src/arch/riscv.s`.
-    # Although this function is not used, it is present in the riscv.s file.
-    source_files = ["tmp/out_functions.c", "tmp/out_driver.c", "src/helper.c"]
-    assembly_files = ["src/arch/riscv.S"]
-    output_name = "out_stackalign"
-    res, stdoutFile = Driver.run(source_files, assembly_files, output_name)
-    if res != 0:
-        print("Skip: Stack Alignment test case failed.")
-        return
-    Report.append(stdoutFile)
+    def analyze(self):
+        header_content = FunctionsHeaderGenerator().generate() + "\n"
+        return self.generate(
+            [
+                header_content + DriverGenerator().generate(),
+                header_content + FunctionsGenerator().generate(),
+            ]
+        )
