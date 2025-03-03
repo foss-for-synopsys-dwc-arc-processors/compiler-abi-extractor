@@ -57,16 +57,17 @@ class CompilationDriver:
 
     # Compile, assemble, link and simulate wrapper to reduce extensive code.
     def run(self, srcFiles, asmFiles, outFile, tmp="tmp/"):
+        asm_files = asmFiles.copy()
         for srcFile in srcFiles:
             asmFile = tmp + os.path.basename(srcFile)
             asmFile = asmFile.replace(".c", ".s")
             res = self.compile(srcFile, asmFile)
             if res != 0:
                 return 1, None
-            asmFiles.append(asmFile)
+            asm_files.append(asmFile)
 
         objFiles = []
-        for asmFile in asmFiles:
+        for asmFile in asm_files:
             objFile = tmp + os.path.basename(asmFile)
             objFile = objFile.replace(".s", ".o")
             objFile = objFile.replace(".S", ".o")

@@ -6,6 +6,7 @@
 
 import random
 
+import analyzer
 import helper
 
 """
@@ -709,20 +710,11 @@ class BitFieldTests:
         return self.get_results()
 
 
-def do_bitfield(Driver, Report, Target):
-    content = BitFieldGenerator(Target).generate()
-    open("tmp/out_bitfield.c", "w").write(content)
-    source_files = ["tmp/out_bitfield.c"]
-    assembly_files = []
-    output_name = "out_bitfield"
-    res, stdout_file = Driver.run(source_files, assembly_files, output_name)
-    if res != 0:
-        print("Skip: Bitfields test case failed.")
-        return
+class BitFieldAnalyzer(analyzer.Analyzer):
+    def __init__(self, Driver, Report, Target):
+        super().__init__(Driver, Report, Target, "bitfield")
 
-    content = helper.read_file(stdout_file)
-
-    summary_content = BitFieldTests().prepare_summary(content)
-    summary_file = "tmp/out_bitfield.sum"
-    open(summary_file, "w").write(summary_content)
-    Report.append(summary_file)
+    def analyze(self):
+        return BitFieldTests().prepare_summary(
+            self.generate(BitFieldGenerator(self.Target).generate())
+        )

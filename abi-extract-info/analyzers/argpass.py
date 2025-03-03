@@ -4,6 +4,7 @@
 # This source code is licensed under the GPL-3.0 license found in
 # the LICENSE file in the root directory of this source tree.
 
+import analyzer
 import helper
 import hexUtils
 import dumpInformation
@@ -413,70 +414,55 @@ class ArgPassTests:
         return citeration
 
 
-def do_argpass(Driver, Report, Target):
-    # List of datatypes to be tested.
-    types = ["char", "short", "int", "long", "long long", "float", "double"]
+class ArgPassAnalyzer(analyzer.Analyzer):
+    def __init__(self, Driver, Report, Target):
+        super().__init__(Driver, Report, Target, "argpass")
 
-    results = {}
-    for dtype in types:
-        # Create an instance of `ArgPassTests` for the current Target
-        arg_pass_tests = ArgPassTests(Target)
+    def analyze(self):
+        # List of datatypes to be tested.
+        types = ["char", "short", "int", "long", "long long", "float", "double"]
 
-        dtype_sizeof = Target.get_type_details(dtype)["size"]
-        results[dtype] = []
+        results = {}
+        for dtype in types:
+            # Create an instance of `ArgPassTests` for the current Target
+            arg_pass_tests = ArgPassTests(self.Target)
 
-        argc = 1
-        while True:
-            # Generate hexadecimal values for the current datatype and count
-            helper.reset_used_values()
-            argv = helper.generate_hexa_list(argc, dtype_sizeof)
+            dtype_sizeof = self.Target.get_type_details(dtype)["size"]
+            results[dtype] = []
 
-            # Generate the content of the test file.
-            content = ArgPassGenerator(Target).generate(dtype, argv)
+            argc = 1
+            while True:
+                # Generate hexadecimal values for the current datatype and count
+                helper.reset_used_values()
+                argv = helper.generate_hexa_list(argc, dtype_sizeof)
 
-            # Create and write the test file.
-            dtype_file = dtype.replace(" ", "_")
-            open(f"tmp/out_argpass_{dtype_file}_{argc}.c", "w").write(content)
-            # Compile and run the test file, and capture the stdout.
-            source_files = [
-                f"tmp/out_argpass_{dtype_file}_{argc}.c",
-                "src/helper.c",
-            ]
-            assembly_files = ["src/arch/riscv.S"]
-            output_name = f"out_argpass_{dtype_file}_{argc}"
-            res, StdoutFile = Driver.run(
-                source_files, assembly_files, output_name
-            )
-            if res != 0:
-                print("Skip: Argument Passing test case failed.")
-                return
+                # Generate the content of the test file.
+                stdout = self.generate(
+                    ArgPassGenerator(self.Target).generate(dtype, argv)
+                )
 
-            # Parse the stdout to extract stack and register bank information.
-            dump_information = dumpInformation.DumpInformation()
-            dump_information.parse(StdoutFile, True)
+                # Parse the stdout to extract stack and register bank information.
+                dump_information = dumpInformation.DumpInformation()
+                dump_information.parse(stdout)
 
-            # Get the stack and register bank information
-            stack = dump_information.get_stack()
-            reg_banks = dump_information.get_reg_banks()
-            # Run the test to check if the value is in the stack
-            citeration = arg_pass_tests.run_test(stack, reg_banks, argv)
+                # Get the stack and register bank information
+                stack = dump_information.get_stack()
+                reg_banks = dump_information.get_reg_banks()
+                # Run the test to check if the value is in the stack
+                citeration = arg_pass_tests.run_test(stack, reg_banks, argv)
 
-            results[dtype].append(citeration)
-            if citeration["value_in_stack"]:
-                break
+                results[dtype].append(citeration)
+                if citeration["value_in_stack"]:
+                    break
 
-            if argc == 20:
-                print("DEBUG: Exitting for save purposes. [do_argpas]")
-                break
+                if argc == 20:
+                    print("DEBUG: Exitting for save purposes. [do_argpas]")
+                    break
 
-            argc += 1
+                argc += 1
 
-        if dtype == "int":
-            Target.set_argument_registers(citeration["registers"])
+            if dtype == "int":
+                self.Target.set_argument_registers(citeration["registers"])
 
-    # Process the results
-    Content = arg_pass_tests.process_stages(results)
-
-    # Write a summary report from the results.
-    open("tmp/out_argPassTests.sum", "w").write(Content)
-    Report.append("tmp/out_argPassTests.sum")
+        # Process the results
+        return arg_pass_tests.process_stages(results)

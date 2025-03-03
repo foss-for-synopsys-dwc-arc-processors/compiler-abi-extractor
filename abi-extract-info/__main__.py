@@ -11,28 +11,34 @@ import optionParser
 import helper
 import targetArch
 
-from analyzers.datatypes import do_datatypes
-from analyzers.saved import do_saved
-from analyzers.returnpass import do_return
-from analyzers.bitfield import do_bitfield
-from analyzers.argpass import do_argpass
-from analyzers.struct_boundaries import do_struct_boundaries
-from analyzers.endianness import do_endianness
-from analyzers.stack_dir import do_stack_dir
-from analyzers.stack_align import do_stack_align
+from analyzers.datatypes import DataTypesAnalyzer
+from analyzers.saved import SavedAnalyzer
+from analyzers.returnpass import ReturnAnalyzer
+from analyzers.bitfield import BitFieldAnalyzer
+from analyzers.argpass import ArgPassAnalyzer
+from analyzers.struct_boundaries import StructBoundaryAnalyzer
+from analyzers.endianness import EndiannessAnalyzer
+from analyzers.stack_dir import StackDirAnalyzer
+from analyzers.stack_align import StackAlignAnalyzer
 
 
-def do_tests(Driver, Report, Target):
-    do_datatypes(Driver, Report, Target)
-    do_stack_dir(Driver, Report)
-    do_stack_align(Driver, Report)
-    do_argpass(Driver, Report, Target)
-    do_struct_boundaries(Driver, Report, Target)
-    do_endianness(Driver, Report)
-    do_saved(Driver, Report, Target)
-    do_return(Driver, Report, Target)
-    do_bitfield(Driver, Report, Target)
+ANALYZERS = [
+    DataTypesAnalyzer,
+    StackDirAnalyzer,
+    StackAlignAnalyzer,
+    ArgPassAnalyzer,
+    StructBoundaryAnalyzer,
+    EndiannessAnalyzer,
+    SavedAnalyzer,
+    ReturnAnalyzer,
+    BitFieldAnalyzer,
     # ,, more different kind of tests here
+]
+
+
+def run_analyzers(Driver, Report, Target):
+    for analyzer in ANALYZERS:
+        analyzer(Driver, Report, Target).run()
 
 
 if __name__ == "__main__":
@@ -61,7 +67,7 @@ if __name__ == "__main__":
     Driver = compilationDriver.CompilationDriver(is_verbose)
 
     # Run tests and generate summary report
-    do_tests(Driver, Report, Target)
+    run_analyzers(Driver, Report, Target)
     Report.generateReport()
 
     if not OptionParser.get("save_temps"):

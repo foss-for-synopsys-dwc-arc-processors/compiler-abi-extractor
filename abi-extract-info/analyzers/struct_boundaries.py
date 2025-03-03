@@ -4,11 +4,12 @@
 # This source code is licensed under the GPL-3.0 license found in
 # the LICENSE file in the root directory of this source tree.
 
+import analyzer
 import helper
 import hexUtils
 import dumpInformation
 
-from analyzers.empty_struct import do_empty_struct
+from analyzers.empty_struct import EmptyStructAnalyzer
 
 """
 The purpose of this generator is to create a C test case that validates the
@@ -128,7 +129,6 @@ if a value appears in registers, the stack, or if its passed by reference.
 class StructTests:
     def __init__(self, Target):
         self.Target = Target
-        self.results = []
 
     # Process the results to categorize them according to their registers
     # and if values were splitted in pairs.
@@ -397,225 +397,234 @@ class StructTests:
         return citeration
 
 
-def do_struct_boundaries(Driver, Report, Target):
-    # TODO: Test for 64-bit scenarios.
+class StructBoundaryAnalyzerSpecialCase(analyzer.Analyzer):
+    def __init__(self, Driver, Report, Target):
+        super().__init__(Driver, Report, Target, "struct_boundary_special_case")
 
-    # The `char_limit` is calculated with the `char` datatype.
-    # The test case will generate multiple C files to test the struct
-    # boundaries, char by char. Once it reaches the stack as reference,
-    # the `char_limit` is defined.
-    # Start the char limit count with 1.
-    char_limit = 1
-    dtype = "char"
-    results = {}
-    results[dtype] = []
-    char_sizeof = Target.get_type_details(dtype)["size"]
+    def analyze(self):
+        struct_tests = StructTests(self.Target)
 
-    # Reset the used generated values.
-    helper.reset_used_values()
-    while True:
-        # Generate a hexadecimal value list according to the current count.
-        hvalues = helper.generate_hexa_list(char_limit, char_sizeof)
-
-        # Generate and build/execute the test case.
-        dtypes = [dtype] * char_limit
-        Content = StructGenerator(
-            Target, char_limit, dtypes
-        ).generate_single_call(hvalues)
-        output_name = f"out_struct_boundaries_{dtype}_{char_limit}"
-        open(f"tmp/{output_name}.c", "w").write(Content)
-        source_files = [f"tmp/{output_name}.c", "src/helper.c"]
-        assembly_files = ["src/arch/riscv.S"]
-        res, stdout_file = Driver.run(source_files, assembly_files, output_name)
-        if res != 0:
-            print("Skip: Struct Argument Passing test case failed.")
-            return
-        struct_tests = StructTests(Target)
-
-        # Parse the dump information.
-        dump_information = dumpInformation.DumpInformation()
-        dump_information.parse(stdout_file, True)
-
-        # Get stack and register bank information.
-        stack = dump_information.get_stack()
-        reg_banks = dump_information.get_reg_banks()
-
-        # Extract the struct sizeof from C test case.
-        input_str = helper.read_file(stdout_file)
-        # Regular expression to match the size
-        regex = r"Sizeof\(struct structType\): (\d+)"
-        size = helper.parse_regex(regex, input_str)
-
-        citeration = {}
-        citeration["sizeof(S)"] = size
-        struct_tests.run_test(citeration, dtype, stack, reg_banks, hvalues)
-        results[dtype].append(citeration)
-        if citeration["passed_by_ref"] != None:
-            break
-
-        # The struct has not been passed by reference yet, so increment
-        # the char limit by one.
-        char_limit += 1
-        if char_limit == 10:
-            print("breaking for safe purposes [struct_boundaries]")
-            break
-
-    # Reset used values.
-    helper.reset_used_values()
-    # Set back to the char's limit as its currently out of bounds.
-    char_limit -= 1
-
-    struct_tests = StructTests(Target)
-    # `long double` needs a different treating because its size
-    # can be 16 bytes in a 32-bit architecture. That means that
-    # the values are splitten in 4, and so that implementation
-    # is yet to be added. FIXME
-    types = ["short", "int", "long", "long long", "float", "double"]
-    # HACK: This value will be replaced by a architecture validation
-    # in the beginning of the framework execution.
-    register_bank_count = 0
-    for dtype in types:
-        results[dtype] = []
-
-        # Get datatype size from stored information from previous test case.
-        sizeof_dtype = Target.get_type_details(dtype)["size"]
-
-        # Calculate max datatype boundary according to sizeof.
-        limit_dtype = char_limit // sizeof_dtype
-
-        # The expected boundary may not be reached with the previously
-        # calculated limit. In that case, we increment the limit_dtype by 1
-        # and recalculate for the given data type. A maximum of 10 iterations
-        # is enforced to prevent infinite loops.
-        reached_boundary = False
-        while not reached_boundary and limit_dtype < 10:
-            # Generate the struct hexadecimal values with a list of data types.
-            # Plus one char to validate the limit.
+        # As per the RISC-V ABi:
+        # "A struct containing two floating-point reals is passed in two
+        #  floating-point registers, if neither real is more than ABI_FLEN
+        #   bits wide and at least two floating-registers are available."
+        # To handle this, a special case is necessary to validate that the following
+        # data type pairs are the struct boundary size limits:
+        #   - float/double
+        #   - double/float
+        #   - float/float
+        #   - double/double
+        sc_results = {}
+        special_cases = [
+            ["float", "double"],
+            ["double", "float"],
+            ["float", "float"],
+            ["double", "double"],
+        ]
+        for dtypes in special_cases:
+            dtypes_str = "_".join(dtypes)
+            sc_results[dtypes_str] = []
             for index, i in enumerate([[], ["char"]]):
-                dtypes = [dtype] * limit_dtype + i
+
+                dtypes = dtypes + i
                 hvalues = helper.generate_hexa_list_from_datatypes(
-                    dtypes, Target
+                    dtypes, self.Target
                 )
-                # Generate and build/execute the test case.
-                Content = StructGenerator(
-                    Target, None, dtypes
-                ).generate_single_call(hvalues)
-                output_name = f"out_struct_boundaries_{dtype}_{index}"
-                open(f"tmp/{output_name}.c", "w").write(Content)
-                source_files = [f"tmp/{output_name}.c", "src/helper.c"]
-                assembly_files = ["src/arch/riscv.S"]
-                res, stdout_file = Driver.run(
-                    source_files, assembly_files, output_name
+
+                stdout = self.generate(
+                    StructGenerator(
+                        self.Target, None, dtypes
+                    ).generate_single_call(hvalues)
                 )
-                if res != 0:
-                    print("Skip: Struct Argument Passing test case failed.")
-                    return
 
                 # Parse the dump information.
                 dump_information = dumpInformation.DumpInformation()
-                to_read = True
-                dump_information.parse(stdout_file, to_read)
+                dump_information.parse(stdout)
 
                 # Get stack and register bank information
                 stack = dump_information.get_stack()
                 reg_banks = dump_information.get_reg_banks()
-                # Get the register bank count from the header dump information.
-                register_bank_count = dump_information.get_header_info(2)
 
-                # Extract the struct sizeof from C test case.
-                input_str = helper.read_file(stdout_file)
                 # Regular expression to match the size
                 regex = r"Sizeof\(struct structType\): (\d+)"
-                size = helper.parse_regex(regex, input_str)
+                size = helper.parse_regex(regex, stdout)
 
                 citeration = {}
                 citeration["sizeof(S)"] = size
+
+                # Create tuple list of data type and the corresponding hexadecimal
+                # values.
+                tmp = [
+                    (dtype, hvalues[index])
+                    for index, dtype in enumerate(dtypes)
+                ]
+                citeration["dtypes,hvalues"] = tmp
+
+                # FIXME The use of "double" is not correct, but it doesn't seem to
+                # make any difference here.
                 struct_tests.run_test(
-                    citeration, dtype, stack, reg_banks, hvalues
+                    citeration, "double", stack, reg_banks, hvalues
                 )
-                results[dtype].append(citeration)
+                sc_results[dtypes_str].append(citeration)
                 if citeration["passed_by_ref"] != None:
-                    reached_boundary = True
                     break
-            limit_dtype = limit_dtype + 1
 
-    # As per the RISC-V ABi:
-    # "A struct containing two floating-point reals is passed in two
-    #  floating-point registers, if neither real is more than ABI_FLEN
-    #   bits wide and at least two floating-registers are available."
-    # To handle this, a special case is necessary to validate that the following
-    # data type pairs are the struct boundary size limits:
-    #   - float/double
-    #   - double/float
-    #   - float/float
-    #   - double/double
-    sc_results = {}
-    special_cases = [
-        ["float", "double"],
-        ["double", "float"],
-        ["float", "float"],
-        ["double", "double"],
-    ]
-    for dtypes in special_cases:
-        dtypes_str = "_".join(dtypes)
-        sc_results[dtypes_str] = []
-        for index, i in enumerate([[], ["char"]]):
+        return struct_tests.prepare_summary_special_case(sc_results)
 
-            dtypes = dtypes + i
-            hvalues = helper.generate_hexa_list_from_datatypes(dtypes, Target)
 
-            content = StructGenerator(
-                Target, None, dtypes
-            ).generate_single_call(hvalues)
+class StructBoundaryAnalyzer(analyzer.Analyzer):
+    def __init__(self, Driver, Report, Target):
+        super().__init__(Driver, Report, Target, "struct_boundary")
 
-            output_name = f"out_struct_boundaries_sc_{dtypes_str}_{index}"
-            open(f"tmp/{output_name}.c", "w").write(content)
-            source_files = [f"tmp/{output_name}.c", "src/helper.c"]
-            assembly_files = ["src/arch/riscv.S"]
-            res, StdoutFile = Driver.run(
-                source_files, assembly_files, output_name
+    def analyze_char_limit(self, results):
+        # The `char_limit` is calculated with the `char` datatype.
+        # The test case will generate multiple C files to test the struct
+        # boundaries, char by char. Once it reaches the stack as reference,
+        # the `char_limit` is defined.
+        # Start the char limit count with 1.
+        char_limit = 1
+
+        dtype = "char"
+        results[dtype] = []
+        char_sizeof = self.Target.get_type_details(dtype)["size"]
+
+        # Reset the used generated values.
+        helper.reset_used_values()
+        while True:
+            # Generate a hexadecimal value list according to the current count.
+            hvalues = helper.generate_hexa_list(char_limit, char_sizeof)
+
+            # Generate and build/execute the test case.
+            dtypes = [dtype] * char_limit
+            stdout = self.generate(
+                StructGenerator(
+                    self.Target, char_limit, dtypes
+                ).generate_single_call(hvalues)
             )
-            if res != 0:
-                print("Skip: Struct Argument Passing test case failed.")
-                return
+
+            struct_tests = StructTests(self.Target)
 
             # Parse the dump information.
             dump_information = dumpInformation.DumpInformation()
-            read_file = True
-            dump_information.parse(StdoutFile, read_file)
+            dump_information.parse(stdout)
 
-            # Get stack and register bank information
+            # Get stack and register bank information.
             stack = dump_information.get_stack()
             reg_banks = dump_information.get_reg_banks()
 
-            input_str = helper.read_file(StdoutFile)
+            # Extract the struct sizeof from C test case.
             # Regular expression to match the size
             regex = r"Sizeof\(struct structType\): (\d+)"
-            size = helper.parse_regex(regex, input_str)
+            size = helper.parse_regex(regex, stdout)
 
             citeration = {}
             citeration["sizeof(S)"] = size
-
-            # Create tuple list of data type and the corresponding hexadecimal
-            # values.
-            tmp = [
-                (dtype, hvalues[index]) for index, dtype in enumerate(dtypes)
-            ]
-            citeration["dtypes,hvalues"] = tmp
-
             struct_tests.run_test(citeration, dtype, stack, reg_banks, hvalues)
-            sc_results[dtypes_str].append(citeration)
+            results[dtype].append(citeration)
             if citeration["passed_by_ref"] != None:
                 break
 
-    # Store the register bank count.
-    Target.set_register_bank_count(register_bank_count)
+            # The struct has not been passed by reference yet, so increment
+            # the char limit by one.
+            char_limit += 1
+            if char_limit == 10:
+                print("breaking for safe purposes [struct_boundaries]")
+                break
 
-    content = struct_tests.prepare_summary(results)
-    content += struct_tests.prepare_summary_special_case(sc_results)
-    # Run the empty struct test case.
-    content += do_empty_struct(Driver, Report, Target)
-    open("tmp/out_structs.sum", "w").write(content)
+        # Set back to the char's limit as its currently out of bounds.
+        return char_limit - 1
 
-    # Store the generated report file for struct argumnet passing test case.
-    Report.append("tmp/out_structs.sum")
+    def analyze_struct_types(self, results, char_limit):
+        struct_tests = StructTests(self.Target)
+
+        # `long double` needs a different treating because its size
+        # can be 16 bytes in a 32-bit architecture. That means that
+        # the values are splitten in 4, and so that implementation
+        # is yet to be added. FIXME
+        types = ["short", "int", "long", "long long", "float", "double"]
+
+        # HACK: This value will be replaced by a architecture validation
+        # in the beginning of the framework execution.
+        register_bank_count = 0
+
+        for dtype in types:
+            results[dtype] = []
+
+            # Get datatype size from stored information from previous test case.
+            sizeof_dtype = self.Target.get_type_details(dtype)["size"]
+
+            # Calculate max datatype boundary according to sizeof.
+            limit_dtype = char_limit // sizeof_dtype
+
+            # The expected boundary may not be reached with the previously
+            # calculated limit. In that case, we increment the limit_dtype by 1
+            # and recalculate for the given data type. A maximum of 10 iterations
+            # is enforced to prevent infinite loops.
+            reached_boundary = False
+            while not reached_boundary and limit_dtype < 10:
+                # Generate the struct hexadecimal values with a list of data types.
+                # Plus one char to validate the limit.
+                for index, i in enumerate([[], ["char"]]):
+                    dtypes = [dtype] * limit_dtype + i
+                    hvalues = helper.generate_hexa_list_from_datatypes(
+                        dtypes, self.Target
+                    )
+                    # Generate and build/execute the test case.
+                    stdout = self.generate(
+                        StructGenerator(
+                            self.Target, None, dtypes
+                        ).generate_single_call(hvalues)
+                    )
+
+                    # Parse the dump information.
+                    dump_information = dumpInformation.DumpInformation()
+                    dump_information.parse(stdout)
+
+                    # Get stack and register bank information
+                    stack = dump_information.get_stack()
+                    reg_banks = dump_information.get_reg_banks()
+                    # Get the register bank count from the header dump information.
+                    register_bank_count = dump_information.get_header_info(2)
+
+                    # Extract the struct sizeof from C test case.
+                    # Regular expression to match the size
+                    regex = r"Sizeof\(struct structType\): (\d+)"
+                    size = helper.parse_regex(regex, stdout)
+
+                    citeration = {}
+                    citeration["sizeof(S)"] = size
+                    struct_tests.run_test(
+                        citeration, dtype, stack, reg_banks, hvalues
+                    )
+                    results[dtype].append(citeration)
+                    if citeration["passed_by_ref"] != None:
+                        reached_boundary = True
+                        break
+                limit_dtype = limit_dtype + 1
+
+        # Store the register bank count.
+        self.Target.set_register_bank_count(register_bank_count)
+
+    def analyze_struct_boundaries(self):
+        results = {}
+        char_limit = self.analyze_char_limit(results)
+        # Reset used values.
+        helper.reset_used_values()
+        self.analyze_struct_types(results, char_limit)
+
+        return StructTests(self.Target).prepare_summary(results)
+
+    def analyze(self):
+        # TODO: Test for 64-bit scenarios.
+        content = self.analyze_struct_boundaries()
+
+        content += StructBoundaryAnalyzerSpecialCase(
+            self.Driver, self.Report, self.Target
+        ).analyze()
+
+        # Run the empty struct test case.
+        content += EmptyStructAnalyzer(
+            self.Driver, self.Report, self.Target
+        ).analyze()
+
+        return content

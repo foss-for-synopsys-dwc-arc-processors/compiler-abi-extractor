@@ -4,6 +4,7 @@
 # This source code is licensed under the GPL-3.0 license found in
 # the LICENSE file in the root directory of this source tree.
 
+import analyzer
 import dumpInformation
 
 """
@@ -138,18 +139,11 @@ class EmptyStructValidator:
 
         return is_ignored
 
-    # This function needs to be moved to a "lib/helper" as a module
-    # to be access globaly. FIXME
-    def read_file(self, file_name):
-        with open(file_name, "r") as file:
-            return file.read().splitlines()
-
     # This function should be in the "dumpInformation" class. FIXME
-    def split_sections(self, StdoutFile):
-        Content = self.read_file(StdoutFile)
-
+    def split_sections(self, Content):
         result = []
         current_sublist = []
+        Content = Content.splitlines()
 
         for c in Content:
             if "// Done" in c:
@@ -160,7 +154,7 @@ class EmptyStructValidator:
 
         dump_information = dumpInformation.DumpInformation()
         for count, sublist in enumerate(result):
-            dump_information.parse(sublist)
+            dump_information.parse_lines(sublist)
 
             for key, value in dump_information.RegBanks.items():
                 is_ignored = self.validate_if_ignored(key, value, count + 1)
@@ -173,20 +167,14 @@ class EmptyStructValidator:
             return "- empty struct is not ignored by C compiler.\n"
 
 
-def do_empty_struct(Driver, Report, Target):
-    # This value is to be defined according to number for
-    # argument passing in registers from "do_argpass" test case.
-    MaxCallCount = 8  # Current static value. FIXME
-    Content = EmptyStructGenerator(MaxCallCount).generate()
-    open("tmp/out_emptyStruct.c", "w").write(Content)
+class EmptyStructAnalyzer(analyzer.Analyzer):
+    def __init__(self, Driver, Report, Target):
+        super().__init__(Driver, Report, Target, "empty_struct")
 
-    source_files = ["tmp/out_emptyStruct.c", "src/helper.c"]
-    assembly_files = ["src/arch/riscv.S"]
-    output_name = "out_emptyStruct"
-    res, StdoutFile = Driver.run(source_files, assembly_files, output_name)
-    if res != 0:
-        print("Skip: Empty Struct test case failed.")
-        return
-
-    content = EmptyStructValidator(Target).split_sections(StdoutFile)
-    return content
+    def analyze(self):
+        # This value is to be defined according to number for
+        # argument passing in registers from "do_argpass" test case.
+        MaxCallCount = 8  # Current static value. FIXME
+        return EmptyStructValidator(self.Target).split_sections(
+            self.generate(EmptyStructGenerator(MaxCallCount).generate())
+        )
