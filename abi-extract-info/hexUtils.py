@@ -12,6 +12,7 @@ functions for handling hexadecimal values.
 
 import helper
 
+
 class HexUtils:
     def __init__(self, target):
         self.Target = target
@@ -25,7 +26,9 @@ class HexUtils:
         return f"0x{value}"
 
     # Calculate the difference between two hexadecimal strings.
-    def _hex_difference(self, hex1: str, hex2: str) -> int: # Shall I adapt to this?
+    def _hex_difference(
+        self, hex1: str, hex2: str
+    ) -> int:  # Shall I adapt to this?
         # Convert hexadecimal strings to integers.
         num1 = int(hex1, 16)
         num2 = int(hex2, 16)
@@ -35,7 +38,7 @@ class HexUtils:
 
         return difference
 
-   # Calculate the number of bytes of `value`
+    # Calculate the number of bytes of `value`
     def sizeof(self, value):
         hex_clean = value
         if "0x" in value:
@@ -59,7 +62,7 @@ class HexUtils:
 
     # Split a hexadecimal value into two halves.
     def _split_hex_value(self, value):
-        value = self._remove_identifier(value) # Remove '0x' prefix
+        value = self._remove_identifier(value)  # Remove '0x' prefix
         midpoint = len(value) // 2
         first_half = f"0x{value[:midpoint]}"
         second_half = f"0x{value[midpoint:]}"
@@ -70,7 +73,7 @@ class HexUtils:
         value = self._remove_identifier(value)
         type_extend = "00" if is_zero else "ff"
 
-        while (self.sizeof(value) < sizeof_int):
+        while self.sizeof(value) < sizeof_int:
             value = f"{type_extend}{value}"
 
         value = self._add_identifier(value)
@@ -92,7 +95,7 @@ class HexUtils:
         inconsistencies = []
 
         # Iterate through each value in argv.
-        while (argv):
+        while argv:
             tmp = []
             value = argv.pop(0)
 
@@ -103,15 +106,23 @@ class HexUtils:
 
                     # Convert hexadecimal values to binary.
                     bvalue_register = helper.hexa_to_binary(register_value)
-                    bvalue          = helper.hexa_to_binary(value)
+                    bvalue = helper.hexa_to_binary(value)
                     # Convert expected value to zero extended.
-                    zero_register_value = self._zero_extend(value, self.sizeof(register_value))
+                    zero_register_value = self._zero_extend(
+                        value, self.sizeof(register_value)
+                    )
                     # Convert expected value to sign extended.
-                    sign_register_value = self._sign_extend(value, self.sizeof(register_value))
+                    sign_register_value = self._sign_extend(
+                        value, self.sizeof(register_value)
+                    )
 
-                    if bvalue_register == bvalue or \
-                       bvalue_register == helper.hexa_to_binary(zero_register_value) or \
-                       bvalue_register == helper.hexa_to_binary(sign_register_value):
+                    if (
+                        bvalue_register == bvalue
+                        or bvalue_register
+                        == helper.hexa_to_binary(zero_register_value)
+                        or bvalue_register
+                        == helper.hexa_to_binary(sign_register_value)
+                    ):
                         tmp.append(bank_register_names[index])
                         registers[bank_register_names[index]] = value
 
@@ -129,19 +140,25 @@ class HexUtils:
         for stack_address, stack_value in stack:
             # Convert hexadecimal values to binary.
             bvalue_stack = helper.hexa_to_binary(stack_value)
-            bvalue       = helper.hexa_to_binary(value)
+            bvalue = helper.hexa_to_binary(value)
 
             # Convert expected value to zero extended.
-            zero_stack_value = self._zero_extend(value, self.sizeof(stack_value))
+            zero_stack_value = self._zero_extend(
+                value, self.sizeof(stack_value)
+            )
             # Convert expected value to sign extended.
-            sign_stack_value = self._sign_extend(value, self.sizeof(stack_value))
+            sign_stack_value = self._sign_extend(
+                value, self.sizeof(stack_value)
+            )
 
-            if bvalue_stack == bvalue or \
-                bvalue_stack == helper.hexa_to_binary(zero_stack_value) or \
-                bvalue_stack == helper.hexa_to_binary(sign_stack_value):
-                for k,v in citeration["registers"].items():
+            if (
+                bvalue_stack == bvalue
+                or bvalue_stack == helper.hexa_to_binary(zero_stack_value)
+                or bvalue_stack == helper.hexa_to_binary(sign_stack_value)
+            ):
+                for k, v in citeration["registers"].items():
                     if v == value:
-                        inconsistencies.append((k,"[stack]"))
+                        inconsistencies.append((k, "[stack]"))
                 addresses.append(stack_address)
 
         return (addresses, inconsistencies)
@@ -175,7 +192,7 @@ class HexUtils:
         sizeof_int = 4
 
         # Iterate through each value in argv.
-        while (argv):
+        while argv:
 
             value = argv.pop(0)
 
@@ -221,13 +238,19 @@ class HexUtils:
 
                         # Get the order of [low] and [high]
                         if not order:
-                            if register_value == first_half and bank_register[index+1] == second_half:
+                            if (
+                                register_value == first_half
+                                and bank_register[index + 1] == second_half
+                            ):
                                 order = "[high], [low]"
-                            elif register_value == second_half and bank_register[index+1] == first_half:
+                            elif (
+                                register_value == second_half
+                                and bank_register[index + 1] == first_half
+                            ):
                                 order = "[low], [high]"
 
                         # Convert hexadecimal values to binary.
-                        bvalue_register   = helper.hexa_to_binary(register_value)
+                        bvalue_register = helper.hexa_to_binary(register_value)
                         bvalue_first_half = helper.hexa_to_binary(first_half)
                         bvalue_second_half = helper.hexa_to_binary(second_half)
 
@@ -255,7 +278,7 @@ class HexUtils:
         inconsistencies = []
 
         # Process `argv` to combine values.
-        while (argv):
+        while argv:
             # Peek the value from `argv`
             value = argv[0]
             res = []
@@ -267,13 +290,19 @@ class HexUtils:
                 continue
 
             # Aggregate values until the combined size reaches or exceeds sizeof_int
-            while argv and self.sizeof(self._combine_hex_values(res)) < sizeof_int:
+            while (
+                argv and self.sizeof(self._combine_hex_values(res)) < sizeof_int
+            ):
                 res.append(argv.pop(0))
 
                 if argv:
                     next_value = argv[0]
                     # Check if combining with the next value fits within `sizeof_int`
-                    if self.sizeof(self._combine_hex_values(res)) + self.sizeof(next_value) <= sizeof_int:
+                    if (
+                        self.sizeof(self._combine_hex_values(res))
+                        + self.sizeof(next_value)
+                        <= sizeof_int
+                    ):
                         res.append(argv.pop(0))
                     else:
                         break
@@ -281,8 +310,14 @@ class HexUtils:
             # Special case for combining values - `char`, `short`
             # When we are passing a `struct {char, short}`, the char value will be extended
             # to align with short.
-            if len(res) == 2 and self.sizeof(res[0]) == 1 and self.sizeof(res[1]) == 2:
-                res[0] = f"0x00{res[0][2:]}"  # Adjust representation for short exception.
+            if (
+                len(res) == 2
+                and self.sizeof(res[0]) == 1
+                and self.sizeof(res[1]) == 2
+            ):
+                res[0] = (
+                    f"0x00{res[0][2:]}"  # Adjust representation for short exception.
+                )
 
             # Combine the aggregated values into a single hexadecimal value.
             combined_hex = self._combine_hex_values(res)
@@ -332,7 +367,9 @@ class HexUtils:
                 # FIXME Here it would make sense to validate the next stack value,
                 # but has been observe that the next value is not always in the next stack address.
                 if stack_value == argv[0]:
-                    passed_by_ref_register = register_values_dict[argument_registers[0]]
+                    passed_by_ref_register = register_values_dict[
+                        argument_registers[0]
+                    ]
                     passed_by_ref = "[stack]"
 
                     return (passed_by_ref, passed_by_ref_register)
@@ -358,7 +395,7 @@ class HexUtils:
             for index, reg in enumerate(registers):
                 register_values_dict[reg] = register_values[index]
 
-        while (argv):
+        while argv:
             value = argv.pop(0)
 
             # Get the size of the current value.
@@ -371,7 +408,9 @@ class HexUtils:
             first_half, second_half = self._split_hex_value(value)
 
             # Iterate over stack to find matching pairs.
-            for index in range(len(stack) - 1): # Use len(stack) -1 to prevent out-of-range error
+            for index in range(
+                len(stack) - 1
+            ):  # Use len(stack) -1 to prevent out-of-range error
                 # Get the index's stack address and correspoding value.
                 stack_address, stack_value = stack[index]
 
@@ -384,7 +423,9 @@ class HexUtils:
                     # FIXME Here it would make sense to validate the next stack value,
                     # but has been observe that the next value is not always in the next stack address.
                     if stack_value == first_half or stack_value == second_half:
-                        passed_by_ref_register = register_values_dict[argument_registers[0]]
+                        passed_by_ref_register = register_values_dict[
+                            argument_registers[0]
+                        ]
                         passed_by_ref = "[stack]"
 
                         return (passed_by_ref, passed_by_ref_register)
@@ -408,18 +449,24 @@ class HexUtils:
                 register_values_dict[reg] = register_values[index]
 
         # Process argv to combine values.
-        while (argv):
+        while argv:
             # Peek the value from argv
             value = argv[0]
             res = []
             # Aggregate values until the combined size reaches or exceeds sizeof_int.
-            while argv and self.sizeof(self._combine_hex_values(res)) < sizeof_int:
+            while (
+                argv and self.sizeof(self._combine_hex_values(res)) < sizeof_int
+            ):
                 res.append(argv.pop(0))
 
                 # Check if adding the next would still fit within `sizeof_int`.
                 if argv:
                     next_value = argv[0]
-                    if self.sizeof(self._combine_hex_values(res)) + self.sizeof(next_value) <= sizeof_int:
+                    if (
+                        self.sizeof(self._combine_hex_values(res))
+                        + self.sizeof(next_value)
+                        <= sizeof_int
+                    ):
                         res.append(argv.pop(0))
                     else:
                         break
@@ -427,8 +474,14 @@ class HexUtils:
             # Special case for combining values - `char`, `short`
             # When we are passing a `struct {char, short}`, the char value will be extended
             # to align with short.
-            if len(res) == 2 and self.sizeof(res[0]) == 1 and self.sizeof(res[1]) == 2:
-                res[0] = f"0x00{res[0][2:]}"  # Adjust representation for short exception.
+            if (
+                len(res) == 2
+                and self.sizeof(res[0]) == 1
+                and self.sizeof(res[1]) == 2
+            ):
+                res[0] = (
+                    f"0x00{res[0][2:]}"  # Adjust representation for short exception.
+                )
 
             # Combine the aggregated values into a single hexadecimal value.
             combined_hex = self._combine_hex_values(res)
@@ -443,7 +496,9 @@ class HexUtils:
                 stack_address, stack_value = stack[index]
                 if register_values_dict[argument_registers[0]] == stack_address:
                     if stack_value == combined_hex:
-                        passed_by_ref_register = register_values_dict[argument_registers[0]]
+                        passed_by_ref_register = register_values_dict[
+                            argument_registers[0]
+                        ]
                         passed_by_ref = "[stack]"
 
                         return (passed_by_ref, passed_by_ref_register)

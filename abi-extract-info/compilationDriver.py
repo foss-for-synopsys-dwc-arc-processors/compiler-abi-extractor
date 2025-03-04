@@ -8,6 +8,7 @@
 import os
 import subprocess
 
+
 class CompilationDriver:
     def __init__(self, is_verbose):
         self.cc = "cc-wrapper"
@@ -18,22 +19,24 @@ class CompilationDriver:
         self.is_verbose = is_verbose
 
     def isWindows(self):
-        return False # For now, later on, we can also support windows
+        return False  # For now, later on, we can also support windows
 
     def info(self, W):
         print("%s" % W)
 
     # c: an array of arguments. The first element is the program to execute.
     def cmd(self, c, stdout=None, stderr=None, env=None):
-        if self.isWindows() and c[0]=="bash":
-            c=[c[0], "-o", "igncr"]+c[1:]
+        if self.isWindows() and c[0] == "bash":
+            c = [c[0], "-o", "igncr"] + c[1:]
         # If the verbose flag (-v) is detected, executed commands will be
         # displayed along with their stdout and stderr outputs.
         if self.is_verbose:
             self.info("EXECUTING: %s" % (" ".join(c)))
             return subprocess.call(c, stdout=stdout, stderr=stderr, env=env)
         else:
-            return subprocess.call(c, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
+            return subprocess.call(
+                c, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env
+            )
 
     # c: an array of arguments. The first element is the program to execute.
     # Returns the output
@@ -44,7 +47,9 @@ class CompilationDriver:
                 self.info("EXECUTING: %s" % (" ".join(c)))
                 process = subprocess.Popen(c, stdout=subprocess.PIPE)
             else:
-                process = subprocess.Popen(c, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                process = subprocess.Popen(
+                    c, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+                )
             stdout, stderr = process.communicate()
             return stdout, process.returncode
         except OSError as oserror:
@@ -75,7 +80,6 @@ class CompilationDriver:
         if res != 0:
             return 1, None
 
-
         stdoutFile = tmp + outFile + ".stdout"
         res = self.simulate("", outputFile, stdoutFile)
         if res != 0:
@@ -85,10 +89,14 @@ class CompilationDriver:
 
     # Compiler the specified program into an object file
     def compile(self, InputFile, OutputFile):
-        return self.cmd([self.cc] + self.cflags + [InputFile, "-S", "-o", OutputFile])
+        return self.cmd(
+            [self.cc] + self.cflags + [InputFile, "-S", "-o", OutputFile]
+        )
 
     def assemble(self, InputFile, OutputFile):
-        return self.cmd([self.assembler] + self.cflags + [InputFile, "-c", "-o", OutputFile])
+        return self.cmd(
+            [self.assembler] + self.cflags + [InputFile, "-c", "-o", OutputFile]
+        )
 
     # Initialy, only one input file was needed, but now multiple files are required
     # for expanded tests. A mechanism was added to handle multiple files, converting
@@ -96,10 +104,14 @@ class CompilationDriver:
     def link(self, InputFile, OutputFile):
         if isinstance(InputFile, str):
             InputFile = [InputFile]
-        return self.cmd([self.linker] + self.cflags + InputFile + ["-o", OutputFile])
+        return self.cmd(
+            [self.linker] + self.cflags + InputFile + ["-o", OutputFile]
+        )
 
     def simulate(self, args, InputFile, OutputFile):
-        Content, return_code = self.cmdWithResult([self.simulator] + [InputFile])
+        Content, return_code = self.cmdWithResult(
+            [self.simulator] + [InputFile]
+        )
         Content = Content.decode()
         open(OutputFile, "w").write(Content)
         return return_code

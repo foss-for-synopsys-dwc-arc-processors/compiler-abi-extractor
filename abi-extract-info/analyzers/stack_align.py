@@ -7,6 +7,7 @@
 N = [i for i in range(1, 65)]
 # N = [i for i in range(1, 10) if i % 2 != 0]
 
+
 class DriverGenerator:
     def __init__(self):
         self.Result = []
@@ -20,8 +21,9 @@ class DriverGenerator:
     def generateBase(self):
         self.append("#include <stdio.h>")
         self.append("#include <stdint.h>")
-        self.append("#include \"out_functions.h\"")
-        self.append("""
+        self.append('#include "out_functions.h"')
+        self.append(
+            """
 /*
  * This test case calculates the alignment of the stack pointer at each
  * recursive call.
@@ -40,17 +42,21 @@ class DriverGenerator:
  *
  * Note: By passing A to the dummy variable, we hide information from the
  * compiler to prevent optimization.
- */""")
+ */"""
+        )
 
     def generateMain(self):
-        self.append("""
+        self.append(
+            """
 int main() {
     p_functions_struct FunctionArray = {
-        .functions = {""")
+        .functions = {"""
+        )
         for n in N:
             self.append(f"            TrackAlignment{n},")
 
-        self.append("""
+        self.append(
+            """
         }
     };
 
@@ -67,7 +73,8 @@ int main() {
 
     return 0;
 }
-""")
+"""
+        )
 
     def generate(self):
         self.generateBase()
@@ -89,20 +96,24 @@ class FunctionsGenerator:
     def generateBase(self):
         self.append("#include <stdio.h>")
         self.append("#include <stdint.h>")
-        self.append("#include \"out_functions.h\"")
+        self.append('#include "out_functions.h"')
 
     def generateFunctions(self):
         for n in N:
-            self.append("""
+            self.append(
+                """
 void TrackAlignment%d(uintptr_t* p_Alignment, p_functions_struct* FunctionArray, int Index, void *Dummy) {
     char A[%d]; // N = %d
     *p_Alignment |=  get_stack_pointer();
     if (Index > 0) {
         FunctionArray->functions[Index-1](p_Alignment, FunctionArray, Index-1, &A[0]);
     }
-}""" % (n, n, n))
+}"""
+                % (n, n, n)
+            )
 
-        self.append("""
+        self.append(
+            """
 int CalculateAlignment(uintptr_t alignment) {
     int count = 0;
     while ((alignment & 1) == 0) {
@@ -112,12 +123,14 @@ int CalculateAlignment(uintptr_t alignment) {
     return count;
 }
 
-""")
+"""
+        )
 
     def generate(self):
         self.generateBase()
         self.generateFunctions()
         return self.getResult()
+
 
 class FunctionsHeaderGenerator:
     def __init__(self):
@@ -134,20 +147,26 @@ class FunctionsHeaderGenerator:
         self.append("#define FUNCTIONS_H")
         self.append("#include <stdint.h>")
 
-
     def generateFunctionsHeader(self):
         self.append("struct p_functions_struct;")
-        self.append("typedef void (*p_function)(uintptr_t*, struct p_functions_struct*, int, void*);")
+        self.append(
+            "typedef void (*p_function)(uintptr_t*, struct p_functions_struct*, int, void*);"
+        )
 
-        self.append("""
+        self.append(
+            """
 typedef struct p_functions_struct {
     p_function functions[%d];
 } p_functions_struct;
-""" % (len(N)))
+"""
+            % (len(N))
+        )
 
         self.append("extern unsigned long get_stack_pointer(void);")
         for n in N:
-            self.append(f"void TrackAlignment{n}(uintptr_t* p_Alignment, p_functions_struct* FunctionArray, int Index, void *Dummy);")
+            self.append(
+                f"void TrackAlignment{n}(uintptr_t* p_Alignment, p_functions_struct* FunctionArray, int Index, void *Dummy);"
+            )
         self.append("int CalculateAlignment(uintptr_t alignment);")
         self.append("#endif // FUNCTIONS_H")
 
@@ -156,6 +175,7 @@ typedef struct p_functions_struct {
         self.generateFunctionsHeader()
 
         return self.getResult()
+
 
 def do_stack_align(Driver, Report):
     Content = DriverGenerator().generate()
@@ -168,7 +188,7 @@ def do_stack_align(Driver, Report):
     # `src/heler.c` has been added as a placeholder for the dump_information function
     # as it is called within the `callee` function in `src/arch/riscv.s`.
     # Although this function is not used, it is present in the riscv.s file.
-    source_files   = ["tmp/out_functions.c", "tmp/out_driver.c", "src/helper.c"]
+    source_files = ["tmp/out_functions.c", "tmp/out_driver.c", "src/helper.c"]
     assembly_files = ["src/arch/riscv.S"]
     output_name = "out_stackalign"
     res, stdoutFile = Driver.run(source_files, assembly_files, output_name)

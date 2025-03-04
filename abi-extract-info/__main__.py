@@ -11,15 +11,16 @@ import optionParser
 import helper
 import targetArch
 
-from analyzers.datatypes         import do_datatypes
-from analyzers.saved             import do_saved
-from analyzers.returnpass        import do_return
-from analyzers.bitfield          import do_bitfield
-from analyzers.argpass           import do_argpass
+from analyzers.datatypes import do_datatypes
+from analyzers.saved import do_saved
+from analyzers.returnpass import do_return
+from analyzers.bitfield import do_bitfield
+from analyzers.argpass import do_argpass
 from analyzers.struct_boundaries import do_struct_boundaries
-from analyzers.endianness        import do_endianness
-from analyzers.stack_dir         import do_stack_dir
-from analyzers.stack_align       import do_stack_align
+from analyzers.endianness import do_endianness
+from analyzers.stack_dir import do_stack_dir
+from analyzers.stack_align import do_stack_align
+
 
 def do_tests(Driver, Report, Target):
     do_datatypes(Driver, Report, Target)
@@ -33,14 +34,15 @@ def do_tests(Driver, Report, Target):
     do_bitfield(Driver, Report, Target)
     # ,, more different kind of tests here
 
+
 if __name__ == "__main__":
     # Parse options
     OptionParser = optionParser.OptionParser().instance()
     OptionParser.option_parser()
 
     # Construct the report name from options
-    cc_option  = OptionParser.get('cc')
-    sim_option = OptionParser.get('sim')
+    cc_option = OptionParser.get("cc")
+    sim_option = OptionParser.get("sim")
     ReportName = f"{cc_option}_{sim_option}.report"
 
     # Select Target.
@@ -55,7 +57,7 @@ if __name__ == "__main__":
 
     print(f"Running {cc_option} with {sim_option}...")
 
-    is_verbose = OptionParser.get('verbose')
+    is_verbose = OptionParser.get("verbose")
     Driver = compilationDriver.CompilationDriver(is_verbose)
 
     # Run tests and generate summary report
