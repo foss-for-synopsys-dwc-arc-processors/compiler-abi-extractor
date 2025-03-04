@@ -10,7 +10,7 @@ This class is responsible for a set of utility
 functions for handling hexadecimal values.
 """
 
-from lib import helper
+import helper
 
 class HexUtils:
     def __init__(self, target):

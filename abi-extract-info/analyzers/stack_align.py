@@ -1,4 +1,3 @@
-#! /bin/env python
 # Copyright 2025-present, Synopsys, Inc.
 # All rights reserved.
 #
@@ -158,18 +157,22 @@ typedef struct p_functions_struct {
 
         return self.getResult()
 
-def generateDriver():
-    return DriverGenerator().generate()
+def do_stack_align(Driver, Report):
+    Content = DriverGenerator().generate()
+    open("tmp/out_driver.c", "w").write(Content)
+    Content = FunctionsGenerator().generate()
+    open("tmp/out_functions.c", "w").write(Content)
+    Content = FunctionsHeaderGenerator().generate()
+    open("tmp/out_functions.h", "w").write(Content)
 
-def generateFunctions():
-    return FunctionsGenerator().generate()
-
-def generateFunctionsHeader():
-    return FunctionsHeaderGenerator().generate()
-
-import sys
-if __name__ == "__main__":
-    open("out_driver.c", "w").write(generateDriver())
-    open("out_functions.c", "w").write(generateFunctions())
-    open("out_functions.c", "w").write(generateFunctionsHeader())
-    generateFunctionsHeader()
+    # `src/heler.c` has been added as a placeholder for the dump_information function
+    # as it is called within the `callee` function in `src/arch/riscv.s`.
+    # Although this function is not used, it is present in the riscv.s file.
+    source_files   = ["tmp/out_functions.c", "tmp/out_driver.c", "src/helper.c"]
+    assembly_files = ["src/arch/riscv.S"]
+    output_name = "out_stackalign"
+    res, stdoutFile = Driver.run(source_files, assembly_files, output_name)
+    if res != 0:
+        print("Skip: Stack Alignment test case failed.")
+        return
+    Report.append(stdoutFile)
