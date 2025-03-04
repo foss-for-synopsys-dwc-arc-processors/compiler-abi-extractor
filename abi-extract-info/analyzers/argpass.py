@@ -1,9 +1,130 @@
-#! /bin/env python
 # Copyright 2025-present, Synopsys, Inc.
 # All rights reserved.
 #
 # This source code is licensed under the GPL-3.0 license found in
 # the LICENSE file in the root directory of this source tree.
+
+import helper
+import hexUtils
+import dumpInformation
+
+"""
+The purpose of this class is to generate a variety of C test cases using
+different fundamental C types for argument passing.
+
+Given a specified argument count value, several hexadecimal values will be
+passed to a `callee` function written in assembly, which saves all register
+values and prints them to stdout at the end.
+
+For instance, using `int` as the datatype and 4 as argument count,
+we have the following example:
+```c
+    extern void callee(int, int, int, int);
+
+    int main(void) {
+        callee(0x12345678, 0x12345678, 0x12345678, 0x12345678);
+    }
+```
+
+Note that for certain datatypes, an auxiliary function is created to convert
+the value of one datatype to another. For example, for the `double` datatype,
+the test case is as follows:
+```c
+    #include <string.h>
+
+    inline static double ull_as_double(unsigned long long lhs) {
+        double result;
+        memcpy(&result, &lhs, sizeof(result));
+        return result;
+    }
+
+    extern void callee(double, double, double, double);
+
+    int main(void) {
+        callee(ull_as_double(0x1234567890abcdef), ull_as_double(0x1234567890abcdef),
+            ull_as_double(0x1234567890abcdef), ull_as_double(0x1234567890abcdef));
+    }
+```
+Hexadecimal values like `0x1234567890abcdef` are typically interpreted as
+integer types in C, such as `unsigned long long`.
+
+When dealing with different datatypes like `double`, we need to be aware that
+although both `unsigned long long` and `double` may occupy the same number
+of bits (64 bits), their bit-level representations are different.
+
+The convertion function `ull_as_double` uses `memcpy` to directly copy the
+bit pattern of the `unsigned long long` into a `double`. This does not change
+the bit values themselves but reinterprets them according to the
+IEEE 754 standard for a `double`.
+
+Without this convertion function, the compiler would not know to correctly
+interpret the 64-bit pattern as a `double` and will likely change the
+hexadecimal value.
+"""
+class ArgPassGenerator:
+    def __init__(self, Target):
+        self.Target = Target
+        self.Result = []
+
+    def append(self, W):
+        self.Result.append(W)
+
+    def get_result(self):
+        return "\n".join(self.Result)
+
+    def generate_include(self):
+        self.append("#include <string.h>")
+
+    def generate_as_double(self):
+        self.append("""
+inline static double ull_as_double(unsigned long long lhs) {
+    double result;
+    memcpy(&result, &lhs, sizeof(result));
+    return result;
+}
+""")
+
+    def generate_as_float(self):
+        self.append("""
+inline static float int_as_float(unsigned int lhs) {
+    float result;
+    memcpy(&result, &lhs, sizeof(result));
+    return result;
+}
+""")
+
+    def generate_converter(self, dtype):
+        if dtype == "double":
+            self.generate_include()
+            self.generate_as_double()
+        elif dtype == "float":
+            self.generate_include()
+            self.generate_as_float()
+
+    def generate_main(self, dtype, argv):
+        types_list = [dtype] * len(argv)
+        types_str = ", ".join(types_list)
+
+        if dtype == "double":
+            argv_str = ", ".join(f"ull_as_double({value})" for value in argv)
+        elif dtype == "float":
+            argv_str = ", ".join(f"int_as_float({value})" for value in argv)
+        else:
+            argv_str = ", ".join(argv)
+
+        self.append("""
+extern void callee(%s);
+
+int main(void) {
+    callee(%s);
+}
+""" % (types_str, argv_str))
+
+    def generate(self, dtype, argv):
+        self.generate_converter(dtype)
+        self.generate_main(dtype, argv)
+
+        return self.get_result()
 
 """
 The purpose of this class is to validate the presence of a value in the stack.
@@ -23,10 +144,6 @@ passed using the registers.
 - For an 8-byte datatype (64-bit), only 4 values can be passed using the
 registers, as each 8-byte value will occupy two registers.
 """
-
-from lib import helper
-from lib import hexUtils
-
 class ArgPassTests:
     def __init__(self, Target):
         self.Target = Target
@@ -249,6 +366,68 @@ class ArgPassTests:
 
         return citeration
 
-import sys
-if __name__ == "__main__":
-    pass
+def do_argpass(Driver, Report, Target):
+    # List of datatypes to be tested.
+    types = [ "char", "short", "int", "long", "long long",
+              "float", "double"]
+
+    results = {}
+    for dtype in types:
+        # Create an instance of `ArgPassTests` for the current Target
+        arg_pass_tests = ArgPassTests(Target)
+
+        dtype_sizeof = Target.get_type_details(dtype)["size"]
+        results[dtype] = []
+
+        argc = 1
+        while (True):
+            # Generate hexadecimal values for the current datatype and count
+            helper.reset_used_values()
+            argv = helper.generate_hexa_list(argc, dtype_sizeof)
+
+            # Generate the content of the test file.
+            content = ArgPassGenerator(Target).generate(dtype, argv)
+
+            # Create and write the test file.
+            dtype_file = dtype.replace(' ','_')
+            open(f"tmp/out_argpass_{dtype_file}_{argc}.c", "w").write(content)
+            # Compile and run the test file, and capture the stdout.
+            source_files   = [f"tmp/out_argpass_{dtype_file}_{argc}.c", \
+                              "src/helper.c"]
+            assembly_files = ["src/arch/riscv.S"]
+            output_name    = f"out_argpass_{dtype_file}_{argc}"
+            res, StdoutFile = Driver.run(source_files, \
+                                         assembly_files, output_name)
+            if res != 0:
+                print("Skip: Argument Passing test case failed.")
+                return
+
+            # Parse the stdout to extract stack and register bank information.
+            dump_information = dumpInformation.DumpInformation()
+            dump_information.parse(StdoutFile, True)
+
+            # Get the stack and register bank information
+            stack = dump_information.get_stack()
+            reg_banks = dump_information.get_reg_banks()
+            # Run the test to check if the value is in the stack
+            citeration = arg_pass_tests.run_test(stack, reg_banks, argv)
+
+            results[dtype].append(citeration)
+            if citeration["value_in_stack"]:
+                break
+
+            if argc == 20:
+                print("DEBUG: Exitting for save purposes. [do_argpas]")
+                break
+
+            argc += 1
+
+        if dtype == "int":
+            Target.set_argument_registers(citeration["registers"])
+
+    # Process the results
+    Content = arg_pass_tests.process_stages(results)
+
+    # Write a summary report from the results.
+    open("tmp/out_argPassTests.sum", "w").write(Content)
+    Report.append("tmp/out_argPassTests.sum")
