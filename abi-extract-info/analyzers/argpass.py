@@ -61,6 +61,8 @@ Without this convertion function, the compiler would not know to correctly
 interpret the 64-bit pattern as a `double` and will likely change the
 hexadecimal value.
 """
+
+
 class ArgPassGenerator:
     def __init__(self, Target):
         self.Target = Target
@@ -76,22 +78,26 @@ class ArgPassGenerator:
         self.append("#include <string.h>")
 
     def generate_as_double(self):
-        self.append("""
+        self.append(
+            """
 inline static double ull_as_double(unsigned long long lhs) {
     double result;
     memcpy(&result, &lhs, sizeof(result));
     return result;
 }
-""")
+"""
+        )
 
     def generate_as_float(self):
-        self.append("""
+        self.append(
+            """
 inline static float int_as_float(unsigned int lhs) {
     float result;
     memcpy(&result, &lhs, sizeof(result));
     return result;
 }
-""")
+"""
+        )
 
     def generate_converter(self, dtype):
         if dtype == "double":
@@ -112,19 +118,23 @@ inline static float int_as_float(unsigned int lhs) {
         else:
             argv_str = ", ".join(argv)
 
-        self.append("""
+        self.append(
+            """
 extern void callee(%s);
 
 int main(void) {
     callee(%s);
 }
-""" % (types_str, argv_str))
+"""
+            % (types_str, argv_str)
+        )
 
     def generate(self, dtype, argv):
         self.generate_converter(dtype)
         self.generate_main(dtype, argv)
 
         return self.get_result()
+
 
 """
 The purpose of this class is to validate the presence of a value in the stack.
@@ -144,6 +154,8 @@ passed using the registers.
 - For an 8-byte datatype (64-bit), only 4 values can be passed using the
 registers, as each 8-byte value will occupy two registers.
 """
+
+
 class ArgPassTests:
     def __init__(self, Target):
         self.Target = Target
@@ -164,19 +176,25 @@ class ArgPassTests:
             for citeration in iterations:
                 argc = citeration["argc"]
                 # Filter out duplicates from registers
-                regs = [item for item in citeration["registers"] if item not in duplicates]
+                regs = [
+                    item
+                    for item in citeration["registers"]
+                    if item not in duplicates
+                ]
                 order = citeration["pairs_order"]
                 inconsistencies = citeration["inconsistencies"]
                 stack = True if citeration["value_in_stack"] else False
 
-                types.append({
-                    "dtypes": [dtype],
-                    "argc": argc,
-                    "regs": regs,
-                    "order": order,
-                    "inconsistencies": inconsistencies,
-                    "stack": stack
-                })
+                types.append(
+                    {
+                        "dtypes": [dtype],
+                        "argc": argc,
+                        "regs": regs,
+                        "order": order,
+                        "inconsistencies": inconsistencies,
+                        "stack": stack,
+                    }
+                )
 
                 duplicates.update(citeration["registers"])
 
@@ -210,13 +228,15 @@ class ArgPassTests:
                     break
             else:
                 # If no matching entry was found, create a new one
-                result[dtypes_k].append({
-                    "args": [x["argc"]],
-                    "regs": x["regs"],
-                    "order": x["order"],
-                    "inconsistencies": x["inconsistencies"],
-                    "stack": x["stack"]
-                })
+                result[dtypes_k].append(
+                    {
+                        "args": [x["argc"]],
+                        "regs": x["regs"],
+                        "order": x["order"],
+                        "inconsistencies": x["inconsistencies"],
+                        "stack": x["stack"],
+                    }
+                )
 
         return result
 
@@ -232,17 +252,17 @@ class ArgPassTests:
     def process_stage3(self, result):
         merged_r = {}
         for dtype, data in result.items():
-          existing_dtype = None
-          for merged_dtype, merged_data in merged_r.items():
-            if merged_data == data:
-              existing_dtype = merged_dtype
-              break
+            existing_dtype = None
+            for merged_dtype, merged_data in merged_r.items():
+                if merged_data == data:
+                    existing_dtype = merged_dtype
+                    break
 
-          if existing_dtype:
-            new_dtype = existing_dtype + " " + dtype
-            merged_r[new_dtype] = merged_r.pop(existing_dtype)
-          else:
-            merged_r[dtype] = data
+            if existing_dtype:
+                new_dtype = existing_dtype + " " + dtype
+                merged_r[new_dtype] = merged_r.pop(existing_dtype)
+            else:
+                merged_r[dtype] = data
 
         return merged_r
 
@@ -283,21 +303,36 @@ class ArgPassTests:
                     if x["order"]:
                         order_str = x["order"]
                         regs = x["regs"]
-                        regs_str = " ".join([f"[{regs[i]}, {regs[i+1]}]" for i in range(0, len(regs), 2)])
+                        regs_str = " ".join(
+                            [
+                                f"[{regs[i]}, {regs[i+1]}]"
+                                for i in range(0, len(regs), 2)
+                            ]
+                        )
                     else:
                         order_str = ""
-                        regs_str = " ".join(x["regs"]) if x["regs"] else "[stack]" if x["stack"] else ""
+                        regs_str = (
+                            " ".join(x["regs"])
+                            if x["regs"]
+                            else "[stack]" if x["stack"] else ""
+                        )
                 else:
                     regs_str = "[stack]"
 
-                r.append(f" - args {array_to_range(x['args']):<3} {order_str}: {regs_str}")
+                r.append(
+                    f" - args {array_to_range(x['args']):<3} {order_str}: {regs_str}"
+                )
 
             # e.g
             # inconsistencies = [ ("t0", "[stack]"), ("t1", "a1") ]
             #  - WARNING: multiple value occurrences detected in (t0, [stack]), (t1, a1)
             if inconsistencies:
-                inconsistency_str = ", ".join(map(str, inconsistencies)).replace("'", "")
-                r.append(f" - WARNING: multiple value occurrences detected in {inconsistency_str}")
+                inconsistency_str = ", ".join(
+                    map(str, inconsistencies)
+                ).replace("'", "")
+                r.append(
+                    f" - WARNING: multiple value occurrences detected in {inconsistency_str}"
+                )
 
         r.append("")
         return "\n".join(r)
@@ -318,19 +353,26 @@ class ArgPassTests:
 
         # Initialize current test details
         citeration = {
-            "argc": argc,               # Argument count
-            "argv": argv,               # Value checked
-            "registers": None,          # Registers containing the value
-            "value_in_stack": None,     # Wether the value is in the stack
-            "pairs_order": None,        # Order of split values (if any)
-            "inconsistencies": None     # Multiple value occurrences detected
+            "argc": argc,  # Argument count
+            "argv": argv,  # Value checked
+            "registers": None,  # Registers containing the value
+            "value_in_stack": None,  # Wether the value is in the stack
+            "pairs_order": None,  # Order of split values (if any)
+            "inconsistencies": None,  # Multiple value occurrences detected
         }
 
         # Check if the value is in the registers and update current test
-        registers, inconsistencies = hutils.find_registers_fill(argv.copy(), register_banks)
-        citeration["registers"], citeration["inconsistencies"] = registers, inconsistencies
+        registers, inconsistencies = hutils.find_registers_fill(
+            argv.copy(), register_banks
+        )
+        citeration["registers"], citeration["inconsistencies"] = (
+            registers,
+            inconsistencies,
+        )
 
-        registers, inconsistencies, pairs_order = hutils.find_registers_pairs(argv.copy(), register_banks)
+        registers, inconsistencies, pairs_order = hutils.find_registers_pairs(
+            argv.copy(), register_banks
+        )
         if registers:
             if not citeration.get("registers"):
                 citeration["registers"] = registers
@@ -350,13 +392,17 @@ class ArgPassTests:
                 citeration["pairs_order"].update(pairs_order)
 
         # Check if the value is in the stack and update current test
-        value_in_stack, inconsistencies = hutils.find_value_fill_in_stack(citeration, argv.copy(), stack)
+        value_in_stack, inconsistencies = hutils.find_value_fill_in_stack(
+            citeration, argv.copy(), stack
+        )
         citeration["value_in_stack"] = value_in_stack
         citeration["inconsistencies"] = inconsistencies
 
         # If value was not found in the stack, check for pairs in the stack
         if not citeration["value_in_stack"]:
-            value_in_stack, inconsistencies = hutils.find_value_pairs_in_stack(citeration, argv.copy(), stack)
+            value_in_stack, inconsistencies = hutils.find_value_pairs_in_stack(
+                citeration, argv.copy(), stack
+            )
             citeration["value_in_stack"] = value_in_stack
             citeration["inconsistencies"] = inconsistencies
 
@@ -366,10 +412,10 @@ class ArgPassTests:
 
         return citeration
 
+
 def do_argpass(Driver, Report, Target):
     # List of datatypes to be tested.
-    types = [ "char", "short", "int", "long", "long long",
-              "float", "double"]
+    types = ["char", "short", "int", "long", "long long", "float", "double"]
 
     results = {}
     for dtype in types:
@@ -380,7 +426,7 @@ def do_argpass(Driver, Report, Target):
         results[dtype] = []
 
         argc = 1
-        while (True):
+        while True:
             # Generate hexadecimal values for the current datatype and count
             helper.reset_used_values()
             argv = helper.generate_hexa_list(argc, dtype_sizeof)
@@ -389,15 +435,18 @@ def do_argpass(Driver, Report, Target):
             content = ArgPassGenerator(Target).generate(dtype, argv)
 
             # Create and write the test file.
-            dtype_file = dtype.replace(' ','_')
+            dtype_file = dtype.replace(" ", "_")
             open(f"tmp/out_argpass_{dtype_file}_{argc}.c", "w").write(content)
             # Compile and run the test file, and capture the stdout.
-            source_files   = [f"tmp/out_argpass_{dtype_file}_{argc}.c", \
-                              "src/helper.c"]
+            source_files = [
+                f"tmp/out_argpass_{dtype_file}_{argc}.c",
+                "src/helper.c",
+            ]
             assembly_files = ["src/arch/riscv.S"]
-            output_name    = f"out_argpass_{dtype_file}_{argc}"
-            res, StdoutFile = Driver.run(source_files, \
-                                         assembly_files, output_name)
+            output_name = f"out_argpass_{dtype_file}_{argc}"
+            res, StdoutFile = Driver.run(
+                source_files, assembly_files, output_name
+            )
             if res != 0:
                 print("Skip: Argument Passing test case failed.")
                 return

@@ -64,6 +64,8 @@ For short example:
 
     The memory layout is `0x0F` `0xFF` `0x03` `0xFF`
 """
+
+
 class BitFieldGenerator:
     def __init__(self, Target):
         self.Target = Target
@@ -90,8 +92,7 @@ class BitFieldGenerator:
                 if value1 + value2 > sizeof:
                     return (value1, value2)
             else:
-                if value1 + value2 < sizeof and \
-                   value1 + value2 > sizeof/2:
+                if value1 + value2 < sizeof and value1 + value2 > sizeof / 2:
                     return (value1, value2)
 
     # Generate 3 greater than and 3 less than examples
@@ -104,7 +105,7 @@ class BitFieldGenerator:
             arr = []
             for i in range(3):
                 sizeof = self.Target.get_type_details(dtype)["size"]
-                sizeof *= 8 # Convert to bits.
+                sizeof *= 8  # Convert to bits.
                 arr.append(self.gen_tuple(sizeof, ">"))
                 arr.append(self.gen_tuple(sizeof, "<"))
 
@@ -128,7 +129,7 @@ class BitFieldGenerator:
     # Extend binary value with `N` to fit in a given datatype size
     def extend_with_undefined(self, bvalue, dtype):
         sizeof = self.Target.get_type_details(dtype)["size"]
-        sizeof *= 8 # FIXME: Convert bytes to bits.
+        sizeof *= 8  # FIXME: Convert bytes to bits.
         bvalue = bvalue.replace(" ", "")
         length = len(bvalue)
         if length < sizeof:
@@ -138,13 +139,15 @@ class BitFieldGenerator:
 
     # Concatenate binary values without adding padding.
     def no_extra_padding(self, bvalues):
-        bvalue = ''.join(b.replace(" ", "") for b in reversed(bvalues))
+        bvalue = "".join(b.replace(" ", "") for b in reversed(bvalues))
         return self.pad_mult_4(bvalue)
 
     # Add padding to fit each value in their datatype size.
     def extra_padding(self, bvalues, dtype):
         # Extend each binary value and collect them in a list
-        extended_bvalues = [self.extend_with_undefined(b, dtype) for b in bvalues[:-1]] + [bvalues[-1]]
+        extended_bvalues = [
+            self.extend_with_undefined(b, dtype) for b in bvalues[:-1]
+        ] + [bvalues[-1]]
 
         return self.no_extra_padding(extended_bvalues)
 
@@ -152,17 +155,17 @@ class BitFieldGenerator:
     def format_binary(self, binary_str, value=4):
         # Reverse the string to format from the right
         reversed_str = binary_str[::-1]
-        formatted_str = ''
+        formatted_str = ""
 
         for i in range(0, len(reversed_str), value):
-            formatted_str += reversed_str[i:i+value] + ' '
+            formatted_str += reversed_str[i : i + value] + " "
 
         # Reverse back and strip the trailing space
         return formatted_str[::-1].strip()
 
     # Add padding to multiple of 4.
     def pad_mult_4(self, bvalue):
-         # Remove any spaces in the binary value
+        # Remove any spaces in the binary value
         bvalue = bvalue.replace(" ", "")
 
         # Calculate the number of zeros needed
@@ -256,11 +259,13 @@ class BitFieldGenerator:
 
         # e.g
         # union union_short_0 test = { .s = { .x = 0x2AA, .y = 0xDB6 } };
-        self.append(f"  union union_{name} test = {{ .s = {{ {''.join(tmp_str)} }} }};")
+        self.append(
+            f"  union union_{name} test = {{ .s = {{ {''.join(tmp_str)} }} }};"
+        )
 
         bfields_sum = sum(bitfields)
         sizeof = self.Target.get_type_details(dtype)["size"]
-        sizeof *= 8 # FIXME: Convert bytes to bits.
+        sizeof *= 8  # FIXME: Convert bytes to bits.
         # Calculate if greater.
         sign = ">" if bfields_sum > sizeof else "<"
 
@@ -272,7 +277,7 @@ class BitFieldGenerator:
         for hvalue in hvalues:
             bvalues.append(helper.hexa_to_binary(hvalue))
 
-        dtype_sizeof     = self.Target.get_type_details(dtype)["size"]
+        dtype_sizeof = self.Target.get_type_details(dtype)["size"]
         long_long_sizeof = self.Target.get_type_details("long long")["size"]
         if dtype == "char":
             self.generate_calculate_byte(dtype, bvalues)
@@ -283,8 +288,6 @@ class BitFieldGenerator:
 
         else:
             self.generate_calculate(dtype, bvalues)
-
-
 
     def generate_calculate(self, dtype, bvalues):
         # e.g
@@ -299,13 +302,17 @@ class BitFieldGenerator:
         #   printf("Little-endian.");
         # }
         bvalue_little_endian_no_pad = self.no_extra_padding(bvalues)
-        bmask_little_endian_no_pad  = self.create_mask(bvalue_little_endian_no_pad)
-        self.append(f"""
+        bmask_little_endian_no_pad = self.create_mask(
+            bvalue_little_endian_no_pad
+        )
+        self.append(
+            f"""
     if ((*test.values & {helper.binary_to_hexa(bmask_little_endian_no_pad)}) == {helper.binary_to_hexa(bvalue_little_endian_no_pad)})
     {{
         printf("No extra padding.:");
         printf("Little-endian.");
-    }}""")
+    }}"""
+        )
 
         # e.g
         # if ((test.value & 0xFFFF3F) == 0xAADA36)
@@ -313,14 +320,18 @@ class BitFieldGenerator:
         #   printf("No extra padding.:");
         #   printf("Big endian.");
         # }
-        bvalue_big_endian_no_pad = self.little_to_big_endian(bvalue_little_endian_no_pad)
-        bmask_big_endian_no_pad  = self.create_mask(bvalue_big_endian_no_pad)
-        self.append(f"""
+        bvalue_big_endian_no_pad = self.little_to_big_endian(
+            bvalue_little_endian_no_pad
+        )
+        bmask_big_endian_no_pad = self.create_mask(bvalue_big_endian_no_pad)
+        self.append(
+            f"""
     if ((*test.values & {helper.binary_to_hexa(bmask_big_endian_no_pad)}) == {helper.binary_to_hexa(bvalue_big_endian_no_pad)})
     {{
         printf("No extra padding.:");
         printf("Big-endian.");
-    }}""")
+    }}"""
+        )
 
         # e.g
         # if ((test.value & FFF03FF) == 0xDB602AA)
@@ -329,13 +340,15 @@ class BitFieldGenerator:
         #   printf("Little endian.");
         # }
         bvalue_little_endian_pad = self.extra_padding(bvalues, dtype)
-        bmask_little_endian_pad  = self.create_mask(bvalue_little_endian_pad)
-        self.append(f"""
+        bmask_little_endian_pad = self.create_mask(bvalue_little_endian_pad)
+        self.append(
+            f"""
     if ((*test.values & {helper.binary_to_hexa(bmask_little_endian_pad)}) == {helper.binary_to_hexa(bvalue_little_endian_pad)})
     {{
         printf("Extra padding.:");
         printf("Little-endian.");
-    }}""")
+    }}"""
+        )
 
         # e.g
         # if ((test.value & 0xFF03FF0F) == 0xAA02B6D)
@@ -343,14 +356,18 @@ class BitFieldGenerator:
         #   printf("Extra padding.:");
         #   printf("Big endian.");
         # }
-        bvalue_big_endian_pad = self.little_to_big_endian(bvalue_little_endian_pad)
-        bmask_big_endian_pad  = self.create_mask(bvalue_big_endian_pad)
-        self.append(f"""
+        bvalue_big_endian_pad = self.little_to_big_endian(
+            bvalue_little_endian_pad
+        )
+        bmask_big_endian_pad = self.create_mask(bvalue_big_endian_pad)
+        self.append(
+            f"""
     if ((*test.values & {helper.binary_to_hexa(bmask_big_endian_pad)}) == {helper.binary_to_hexa(bvalue_big_endian_pad)})
     {{
         printf("Extra padding.:");
         printf("Big-endian.");
-    }}""")
+    }}"""
+        )
 
         self.append('printf("\\n");')
         self.append("}")
@@ -367,12 +384,16 @@ class BitFieldGenerator:
         #     printf("No extra padding.");
         # }
         bvalue_little_endian_no_pad = self.no_extra_padding(bvalues)
-        bmask_little_endian_no_pad  = self.create_mask(bvalue_little_endian_no_pad)
-        self.append(f"""
+        bmask_little_endian_no_pad = self.create_mask(
+            bvalue_little_endian_no_pad
+        )
+        self.append(
+            f"""
     if ((*test.values & {helper.binary_to_hexa(bmask_little_endian_no_pad)}) == {helper.binary_to_hexa(bvalue_little_endian_no_pad)})
     {{
         printf("No extra padding.");
-    }}""")
+    }}"""
+        )
 
         # e.g
         # if ((*test.values & 0x1F3F) == 0x152A)
@@ -380,13 +401,15 @@ class BitFieldGenerator:
         #     printf("Extra padding.");
         # }
         bvalue_little_endian_pad = self.extra_padding(bvalues, dtype)
-        bmask_little_endian_pad  = self.create_mask(bvalue_little_endian_pad)
-        self.append(f"""
+        bmask_little_endian_pad = self.create_mask(bvalue_little_endian_pad)
+        self.append(
+            f"""
     if ((*test.values & {helper.binary_to_hexa(bmask_little_endian_pad)}) == {helper.binary_to_hexa(bvalue_little_endian_pad)})
     {{
         printf("Extra padding.:");
         printf("Little-endian.");
-    }}""")
+    }}"""
+        )
 
         # e.g
         # if ((*test.values & 0x3F1F) == 0x2A15)
@@ -394,14 +417,18 @@ class BitFieldGenerator:
         #     printf("Extra padding.:");
         #     printf("Big-endian.");
         # }
-        bvalue_big_endian_pad = self.little_to_big_endian(bvalue_little_endian_pad)
-        bmask_big_endian_pad  = self.create_mask(bvalue_big_endian_pad)
-        self.append(f"""
+        bvalue_big_endian_pad = self.little_to_big_endian(
+            bvalue_little_endian_pad
+        )
+        bmask_big_endian_pad = self.create_mask(bvalue_big_endian_pad)
+        self.append(
+            f"""
     if ((*test.values & {helper.binary_to_hexa(bmask_big_endian_pad)}) == {helper.binary_to_hexa(bvalue_big_endian_pad)})
     {{
         printf("Extra padding.:");
         printf("Big-endian.");
-    }}""")
+    }}"""
+        )
 
         self.append('printf("\\n");')
         self.append("}")
@@ -412,9 +439,11 @@ class BitFieldGenerator:
         # union union_short_0 test = { .s = { .x = 0xBB6171D, .y = 0xA678 } };
         # printf("long_long:<:");
 
-        self.append("""
+        self.append(
+            """
     unsigned long long lower_bits = (*(test.values + 0) & 0xFFFFFFFF);
-    unsigned long long upper_bits = ((*(test.values + 0) >> 32));""")
+    unsigned long long upper_bits = ((*(test.values + 0) >> 32));"""
+        )
 
         # e.g
         # if ((lower_bits & 0xFFFFFFFF) == 0x8BB6171D &&
@@ -424,18 +453,26 @@ class BitFieldGenerator:
         #     printf("Little-endian.");
         # }
         bvalue_little_endian_no_pad = self.no_extra_padding(bvalues)
-        bmask_little_endian_no_pad  = self.create_mask(bvalue_little_endian_no_pad)
+        bmask_little_endian_no_pad = self.create_mask(
+            bvalue_little_endian_no_pad
+        )
 
-        bvalue_upper, bvalue_lower = self.split_upper_lower(bvalue_little_endian_no_pad)
-        bmask_upper, bmask_lower  = self.split_upper_lower(bmask_little_endian_no_pad)
+        bvalue_upper, bvalue_lower = self.split_upper_lower(
+            bvalue_little_endian_no_pad
+        )
+        bmask_upper, bmask_lower = self.split_upper_lower(
+            bmask_little_endian_no_pad
+        )
 
-        self.append(f"""
+        self.append(
+            f"""
     if ((lower_bits & {helper.binary_to_hexa(bmask_lower)}) == {helper.binary_to_hexa(bvalue_lower)} &&
         (upper_bits & {helper.binary_to_hexa(bmask_upper)}) == {helper.binary_to_hexa(bvalue_upper)})
     {{
         printf("No extra padding.:");
         printf("Little-endian.");
-    }}""")
+    }}"""
+        )
 
         # e.g
         # if ((lower_bits & 0xFFFFFFFF) == 0x7B68B67A &&
@@ -444,24 +481,34 @@ class BitFieldGenerator:
         #     printf("No extra padding.:");
         #     printf("Big-endian.");
         # }
-        bvalue_big_endian_no_pad = self.little_to_big_endian(bvalue_little_endian_no_pad)
-        bmask_big_endian_no_pad  = self.create_mask(bvalue_big_endian_no_pad)
+        bvalue_big_endian_no_pad = self.little_to_big_endian(
+            bvalue_little_endian_no_pad
+        )
+        bmask_big_endian_no_pad = self.create_mask(bvalue_big_endian_no_pad)
 
-        bvalue_upper, bvalue_lower = self.split_upper_lower(bvalue_big_endian_no_pad)
-        bmask_upper, bmask_lower  = self.split_upper_lower(bmask_big_endian_no_pad)
+        bvalue_upper, bvalue_lower = self.split_upper_lower(
+            bvalue_big_endian_no_pad
+        )
+        bmask_upper, bmask_lower = self.split_upper_lower(
+            bmask_big_endian_no_pad
+        )
 
-        self.append(f"""
+        self.append(
+            f"""
     if ((lower_bits & {helper.binary_to_hexa(bmask_lower)}) == {helper.binary_to_hexa(bvalue_lower)} &&
         (upper_bits & {helper.binary_to_hexa(bmask_upper)}) == {helper.binary_to_hexa(bvalue_upper)})
     {{
         printf("No extra padding.:");
         printf("Big-endian.");
-    }}""")
+    }}"""
+        )
 
-        self.append("""
+        self.append(
+            """
     lower_bits = (*(test.values + 0) & 0xFFFFFFFFFFFFFFFF);
     upper_bits = (*(test.values + 1) & 0xFFFFFFFFFFFFFFFF);
-""")
+"""
+        )
 
         # e.g
         # if ((lower_bits & 0x000000000FFFFFFF) == 0x000000000BB6171D &&
@@ -471,17 +518,23 @@ class BitFieldGenerator:
         #     printf("Little-endian.");
         # }
         bvalue_little_endian_pad = self.extra_padding(bvalues, dtype)
-        bmask_little_endian_pad  = self.create_mask(bvalue_little_endian_pad)
+        bmask_little_endian_pad = self.create_mask(bvalue_little_endian_pad)
 
-        bvalue_upper, bvalue_lower = self.split_upper_lower(bvalue_little_endian_pad, 64)
-        bmask_upper, bmask_lower  = self.split_upper_lower(bmask_little_endian_pad, 64)
-        self.append(f"""
+        bvalue_upper, bvalue_lower = self.split_upper_lower(
+            bvalue_little_endian_pad, 64
+        )
+        bmask_upper, bmask_lower = self.split_upper_lower(
+            bmask_little_endian_pad, 64
+        )
+        self.append(
+            f"""
     if ((lower_bits & {helper.binary_to_hexa(bmask_lower)}) == {helper.binary_to_hexa(bvalue_lower)} &&
         (upper_bits & {helper.binary_to_hexa(bmask_upper)}) == {helper.binary_to_hexa(bvalue_upper)})
     {{
         printf("Extra padding.:");
         printf("Little-endian.");
-    }}""")
+    }}"""
+        )
 
         # e.g
         # if ((lower_bits & 0xFF0F00000000FFFF) == 0xB60B0000000078A6 &&
@@ -490,25 +543,33 @@ class BitFieldGenerator:
         #     printf("Extra padding.:");
         #     printf("Big-endian.");
         # }
-        bvalue_big_endian_pad = self.little_to_big_endian(bvalue_little_endian_pad)
-        bmask_big_endian_pad  = self.create_mask(bvalue_big_endian_pad)
+        bvalue_big_endian_pad = self.little_to_big_endian(
+            bvalue_little_endian_pad
+        )
+        bmask_big_endian_pad = self.create_mask(bvalue_big_endian_pad)
 
-        bvalue_upper, bvalue_lower = self.split_upper_lower(bvalue_big_endian_pad, 64)
-        bmask_upper, bmask_lower  = self.split_upper_lower(bmask_big_endian_pad, 64)
-        self.append(f"""
+        bvalue_upper, bvalue_lower = self.split_upper_lower(
+            bvalue_big_endian_pad, 64
+        )
+        bmask_upper, bmask_lower = self.split_upper_lower(
+            bmask_big_endian_pad, 64
+        )
+        self.append(
+            f"""
     if ((lower_bits & {helper.binary_to_hexa(bmask_lower)}) == {helper.binary_to_hexa(bvalue_lower)} &&
         (upper_bits & {helper.binary_to_hexa(bmask_upper)}) == {helper.binary_to_hexa(bvalue_upper)})
     {{
         printf("Extra padding.:");
         printf("Big-endian.");
-    }}""")
+    }}"""
+        )
 
         self.append('printf("\\n");')
         self.append("}")
 
     def generate_main(self):
         self.append("int main (void) {")
-        self.extend(f'  calculate_{name}();' for name in self.names)
+        self.extend(f"  calculate_{name}();" for name in self.names)
         self.append(f"  return 0;")
         self.append("}")
 
@@ -524,10 +585,13 @@ class BitFieldGenerator:
         self.generate_main()
         return self.get_result()
 
+
 """
 This class parses the bit-field test case to a summary.
 It validates how bit-fields are mapped in memory.
 """
+
+
 class BitFieldTests:
     def __init__(self):
         self.results = []
@@ -561,20 +625,24 @@ class BitFieldTests:
                 continue
 
             # Split the string to get dtype, sign, and content
-            sdata   = entry.split(":")
-            dtype   = sdata[0][:-2]  # Removing the '_0', '_1', etc. from dtype
-            sign    = sdata[1]
+            sdata = entry.split(":")
+            dtype = sdata[0][:-2]  # Removing the '_0', '_1', etc. from dtype
+            sign = sdata[1]
             content = ":".join(sdata[2:])
 
             found = False
             for e in entries:
                 if e["dtype"][0] == dtype and e["sign"] == sign:
-                    e["content"].append(content)  # Append content to existing entry
+                    e["content"].append(
+                        content
+                    )  # Append content to existing entry
                     found = True
                     break
 
             if not found:
-                entries.append({ "dtype": [dtype], "sign": sign, "content": [content] })
+                entries.append(
+                    {"dtype": [dtype], "sign": sign, "content": [content]}
+                )
 
         return entries
 
@@ -614,7 +682,10 @@ class BitFieldTests:
                     continue
 
                 # If sign and content are the same, merge dtype
-                if entry["sign"] == entry2["sign"] and entry["content"] == entry2["content"]:
+                if (
+                    entry["sign"] == entry2["sign"]
+                    and entry["content"] == entry2["content"]
+                ):
                     entry["dtype"].extend(entry2["dtype"])
                     entries.remove(entry2)  # Remove merged entry
 
@@ -637,10 +708,11 @@ class BitFieldTests:
         self.summary_results(entries)
         return self.get_results()
 
+
 def do_bitfield(Driver, Report, Target):
     content = BitFieldGenerator(Target).generate()
     open("tmp/out_bitfield.c", "w").write(content)
-    source_files   = ["tmp/out_bitfield.c"]
+    source_files = ["tmp/out_bitfield.c"]
     assembly_files = []
     output_name = "out_bitfield"
     res, stdout_file = Driver.run(source_files, assembly_files, output_name)

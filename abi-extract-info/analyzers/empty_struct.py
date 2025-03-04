@@ -16,6 +16,8 @@ RISC-V ABIs Specification v1.1
 ** 2.1. Integer Calling Convention
 ***  "Empty structs (...) are ignored by C compilers (...)"
 """
+
+
 class EmptyStructGenerator:
     def __init__(self, MaxCallCount):
         self.Result = []
@@ -32,12 +34,14 @@ class EmptyStructGenerator:
         self.Result.append(W)
 
     def generateBase(self):
-        self.append("""
+        self.append(
+            """
 struct emptyStruct {
 };
 
 extern void callee();
-""")
+"""
+        )
 
     def generateCalls(self):
         call_arguments = []
@@ -58,12 +62,13 @@ extern void callee();
     def generateMain(self):
         call_arguments = []
 
-
-        self.append("""
+        self.append(
+            """
 int main (void) {
     int I = 0xdead;
     struct emptyStruct S;
-""")
+"""
+        )
 
         for i in range(self.CallCount, self.MaxCallCount + 1):
             self.generateCalls()
@@ -83,6 +88,7 @@ int main (void) {
         result = self.getResult()
         self.Reset()
         return result
+
 
 """
 The logic relies on validating the presence of the keyword ("0xdead") in the
@@ -107,6 +113,8 @@ For each information dump (each "callee" call), it is verified that only the
 value of "I" ("0xdead") is present in the argument passing registers. This
 confirms that the empty struct is indeed being ignored by the C compiler.
 """
+
+
 class EmptyStructValidator:
     def __init__(self, Target):
         self.Result = list()
@@ -164,14 +172,15 @@ class EmptyStructValidator:
         else:
             return "- empty struct is not ignored by C compiler.\n"
 
+
 def do_empty_struct(Driver, Report, Target):
     # This value is to be defined according to number for
     # argument passing in registers from "do_argpass" test case.
-    MaxCallCount = 8 # Current static value. FIXME
+    MaxCallCount = 8  # Current static value. FIXME
     Content = EmptyStructGenerator(MaxCallCount).generate()
     open("tmp/out_emptyStruct.c", "w").write(Content)
 
-    source_files   = ["tmp/out_emptyStruct.c", "src/helper.c"]
+    source_files = ["tmp/out_emptyStruct.c", "src/helper.c"]
     assembly_files = ["src/arch/riscv.S"]
     output_name = "out_emptyStruct"
     res, StdoutFile = Driver.run(source_files, assembly_files, output_name)

@@ -12,6 +12,7 @@ test results into a single summary report file upon the conclusion
 of the `abi-extract-info` tool.
 """
 
+
 class ReportDriver:
     def __init__(self, ReportFile, OptionParser):
         self.Files = []
@@ -42,10 +43,14 @@ class ReportDriver:
         if self.OptionParser.get("print-report"):
             print(self.readFile(reportFile))
 
+
 import sys
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python3 reportDriver.py <file_name01>,<file_name02>,.. [output_file]")
+        print(
+            "Usage: python3 reportDriver.py <file_name01>,<file_name02>,.. [output_file]"
+        )
         sys.exit(1)
     Driver = ReportDriver()
     for f in sys.argv[1].split(","):

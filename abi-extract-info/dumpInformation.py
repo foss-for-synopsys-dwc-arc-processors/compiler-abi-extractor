@@ -5,6 +5,7 @@
 # This source code is licensed under the GPL-3.0 license found in
 # the LICENSE file in the root directory of this source tree.
 
+
 class DumpInformation:
     def __init__(self):
         self.HeaderInfo = list()
@@ -27,7 +28,7 @@ class DumpInformation:
     # Read Header from the "dump_information" provided by "src/helper.c"
     def read_header(self, content):
         if "// Header info" not in content[0]:
-#            return content
+            #            return content
             return self.read_header(content[1:])
 
         # Delete comment - "// Header info"
@@ -105,7 +106,7 @@ class DumpInformation:
 
         return result
 
-    def parse(self, Content, to_read = False):
+    def parse(self, Content, to_read=False):
         if to_read:
             Content = self.read_file(Content)
         Content = self.read_header(Content)
@@ -114,17 +115,22 @@ class DumpInformation:
 
         return Content
 
+
 def get_header_info(index):
     return DumpInformation().get_header_info(index)
+
 
 def get_reg_banks():
     return DumpInformation().get_reg_banks()
 
+
 def get_stack(self):
     return DumpInformation().get_stack()
+
 
 def split_dump_sections(Content):
     return DumpInformation().split_dump_sections(Content)
 
-def parse(Content, to_read = False):
+
+def parse(Content, to_read=False):
     return DumpInformation().parse(Content, to_read)

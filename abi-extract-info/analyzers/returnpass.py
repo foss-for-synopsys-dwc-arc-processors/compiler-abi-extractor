@@ -32,6 +32,8 @@ value directly. So you define a high and low, copy
 both to an array (unsigned char bytes[16]), and then
 copy that array to the actual return call.
 """
+
+
 class ReturnGenerator:
     def __init__(self, Target, dtype):
         self._result = []
@@ -48,24 +50,28 @@ class ReturnGenerator:
         self.append("#include <string.h>")
 
     def generate_as_float(self):
-        self.append("""
+        self.append(
+            """
 inline static float ul_as_float(unsigned long lhs)
 {
     float result;
     memcpy(&result, &lhs, sizeof(float));
     return result;
 }
-""")
+"""
+        )
 
     def generate_as_double(self):
-        self.append("""
+        self.append(
+            """
 inline static double ull_as_double(unsigned long long lhs)
 {
     double result;
     memcpy(&result, &lhs, sizeof(double));
     return result;
 }
-""")
+"""
+        )
 
     def generate_converter(self):
         if self._dtype == "float":
@@ -90,21 +96,26 @@ inline static double ull_as_double(unsigned long long lhs)
         else:
             argv = hvalue_return
 
-        self.append("""
+        self.append(
+            """
 %s bar (void) {
     /* %s a = %s; */
     reset_registers();
     return %s;
 }
-""" % (self._dtype, self._dtype, argv, argv))
+"""
+            % (self._dtype, self._dtype, argv, argv)
+        )
 
     def generate_single_call_main(self):
-        self.append("""
+        self.append(
+            """
 int main (void) {
     foo ();
     return 0;
 }
-""")
+"""
+        )
 
     def generate_single_call(self, hvalue_return):
         self.generate_converter()
@@ -115,10 +126,13 @@ int main (void) {
 
         return self.get_result()
 
+
 """
 This class is responsible for generating the summary report
 and the proper calls to validate each dump information.
 """
+
+
 class ReturnTests:
     def __init__(self, Target):
         self.Target = Target
@@ -128,8 +142,8 @@ class ReturnTests:
         pairs_order = ""
 
         for key, value in results.items():
-            fill = tuple(value[0]['registers_fill'])
-            pairs = tuple(value[0]['registers_pairs'])
+            fill = tuple(value[0]["registers_fill"])
+            pairs = tuple(value[0]["registers_pairs"])
 
             if not pairs_order:
                 pairs_order = value[0]["pairs_order"]
@@ -154,11 +168,15 @@ class ReturnTests:
                 if len(regs) == 1:
                     # Single register
                     summary.append(f"- {' : '.join(types)}")
-                    summary.append(f" - passed in registers: {', '.join([f'{reg}' for reg in regs])}")
+                    summary.append(
+                        f" - passed in registers: {', '.join([f'{reg}' for reg in regs])}"
+                    )
                 else:
                     # Paired registers
                     summary.append(f"- {' : '.join(types)}")
-                    summary.append(f" - passed in registers {pairs_order}: {', '.join([f'{reg}' for reg in regs])}")
+                    summary.append(
+                        f" - passed in registers {pairs_order}: {', '.join([f'{reg}' for reg in regs])}"
+                    )
             else:
                 # No registers
                 summary.append(f"- {' : '.join(types)}")
@@ -175,13 +193,17 @@ class ReturnTests:
         citeration["registers_fill"], citeration["inconsistencies"] = tmp
 
         tmp = hutils.find_registers_pairs(argv.copy(), register_banks)
-        citeration["registers_pairs"], citeration["inconsistencies"], citeration["pairs_order"] = tmp
+        (
+            citeration["registers_pairs"],
+            citeration["inconsistencies"],
+            citeration["pairs_order"],
+        ) = tmp
 
         return citeration
 
+
 def do_return(Driver, Report, Target):
-    dtypes = ["char", "short", "int", "long",
-             "long long", "float", "double"]
+    dtypes = ["char", "short", "int", "long", "long long", "float", "double"]
 
     return_tests = ReturnTests(Target)
     results = {}
@@ -196,11 +218,13 @@ def do_return(Driver, Report, Target):
         hvalue_return = helper.generate_hexa_value(sizeof)
 
         # Generate and build/execute the test case.
-        content = ReturnGenerator(Target, dtype).generate_single_call(hvalue_return)
-        dtype_ = dtype.replace(' ', '_')
+        content = ReturnGenerator(Target, dtype).generate_single_call(
+            hvalue_return
+        )
+        dtype_ = dtype.replace(" ", "_")
         open(f"tmp/out_return_{dtype_}.c", "w").write(content)
 
-        source_files   = [f"tmp/out_return_{dtype_}.c", "src/helper.c"]
+        source_files = [f"tmp/out_return_{dtype_}.c", "src/helper.c"]
         assembly_files = ["src/arch/riscv.S", "src/arch/riscv2.s"]
         output_name = f"out_return_{dtype_}"
         res, stdout_file = Driver.run(source_files, assembly_files, output_name)

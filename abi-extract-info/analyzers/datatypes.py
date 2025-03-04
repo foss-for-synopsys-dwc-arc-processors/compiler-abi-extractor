@@ -8,9 +8,20 @@ import re
 
 import helper
 
-Types = [ "char", "signed char", "unsigned char", "short", "int", "long", "long long",
-          "void*", "float", "double", "long double",
-        ]
+Types = [
+    "char",
+    "signed char",
+    "unsigned char",
+    "short",
+    "int",
+    "long",
+    "long long",
+    "void*",
+    "float",
+    "double",
+    "long double",
+]
+
 
 class DataTypesGenerator:
     def __init__(self):
@@ -21,7 +32,8 @@ class DataTypesGenerator:
         self.Result.append(W)
 
     def generateBase(self):
-        self.append("""
+        self.append(
+            """
 #include <stdio.h>
 #include <stdint.h>
 
@@ -29,70 +41,95 @@ void print_info(const char *datatype, int signedness, size_t size, uintptr_t the
    printf("%-20s: signedness: %d, size: %zu, align: %zu\\n", datatype, signedness, size, (size_t)theOffset);
 }
 
-""")
+"""
+        )
 
     # Generate global variabels for each type and print runtime information about them
     def generateTypeChecksUsingStructs(self):
 
         # Generate Structs  for each type and print runtime information about them
         for I, T in enumerate(Types):
-            self.append("""struct struct_%s {
+            self.append(
+                """struct struct_%s {
   %s theType;
-};""" % (T.replace(' ', '_').replace('*', ''), T))
+};"""
+                % (T.replace(" ", "_").replace("*", ""), T)
+            )
 
-            self.append("""struct StructType%d {
+            self.append(
+                """struct StructType%d {
   char dummy;
   struct struct_%s theType;
 } theStructTypeObject%d;
-""" % (I, T.replace(' ', '_').replace('*', ''), I))
+"""
+                % (I, T.replace(" ", "_").replace("*", ""), I)
+            )
 
         # Generate Unions for each type and print runtime information about them
         for I, T in enumerate(Types):
-            self.append("""union union_%s {
+            self.append(
+                """union union_%s {
   char dummy;
   %s theType;
-};""" % (T.replace(' ', '_').replace('*', ''), T))
+};"""
+                % (T.replace(" ", "_").replace("*", ""), T)
+            )
 
-            self.append("""struct UnionType%d {
+            self.append(
+                """struct UnionType%d {
   char dummy;
   union union_%s theType;
 } theUnionTypeObject%d;
-""" % (I, T.replace(' ', '_').replace('*', ''), I))
+"""
+                % (I, T.replace(" ", "_").replace("*", ""), I)
+            )
 
         for I, T in enumerate(Types):
             # Ensure we always start with an odd address (as far as C standard guarantees this)
-            self.append("""struct Type%d {
+            self.append(
+                """struct Type%d {
   char dummy;
   %s theType;
 } theTypeObject%d;
-""" % (I, T, I))
+"""
+                % (I, T, I)
+            )
 
         self.append("void analyzeTypesUsingGlobals() {")
         for I, T in enumerate(Types):
             # Omitting the assignment of "-1" to "void*" because some compilers consider it an error.
             if T != "void*":
                 self.append(f"  theTypeObject{I}.theType = -1;")
-                self.append(f"  print_info(\"{T}\", theTypeObject{I}.theType == -1, sizeof({T}), (uintptr_t)&theTypeObject{I}.theType-(uintptr_t)&theTypeObject{I}.dummy);")
+                self.append(
+                    f'  print_info("{T}", theTypeObject{I}.theType == -1, sizeof({T}), (uintptr_t)&theTypeObject{I}.theType-(uintptr_t)&theTypeObject{I}.dummy);'
+                )
             else:
-                self.append(f"  print_info(\"{T}\", 0, sizeof({T}), (uintptr_t)&theTypeObject{I}.theType-(uintptr_t)&theTypeObject{I}.dummy);")
+                self.append(
+                    f'  print_info("{T}", 0, sizeof({T}), (uintptr_t)&theTypeObject{I}.theType-(uintptr_t)&theTypeObject{I}.dummy);'
+                )
 
         for I, T in enumerate(Types):
-            Struct = T.replace(' ', '_').replace('*', '')
-            self.append(f"  print_info(\"struct {Struct}\", 0, sizeof(struct struct_{Struct}), (uintptr_t)&theStructTypeObject{I}.theType-(uintptr_t)&theStructTypeObject{I}.dummy);")
+            Struct = T.replace(" ", "_").replace("*", "")
+            self.append(
+                f'  print_info("struct {Struct}", 0, sizeof(struct struct_{Struct}), (uintptr_t)&theStructTypeObject{I}.theType-(uintptr_t)&theStructTypeObject{I}.dummy);'
+            )
 
         for I, T in enumerate(Types):
-            Union = T.replace(' ', '_').replace('*', '')
-            self.append(f"  print_info(\"union {Union}\", 0, sizeof(union union_{Union}), (uintptr_t)&theUnionTypeObject{I}.theType-(uintptr_t)&theUnionTypeObject{I}.dummy);")
-
+            Union = T.replace(" ", "_").replace("*", "")
+            self.append(
+                f'  print_info("union {Union}", 0, sizeof(union union_{Union}), (uintptr_t)&theUnionTypeObject{I}.theType-(uintptr_t)&theUnionTypeObject{I}.dummy);'
+            )
 
         self.append("}\n")
 
     def generateMain(self):
-        self.append("""
+        self.append(
+            """
 int main() {
   analyzeTypesUsingGlobals();
 }
-""")
+"""
+        )
 
     def getResult(self):
         return "\n".join(self.Result)
@@ -104,6 +141,7 @@ int main() {
 
         return self.getResult()
 
+
 class DatatypesTests:
     def __init__(self):
         self.result = []
@@ -114,9 +152,8 @@ class DatatypesTests:
             "struct size": {},
             "struct align": {},
             "union size": {},
-            "union align": {}
+            "union align": {},
         }
-
 
     def append(self, W):
         self.result.append(W)
@@ -125,7 +162,7 @@ class DatatypesTests:
         return "\n".join(self.result)
 
     def pattern(self):
-        return r'(\w[\w*\s]+)+:\s+signedness:\s+(\d),\s+size:\s+(\d+),\s+align:\s+(\d+)'
+        return r"(\w[\w*\s]+)+:\s+signedness:\s+(\d),\s+size:\s+(\d+),\s+align:\s+(\d+)"
 
     def find_matches(self, content):
         return re.findall(self.pattern(), content)
@@ -136,7 +173,7 @@ class DatatypesTests:
             size, alignment = str(size), str(alignment)
 
             if "struct" in data_type:
-                base_type  = data_type[7:]
+                base_type = data_type[7:]
                 key_prefix = "struct"
             elif "union" in data_type:
                 base_type = data_type[6:]
@@ -147,17 +184,31 @@ class DatatypesTests:
 
             # Update relevant categorizes
             if key_prefix:
-                self.categorizes[f"{key_prefix} size"].setdefault(size, []).append(base_type)
-                self.categorizes[f"{key_prefix} align"].setdefault(alignment, []).append(base_type)
+                self.categorizes[f"{key_prefix} size"].setdefault(
+                    size, []
+                ).append(base_type)
+                self.categorizes[f"{key_prefix} align"].setdefault(
+                    alignment, []
+                ).append(base_type)
             else:
                 self.categorizes["size"].setdefault(size, []).append(base_type)
-                self.categorizes["align"].setdefault(alignment, []).append(base_type)
+                self.categorizes["align"].setdefault(alignment, []).append(
+                    base_type
+                )
                 if signedness == "1":
                     self.categorizes["signedness"].append(base_type)
 
     # Generate summary.
     def generate_summary(self):
-        for key in ["size", "align", "signedness", "struct size", "struct align", "union size", "union align"]:
+        for key in [
+            "size",
+            "align",
+            "signedness",
+            "struct size",
+            "struct align",
+            "union size",
+            "union align",
+        ]:
             self.append(f"Datatype {key} test:")
             if key == "signedness":
                 self.append(f" - {' : '.join(self.categorizes[key])}")
@@ -173,6 +224,7 @@ class DatatypesTests:
 
         return self.get_result()
 
+
 def do_datatypes(Driver, Report, Target):
     Content = DataTypesGenerator().generate()
     open("tmp/out_datatypes.c", "w").write(Content)
@@ -181,7 +233,9 @@ def do_datatypes(Driver, Report, Target):
     output_name = "out_datatypes"
     res, stdoutFile = Driver.run(source_files, assembly_files, output_name)
     if res != 0:
-        print("fatal: Datatypes test case failed. Enable verbose mode (-v) for more details.")
+        print(
+            "fatal: Datatypes test case failed. Enable verbose mode (-v) for more details."
+        )
         exit(1)
 
     # Reading the file generated by the C program executed.

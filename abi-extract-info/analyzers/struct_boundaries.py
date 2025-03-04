@@ -19,6 +19,8 @@ Given a list of data types, it generates a struct that is passed to an
 external `callee()` function, which is responsible for dumping the register
 and stack values.
 """
+
+
 class StructGenerator:
     def __init__(self, Target, count, dtypes):
         self._result = []
@@ -37,24 +39,28 @@ class StructGenerator:
         self.append("#include <string.h>")
 
     def generate_as_float(self):
-        self.append("""
+        self.append(
+            """
 inline static float ul_as_float(unsigned long lhs)
 {
     float result;
     memcpy(&result, &lhs, sizeof(float));
     return result;
 }
-""")
+"""
+        )
 
     def generate_as_double(self):
-        self.append("""
+        self.append(
+            """
 inline static double ull_as_double(unsigned long long lhs)
 {
     double result;
     memcpy(&result, &lhs, sizeof(double));
     return result;
 }
-""")
+"""
+        )
 
     def generate_converter(self):
         if "float" in self.dtypes:
@@ -63,13 +69,18 @@ inline static double ull_as_double(unsigned long long lhs)
             self.generate_as_double()
 
     def generate_single_call_declare(self):
-        declare_str = [f"    {dtype} a{i + 1};" for i, dtype in enumerate(self.dtypes)]
+        declare_str = [
+            f"    {dtype} a{i + 1};" for i, dtype in enumerate(self.dtypes)
+        ]
         declare_str = "\n".join(declare_str)
-        self.append("""
+        self.append(
+            """
 struct structType {
 %s
 };
-""" % (declare_str))
+"""
+            % (declare_str)
+        )
 
     def generate_single_call_prototypes(self):
         self.append("extern void callee(struct structType);")
@@ -84,7 +95,8 @@ struct structType {
                 hvalues_str.append(f"ull_as_double({hvalues[index]})")
             else:
                 hvalues_str.append(hvalues[index])
-        self.append("""
+        self.append(
+            """
 int main (void) {
     printf("Sizeof(struct structType): %%d\\n", sizeof(struct structType));
     reset_registers();
@@ -93,7 +105,9 @@ int main (void) {
 
     return 0;
 }
-""" % (", ".join(hvalues_str)))
+"""
+            % (", ".join(hvalues_str))
+        )
 
     def generate_single_call(self, hvalues):
         self.generate_include()
@@ -104,10 +118,13 @@ int main (void) {
 
         return self.get_result()
 
+
 """
 This class validates how arguments are passed within structs by checking
 if a value appears in registers, the stack, or if its passed by reference.
 """
+
+
 class StructTests:
     def __init__(self, Target):
         self.Target = Target
@@ -138,11 +155,38 @@ class StructTests:
 
                 if not types:
                     if sizeof_dtype == register_size:
-                        types.append({ "sizeof(S)": iteration["sizeof(S)"], "dtypes": [dtype], "regs": list(iteration["registers_fill"].keys()), "pairs": ""})
+                        types.append(
+                            {
+                                "sizeof(S)": iteration["sizeof(S)"],
+                                "dtypes": [dtype],
+                                "regs": list(
+                                    iteration["registers_fill"].keys()
+                                ),
+                                "pairs": "",
+                            }
+                        )
                     elif sizeof_dtype < register_size:
-                        types.append({ "sizeof(S)": iteration["sizeof(S)"], "dtypes": [dtype], "regs": list(iteration["registers_combined"].keys()), "pairs": ""})
+                        types.append(
+                            {
+                                "sizeof(S)": iteration["sizeof(S)"],
+                                "dtypes": [dtype],
+                                "regs": list(
+                                    iteration["registers_combined"].keys()
+                                ),
+                                "pairs": "",
+                            }
+                        )
                     elif sizeof_dtype > register_size:
-                        types.append({ "sizeof(S)": iteration["sizeof(S)"], "dtypes": [dtype], "regs": list(iteration["registers_pairs"].keys()), "pairs": iteration["pairs_order"]})
+                        types.append(
+                            {
+                                "sizeof(S)": iteration["sizeof(S)"],
+                                "dtypes": [dtype],
+                                "regs": list(
+                                    iteration["registers_pairs"].keys()
+                                ),
+                                "pairs": iteration["pairs_order"],
+                            }
+                        )
                     continue
 
                 # Get the registers according to the size type.
@@ -158,13 +202,24 @@ class StructTests:
                 for x in types.copy():
                     # Aggregate the dtype according to their registers
                     # used and if they are in pairs.
-                    if regs == x["regs"] and pairs == x["pairs"] and iteration["sizeof(S)"] == x["sizeof(S)"]:
+                    if (
+                        regs == x["regs"]
+                        and pairs == x["pairs"]
+                        and iteration["sizeof(S)"] == x["sizeof(S)"]
+                    ):
                         x["dtypes"].append(dtype)
                         found = True
                         break
 
                 if not found:
-                    types.append({ "sizeof(S)": iteration["sizeof(S)"], "dtypes": [dtype], "regs": regs, "pairs": pairs })
+                    types.append(
+                        {
+                            "sizeof(S)": iteration["sizeof(S)"],
+                            "dtypes": [dtype],
+                            "regs": regs,
+                            "pairs": pairs,
+                        }
+                    )
 
             # Check if there are at least two iterations
             if len(iterations) >= 2:
@@ -183,7 +238,6 @@ class StructTests:
 
         return types, boundaries, passed_by_ref_value
 
-
     def process_special_case(self, results):
         res = {}
         # Iterate through each dtype and corresponding iterations
@@ -192,8 +246,11 @@ class StructTests:
 
             # Determine the limit
             iterations_length = len(iterations)
-            if iterations[-1].get("passed_by_ref") and \
-               iterations_length >= 2 and not iterations[-2]["passed_by_ref"]:
+            if (
+                iterations[-1].get("passed_by_ref")
+                and iterations_length >= 2
+                and not iterations[-2]["passed_by_ref"]
+            ):
                 limit = len(iterations[-2]["dtypes,hvalues"])
             else:
                 limit = 0
@@ -215,9 +272,11 @@ class StructTests:
                 if argc <= limit:
                     if dtype_str not in data["dtypes"]:
                         data["dtypes"].append(dtype_str)
-                    if iteration["registers_fill"]    or \
-                       iteration["register_combined"] or \
-                       iteration["registers_pairs"]:
+                    if (
+                        iteration["registers_fill"]
+                        or iteration["register_combined"]
+                        or iteration["registers_pairs"]
+                    ):
                         data["<="] = "in registers"
                     else:
                         data["<="] = "unknown"
@@ -233,9 +292,11 @@ class StructTests:
                     match = False
 
                     if argc <= limit:
-                        if iteration["registers_fill"] or \
-                           iteration["register_combined"] or \
-                           iteration["registers_pairs"]:
+                        if (
+                            iteration["registers_fill"]
+                            or iteration["register_combined"]
+                            or iteration["registers_pairs"]
+                        ):
                             if data["<="] == "in registers":
                                 match = True
                     else:
@@ -254,7 +315,7 @@ class StructTests:
                 break
             summary.append(f"- argc <= {limit} : passed {data['<=']}")
             summary.append(f"- argc >  {limit} : passed {data['>']}")
-            dtypes_str = " : ".join(data['dtypes'])
+            dtypes_str = " : ".join(data["dtypes"])
             summary.append(f"  - {dtypes_str}")
         summary.append("")
         return summary
@@ -269,12 +330,14 @@ class StructTests:
         summary = ["Struct argument passing test:"]
         for sizeof, types in types_dict.items():
             summary.append(f"- sizeof(S) <= {sizeof} : passed in registers")
-            summary.append(f"- sizeof(S) >  {sizeof} : passed by ref: {passed_by_ref_value}")
+            summary.append(
+                f"- sizeof(S) >  {sizeof} : passed by ref: {passed_by_ref_value}"
+            )
 
             for i in types:
-                dtypes_str = ' : '.join(i["dtypes"])
-                regs_str   = ', '.join(i["regs"])
-                pairs_str  = i["pairs"]
+                dtypes_str = " : ".join(i["dtypes"])
+                regs_str = ", ".join(i["regs"])
+                pairs_str = i["pairs"]
                 summary.append(f"  - {dtypes_str} {pairs_str}: {regs_str}")
         summary.append("")
         return summary
@@ -301,21 +364,26 @@ class StructTests:
         hutils = hexUtils.HexUtils(self.Target)
 
         # Check if the value is in the registers and update current test
-        tmp = hutils.find_ref_in_stack_fill(dtype, argv.copy(), register_banks, stack)
+        tmp = hutils.find_ref_in_stack_fill(
+            dtype, argv.copy(), register_banks, stack
+        )
         citeration["passed_by_ref"], citeration["passed_by_ref_register"] = tmp
         if citeration["passed_by_ref"]:
             return citeration
 
-        tmp = hutils.find_ref_in_stack_pairs(dtype, argv.copy(), register_banks, stack)
+        tmp = hutils.find_ref_in_stack_pairs(
+            dtype, argv.copy(), register_banks, stack
+        )
         citeration["passed_by_ref"], citeration["passed_by_ref_register"] = tmp
         if citeration["passed_by_ref"]:
             return citeration
 
-        tmp = hutils.find_ref_in_stack_combined(dtype, argv.copy(), register_banks, stack)
+        tmp = hutils.find_ref_in_stack_combined(
+            dtype, argv.copy(), register_banks, stack
+        )
         citeration["passed_by_ref"], citeration["passed_by_ref_register"] = tmp
         if citeration["passed_by_ref"]:
             return citeration
-
 
         tmp = hutils.find_registers_fill(argv.copy(), register_banks)
         citeration["registers_fill"], _ = tmp
@@ -327,6 +395,7 @@ class StructTests:
         citeration["registers_combined"], _ = tmp
 
         return citeration
+
 
 def do_struct_boundaries(Driver, Report, Target):
     # TODO: Test for 64-bit scenarios.
@@ -344,16 +413,18 @@ def do_struct_boundaries(Driver, Report, Target):
 
     # Reset the used generated values.
     helper.reset_used_values()
-    while (True):
+    while True:
         # Generate a hexadecimal value list according to the current count.
         hvalues = helper.generate_hexa_list(char_limit, char_sizeof)
 
         # Generate and build/execute the test case.
         dtypes = [dtype] * char_limit
-        Content = StructGenerator(Target, char_limit, dtypes).generate_single_call(hvalues)
+        Content = StructGenerator(
+            Target, char_limit, dtypes
+        ).generate_single_call(hvalues)
         output_name = f"out_struct_boundaries_{dtype}_{char_limit}"
         open(f"tmp/{output_name}.c", "w").write(Content)
-        source_files   = [f"tmp/{output_name}.c", "src/helper.c"]
+        source_files = [f"tmp/{output_name}.c", "src/helper.c"]
         assembly_files = ["src/arch/riscv.S"]
         res, stdout_file = Driver.run(source_files, assembly_files, output_name)
         if res != 0:
@@ -399,8 +470,7 @@ def do_struct_boundaries(Driver, Report, Target):
     # can be 16 bytes in a 32-bit architecture. That means that
     # the values are splitten in 4, and so that implementation
     # is yet to be added. FIXME
-    types = ["short", "int", "long",
-             "long long", "float", "double"]
+    types = ["short", "int", "long", "long long", "float", "double"]
     # HACK: This value will be replaced by a architecture validation
     # in the beginning of the framework execution.
     register_bank_count = 0
@@ -423,16 +493,20 @@ def do_struct_boundaries(Driver, Report, Target):
             # Plus one char to validate the limit.
             for index, i in enumerate([[], ["char"]]):
                 dtypes = [dtype] * limit_dtype + i
-                hvalues = helper.generate_hexa_list_from_datatypes(dtypes, \
-                                                                    Target)
+                hvalues = helper.generate_hexa_list_from_datatypes(
+                    dtypes, Target
+                )
                 # Generate and build/execute the test case.
-                Content = StructGenerator(Target, None, dtypes).generate_single_call(hvalues)
+                Content = StructGenerator(
+                    Target, None, dtypes
+                ).generate_single_call(hvalues)
                 output_name = f"out_struct_boundaries_{dtype}_{index}"
                 open(f"tmp/{output_name}.c", "w").write(Content)
-                source_files   = [f"tmp/{output_name}.c", "src/helper.c"]
+                source_files = [f"tmp/{output_name}.c", "src/helper.c"]
                 assembly_files = ["src/arch/riscv.S"]
-                res, stdout_file = Driver.run(source_files, \
-                                              assembly_files, output_name)
+                res, stdout_file = Driver.run(
+                    source_files, assembly_files, output_name
+                )
                 if res != 0:
                     print("Skip: Struct Argument Passing test case failed.")
                     return
@@ -456,15 +530,14 @@ def do_struct_boundaries(Driver, Report, Target):
 
                 citeration = {}
                 citeration["sizeof(S)"] = size
-                struct_tests.run_test(citeration, dtype, stack, reg_banks, \
-                                      hvalues)
+                struct_tests.run_test(
+                    citeration, dtype, stack, reg_banks, hvalues
+                )
                 results[dtype].append(citeration)
                 if citeration["passed_by_ref"] != None:
                     reached_boundary = True
                     break
             limit_dtype = limit_dtype + 1
-
-
 
     # As per the RISC-V ABi:
     # "A struct containing two floating-point reals is passed in two
@@ -477,8 +550,12 @@ def do_struct_boundaries(Driver, Report, Target):
     #   - float/float
     #   - double/double
     sc_results = {}
-    special_cases = [["float", "double"], ["double", "float"],
-                    ["float", "float"], ["double", "double"]]
+    special_cases = [
+        ["float", "double"],
+        ["double", "float"],
+        ["float", "float"],
+        ["double", "double"],
+    ]
     for dtypes in special_cases:
         dtypes_str = "_".join(dtypes)
         sc_results[dtypes_str] = []
@@ -487,14 +564,17 @@ def do_struct_boundaries(Driver, Report, Target):
             dtypes = dtypes + i
             hvalues = helper.generate_hexa_list_from_datatypes(dtypes, Target)
 
-            content = StructGenerator(Target, None, dtypes).generate_single_call(hvalues)
+            content = StructGenerator(
+                Target, None, dtypes
+            ).generate_single_call(hvalues)
 
             output_name = f"out_struct_boundaries_sc_{dtypes_str}_{index}"
             open(f"tmp/{output_name}.c", "w").write(content)
-            source_files   = [f"tmp/{output_name}.c", "src/helper.c"]
+            source_files = [f"tmp/{output_name}.c", "src/helper.c"]
             assembly_files = ["src/arch/riscv.S"]
-            res, StdoutFile = Driver.run(source_files, \
-                                         assembly_files, output_name)
+            res, StdoutFile = Driver.run(
+                source_files, assembly_files, output_name
+            )
             if res != 0:
                 print("Skip: Struct Argument Passing test case failed.")
                 return
@@ -518,7 +598,9 @@ def do_struct_boundaries(Driver, Report, Target):
 
             # Create tuple list of data type and the corresponding hexadecimal
             # values.
-            tmp = [(dtype, hvalues[index]) for index, dtype in enumerate(dtypes)]
+            tmp = [
+                (dtype, hvalues[index]) for index, dtype in enumerate(dtypes)
+            ]
             citeration["dtypes,hvalues"] = tmp
 
             struct_tests.run_test(citeration, dtype, stack, reg_banks, hvalues)

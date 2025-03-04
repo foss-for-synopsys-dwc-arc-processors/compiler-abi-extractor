@@ -27,6 +27,7 @@ For caller-saved registers, we expect them to hold the first set of values.
 This process may need further refinement.
 """
 
+
 class ReturnGenerator:
     def __init__(self, Target):
         self._result = []
@@ -58,7 +59,8 @@ class ReturnGenerator:
         register_names_str = '", "'.join(register_names)
         register_names_str = f'"{register_names_str}"'
 
-        self.append("""
+        self.append(
+            """
 void aux (void) {
     asm volatile (""
     :
@@ -70,10 +72,13 @@ void aux (void) {
     /* Preventing the compiler from optimizing. */
     asm volatile("":::);
 }
-""" % (register_names_str, hvalue_callee_saved))
+"""
+            % (register_names_str, hvalue_callee_saved)
+        )
 
     def generate_func_main(self, hvalue_caller_saved):
-        self.append("""
+        self.append(
+            """
 int main (void) {
     reset_registers();
     set_registers(%s);
@@ -82,7 +87,10 @@ int main (void) {
 
     return 0;
 }
-""" % (hvalue_caller_saved))
+"""
+            % (hvalue_caller_saved)
+        )
+
     def generate_main(self, hvalue_caller_saved):
         self.generate_prototypes_main()
         self.generate_func_main(hvalue_caller_saved)
@@ -94,6 +102,7 @@ int main (void) {
         self.generate_func_aux(hvalue_callee_saved)
 
         return self.get_result()
+
 
 class SavedTests:
     def __init__(self, Target):
@@ -112,16 +121,22 @@ class SavedTests:
 
         return "\n".join(summary)
 
-    def run_test(self, register_banks, hvalue_caller_saved, hvalue_callee_saved):
+    def run_test(
+        self, register_banks, hvalue_caller_saved, hvalue_callee_saved
+    ):
         hutils = hexUtils.HexUtils(self.Target)
 
         tmp = hutils.find_registers_fill([hvalue_caller_saved], register_banks)
-        caller_saved_registers, _  = tmp
+        caller_saved_registers, _ = tmp
 
         tmp = hutils.find_registers_fill([hvalue_callee_saved], register_banks)
         callee_saved_registers, _ = tmp
 
-        return self.generate_summary(caller_saved_registers, callee_saved_registers)
+        return self.generate_summary(
+            caller_saved_registers, callee_saved_registers
+        )
+
+
 def do_saved(Driver, Report, Target):
     sizeof = Target.get_type_details("int")["size"]
 
@@ -135,8 +150,11 @@ def do_saved(Driver, Report, Target):
     content = ReturnGenerator(Target).generate_aux(hvalue_callee_saved)
     open("tmp/out_saved_aux.c", "w").write(content)
 
-    source_files = ["tmp/out_saved_main.c", \
-                    "tmp/out_saved_aux.c", "src/helper.c"]
+    source_files = [
+        "tmp/out_saved_main.c",
+        "tmp/out_saved_aux.c",
+        "src/helper.c",
+    ]
     assembly_files = ["src/arch/riscv.S"]
     output_name = "out_saved"
     res, stdout_file = Driver.run(source_files, assembly_files, output_name)
@@ -149,12 +167,12 @@ def do_saved(Driver, Report, Target):
     register_banks = dump_information.get_reg_banks()
 
     saved_tests = SavedTests(Target)
-    summary_content = saved_tests.run_test(register_banks, \
-                                hvalue_caller_saved, hvalue_callee_saved)
+    summary_content = saved_tests.run_test(
+        register_banks, hvalue_caller_saved, hvalue_callee_saved
+    )
 
     summary_file = "tmp/out_saved.sum"
     open(summary_file, "w").write(summary_content)
 
     # Store the generated report file for argument passing test case.
     Report.append(summary_file)
-
