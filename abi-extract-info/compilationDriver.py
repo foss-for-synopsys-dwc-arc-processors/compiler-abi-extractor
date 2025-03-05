@@ -10,11 +10,11 @@ import subprocess
 
 
 class CompilationDriver:
-    def __init__(self, is_verbose):
-        self.cc = "cc-wrapper"
-        self.assembler = "as-wrapper"
-        self.linker = "ld-wrapper"
-        self.simulator = "sim-wrapper"
+    def __init__(self, is_verbose, cc_path, sim_path):
+        self.cc = str(cc_path / "cc-wrapper")
+        self.assembler = str(cc_path / "as-wrapper")
+        self.linker = str(cc_path / "ld-wrapper")
+        self.simulator = str(sim_path / "sim-wrapper")
         self.cflags = ["-O1"]
         self.is_verbose = is_verbose
 
