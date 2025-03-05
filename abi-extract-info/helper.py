@@ -6,18 +6,19 @@
 # the LICENSE file in the root directory of this source tree.
 
 import os
+import pathlib
 
 
-# Add the compiler and simulator wrappers to the
-# PATH environment variable to enable a modular
-# approach for invoking various compilers and simulators.
-def set_env(cc, sim):
-    root_path = os.path.abspath(".")
-    wrapper_path = root_path + "/scripts/wrapper/"
-
-    # Set environment variable
-    os.environ["PATH"] = wrapper_path + f"/cc/{cc}:" + os.environ["PATH"]
-    os.environ["PATH"] = wrapper_path + f"/sim/{sim}:" + os.environ["PATH"]
+def get_cc_sim_paths(cc, sim):
+    """
+    Resolve the paths to the wrapper by searching relative to this source file.
+    """
+    wrapper_path = (
+        pathlib.Path(__file__) / ".." / ".." / "scripts" / "wrapper"
+    ).resolve()
+    cc_path = wrapper_path / "cc" / f"{cc}"
+    sim_path = wrapper_path / "sim" / f"{sim}"
+    return cc_path, sim_path
 
 
 # Responsible for reading a file and returning its contents.

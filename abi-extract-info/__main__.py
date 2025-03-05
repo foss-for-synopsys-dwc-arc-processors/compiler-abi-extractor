@@ -55,16 +55,14 @@ if __name__ == "__main__":
     # Hardcoded to RISCV FIXME
     Target = targetArch.RISCV()
 
-    # Set environment variable
-    helper.set_env(cc_option, sim_option)
-
     # Initialize the report driver with the report name
     Report = reportDriver.ReportDriver(ReportName, OptionParser)
 
     print(f"Running {cc_option} with {sim_option}...")
 
     is_verbose = OptionParser.get("verbose")
-    Driver = compilationDriver.CompilationDriver(is_verbose)
+    cc_path, sim_path = helper.get_cc_sim_paths(cc_option, sim_option)
+    Driver = compilationDriver.CompilationDriver(is_verbose, cc_path, sim_path)
 
     # Run tests and generate summary report
     run_analyzers(Driver, Report, Target)
