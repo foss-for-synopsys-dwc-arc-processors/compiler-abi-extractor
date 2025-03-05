@@ -274,7 +274,7 @@ class StructTests:
                         data["dtypes"].append(dtype_str)
                     if (
                         iteration["registers_fill"]
-                        or iteration["register_combined"]
+                        or iteration["registers_combined"]
                         or iteration["registers_pairs"]
                     ):
                         data["<="] = "in registers"
@@ -294,7 +294,7 @@ class StructTests:
                     if argc <= limit:
                         if (
                             iteration["registers_fill"]
-                            or iteration["register_combined"]
+                            or iteration["registers_combined"]
                             or iteration["registers_pairs"]
                         ):
                             if data["<="] == "in registers":

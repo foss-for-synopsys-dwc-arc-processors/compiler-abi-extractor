@@ -64,7 +64,7 @@ callee:
     sw x30, 120(t6)
 
     # Initialize t6 to point to the start of the regs_bank1 array
-.if CONFIG_FPU
+#ifndef __riscv_float_abi_soft
     la t6, regs_bank1
     fsd f0, 0(t6)
     fsd f1, 8(t6)
@@ -98,7 +98,7 @@ callee:
     fsd f29, 232(t6)
     fsd f30, 240(t6)
     fsd f31, 248(t6)
-.endif
+#endif
     la t6, regs_bank0
 
     # handle t6/x31
