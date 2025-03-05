@@ -53,14 +53,14 @@ Example:
 $ cat cc-wrapper
 #!/bin/bash
 
-riscv32-unknown-elf-gcc -march=rv32gc -mabi=ilp32d -DCONFIG_FPU=1 "$@"
+riscv32-unknown-elf-gcc -march=rv32gc -mabi=ilp32d "$@"
 ```
 
 ```bash
 $ cat as-wrapper
 #!/bin/bash
 
-riscv32-unknown-elf-gcc -march=rv32gc -mabi=ilp32d -DCONFIG_FPU=1 "$@"
+riscv32-unknown-elf-gcc -march=rv32gc -mabi=ilp32d "$@"
 ```
 
 ```bash
@@ -70,6 +70,5 @@ $ cat ld-wrapper
 riscv32-unknown-elf-gcc -march=rv32gc -mabi=ilp32d "$@"
 `````
 
-The `CONFIG_FPU` macro is required to indicate that the compiler supports hardware floating-point registers.
 The tool applies the `-O1` optimization flag by default for all compilers.
 
