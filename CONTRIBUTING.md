@@ -6,6 +6,7 @@
   * [Ask for Help](#ask-for-help)
   * [Pull Request Lifecycle](#pull-request-lifecycle)
   * [Development Environment Setup](#development-environment-setup)
+  * [Reference Reports](#reference-reports)
   * [Sign Your Commits](#sign-your-commits)
 
 Welcome! We are glad that you want to contribute to our project! 💖
@@ -89,8 +90,15 @@ Make sure the required toolchain and simulator are available in the `PATH`. By d
 4. **Run the Project** \
 Start the application with the following command:
 ```bash
-$ python3 abi-extract-info.py
+$ python3 abi-extract-info
 ```
+
+
+## Reference Reports
+
+The `reports/` directory contains references of what the reports should contain.
+If analyzers are added, or changed in any other way, please update the reference
+reports in this directory.
 
 
 ## Sign Your Commits
