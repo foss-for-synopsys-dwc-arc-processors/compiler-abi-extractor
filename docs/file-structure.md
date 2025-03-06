@@ -2,8 +2,6 @@
 
 This document outlines the framework's file structure, describing the organization and purpose of each file and directory.
 
-# TODO
-
 #### `abi-extract-info/` Directory:
 
 Contains the Python source of the `abi-extract-info` utility:
@@ -34,5 +32,11 @@ Contains the Python source of the `abi-extract-info` utility:
 - `helper.c`    - C source code for architecture dump information.
 ```
 
-### `tmp/` Directory
+#### `reports/` Directory:
+
+Reference reports for every provided wrapper. Can be used for testing or for
+comparing results from different compilers.
+
+#### `tmp/` Directory
+
 Stores temporary files generated during execution.
