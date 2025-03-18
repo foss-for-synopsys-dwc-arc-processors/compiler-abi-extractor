@@ -188,8 +188,7 @@ class HexUtils:
     def find_registers_extended(self, argv, register_banks, is_zero):
         registers = []
 
-        # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
-        sizeof_int = 4
+        register_size = self.Target.get_register_size()
 
         # Iterate through each value in argv.
         while argv:
@@ -197,7 +196,7 @@ class HexUtils:
             value = argv.pop(0)
 
             # If the value is greater or equal to the register sizeof, continue.
-            if self.sizeof(value) >= sizeof_int:
+            if self.sizeof(value) >= register_size:
                 continue
 
             value = self._zero_or_sign_extend(value, is_zero)
@@ -218,8 +217,7 @@ class HexUtils:
         inconsistencies = []
         order = ""
 
-        # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
-        sizeof_int = 4
+        register_size = self.Target.get_register_size()
 
         # Process `argv` to find matching register values.
         while argv:
@@ -227,8 +225,8 @@ class HexUtils:
             value = argv.pop(0)
             sizeof_value = self.sizeof(value)
 
-            # Split the value if its size exceeds `sizeof_int`
-            if sizeof_value > sizeof_int:
+            # Split the value if its size exceeds the register size
+            if sizeof_value > register_size:
                 first_half, second_half = self._split_hex_value(value)
 
                 # Search for each half in each register bank.
@@ -271,8 +269,7 @@ class HexUtils:
 
     # Finds registers that match combined values in `argv`.
     def find_registers_combined(self, argv, register_banks):
-        # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
-        sizeof_int = 4
+        register_size = self.Target.get_register_size()
 
         registers = {}
         inconsistencies = []
@@ -285,23 +282,24 @@ class HexUtils:
             tmp = []
 
             # Check if the current value is already of the expected size.
-            if self.sizeof(value) == sizeof_int:
+            if self.sizeof(value) == register_size:
                 argv.pop(0)
                 continue
 
-            # Aggregate values until the combined size reaches or exceeds sizeof_int
+            # Aggregate values until the combined size reaches or exceeds register_size
             while (
-                argv and self.sizeof(self._combine_hex_values(res)) < sizeof_int
+                argv
+                and self.sizeof(self._combine_hex_values(res)) < register_size
             ):
                 res.append(argv.pop(0))
 
                 if argv:
                     next_value = argv[0]
-                    # Check if combining with the next value fits within `sizeof_int`
+                    # Check if combining with the next value fits within `register_size`
                     if (
                         self.sizeof(self._combine_hex_values(res))
                         + self.sizeof(next_value)
-                        <= sizeof_int
+                        <= register_size
                     ):
                         res.append(argv.pop(0))
                     else:
@@ -381,8 +379,7 @@ class HexUtils:
         passed_by_ref = None
         passed_by_ref_register = None
 
-        # FIXME Assume sizeof(int) is 4  bytes; this should be dynamic if the size can change (i.e 64bits).
-        sizeof_int = 4
+        register_size = self.Target.get_register_size()
 
         # The reg_bank0 registers are used for the passed by reference,
         # even with floating-point register values.
@@ -402,7 +399,7 @@ class HexUtils:
             sizeof_value = self.sizeof(value)
 
             # Check if makes sense to split the value.
-            if sizeof_value <= sizeof_int:
+            if sizeof_value <= register_size:
                 continue
             # Split the value into two parts.
             first_half, second_half = self._split_hex_value(value)
@@ -436,8 +433,7 @@ class HexUtils:
         passed_by_ref = None
         passed_by_ref_register = None
 
-        # FIXME Assume sizeof(int) is 4 bytes; this should be dynamic if the size can change (i.e., 64 bits).
-        sizeof_int = 4
+        register_size = self.Target.get_register_size()
 
         argument_registers = self.Target.get_argument_registers()
 
@@ -453,19 +449,20 @@ class HexUtils:
             # Peek the value from argv
             value = argv[0]
             res = []
-            # Aggregate values until the combined size reaches or exceeds sizeof_int.
+            # Aggregate values until the combined size reaches or exceeds register_size.
             while (
-                argv and self.sizeof(self._combine_hex_values(res)) < sizeof_int
+                argv
+                and self.sizeof(self._combine_hex_values(res)) < register_size
             ):
                 res.append(argv.pop(0))
 
-                # Check if adding the next would still fit within `sizeof_int`.
+                # Check if adding the next would still fit within `register_size`.
                 if argv:
                     next_value = argv[0]
                     if (
                         self.sizeof(self._combine_hex_values(res))
                         + self.sizeof(next_value)
-                        <= sizeof_int
+                        <= register_size
                     ):
                         res.append(argv.pop(0))
                     else:

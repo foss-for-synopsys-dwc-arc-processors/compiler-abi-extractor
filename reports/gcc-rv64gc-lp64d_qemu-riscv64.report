@@ -1,0 +1,93 @@
+Datatype size test:
+ - 1: char : signed char : unsigned char
+ - 2: short
+ - 4: int : float
+ - 8: long : long long : void* : double
+ - 16: long double
+
+Datatype align test:
+ - 1: char : signed char : unsigned char
+ - 2: short
+ - 4: int : float
+ - 8: long : long long : void* : double
+ - 16: long double
+
+Datatype signedness test:
+ - signed char : short : int : long : long long : float : double : long double
+
+Datatype struct size test:
+ - 1: char : signed_char : unsigned_char
+ - 2: short
+ - 4: int : float
+ - 8: long : long_long : void : double
+ - 16: long_double
+
+Datatype struct align test:
+ - 1: char : signed_char : unsigned_char
+ - 2: short
+ - 4: int : float
+ - 8: long : long_long : void : double
+ - 16: long_double
+
+Datatype union size test:
+ - 1: char : signed_char : unsigned_char
+ - 2: short
+ - 4: int : float
+ - 8: long : long_long : void : double
+ - 16: long_double
+
+Datatype union align test:
+ - 1: char : signed_char : unsigned_char
+ - 2: short
+ - 4: int : float
+ - 8: long : long_long : void : double
+ - 16: long_double
+
+Stack direction test:
+- The stack grows downwards.
+
+Stack alignment test:
+- Number of least significant 0 bits: 4
+- Stack is aligned to 16 bytes.
+
+Argument passing test:
+- char : short : int : long : long_long
+ - args 1-8 : a0 a1 a2 a3 a4 a5 a6 a7
+ - args 9   : [stack]
+- float : double
+ - args 1-16 : fa0 fa1 fa2 fa3 fa4 fa5 fa6 fa7 a0 a1 a2 a3 a4 a5 a6 a7
+ - args 17  : [stack]
+
+Struct argument passing test:
+- sizeof(S) <= 16 : passed in registers
+- sizeof(S) >  16 : passed by ref: [stack]
+  - char : short : int : long : long long : float : a0, a1
+  - double : fa0, fa1
+- empty struct is ignored by C compiler.
+
+Endianess test:
+- Wrote (as ull):  0123456789abcdef
+- Read  (as char): efcdab8967452301
+- This system is little-endian.
+
+Caller/callee-saved test:
+ - caller-saved s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11
+ - callee-saved t0, t1, t2, a0, a1, a2, a3, a4, a5, a6, a7, t3, t4, t5, t6
+
+Return registers:
+- char : short : int : long : long long
+ - passed in registers: a0
+- float : double
+ - passed in registers: fa0
+
+Bit-Field test:
+- sum(bit-fields) > sizeof(datatype)
+  - char : short : int : long : long_long
+    - Extra padding.
+    - Little-endian.
+- sum(bit-fields) < sizeof(datatype)
+  - char
+    - No extra padding.
+  - short : int : long : long_long
+    - No extra padding.
+    - Little-endian.

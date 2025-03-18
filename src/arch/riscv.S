@@ -4,19 +4,29 @@
 # This source code is licensed under the GPL-3.0 license found in
 # the LICENSE file in the root directory of this source tree.
 
+#if __riscv_xlen == 64
+#define T6_STACK_OFFSET -8
+#define S2_STACK_OFFSET -16
+#else
+#define T6_STACK_OFFSET -4
+#define S2_STACK_OFFSET -8
+#endif
+
 .data
 .globl regs_bank0
 .globl regs_bank1
 
 regs_bank0:
     .rept 32
-    .word 0
+    .dword 0
     .endr
+    .size regs_bank0, .-regs_bank0
 
 regs_bank1:
     .rept 32
     .dword 0
     .endr
+    .size regs_bank1, .-regs_bank1
 
 .text
 .align  1
@@ -26,8 +36,46 @@ regs_bank1:
 .globl  set_registers
 .type   callee, @function
 callee:
+#if __riscv_xlen == 64
     # Save t6 to the stack
-    sw t6, -4(sp)
+    sd t6, T6_STACK_OFFSET(sp)
+
+    # Initialize t6 to point to the start of the regs_bank0 array
+    la t6, regs_bank0
+    sd x0, 0(t6)
+    sd x1, 8(t6)
+    sd x2, 16(t6)
+    sd x3, 24(t6)
+    sd x4, 32(t6)
+    sd x5, 40(t6)
+    sd x6, 48(t6)
+    sd x7, 56(t6)
+    sd x8, 64(t6)
+    sd x9, 72(t6)
+    sd x10, 80(t6)
+    sd x11, 88(t6)
+    sd x12, 96(t6)
+    sd x13, 104(t6)
+    sd x14, 112(t6)
+    sd x15, 120(t6)
+    sd x16, 128(t6)
+    sd x17, 136(t6)
+    sd x18, 144(t6)
+    sd x19, 152(t6)
+    sd x20, 160(t6)
+    sd x21, 168(t6)
+    sd x22, 176(t6)
+    sd x23, 184(t6)
+    sd x24, 192(t6)
+    sd x25, 200(t6)
+    sd x26, 208(t6)
+    sd x27, 216(t6)
+    sd x28, 224(t6)
+    sd x29, 232(t6)
+    sd x30, 240(t6)
+#else
+    # Save t6 to the stack
+    sw t6, T6_STACK_OFFSET(sp)
 
     # Initialize t6 to point to the start of the regs_bank0 array
     la t6, regs_bank0
@@ -62,6 +110,7 @@ callee:
     sw x28, 112(t6)
     sw x29, 116(t6)
     sw x30, 120(t6)
+#endif
 
     # Initialize t6 to point to the start of the regs_bank1 array
 #ifndef __riscv_float_abi_soft
@@ -101,14 +150,37 @@ callee:
 #endif
     la t6, regs_bank0
 
+#if __riscv_xlen == 64
     # handle t6/x31
-    lw x30, -4(sp)
+    ld x30, T6_STACK_OFFSET(sp)
+    sd x30, 248(t6)
+    ld x30, 240(t6)
+    # Note: t6 register itself (x31) is not stored to regs_bank0 array
+
+    # save the callee-saved register
+    sd s2, S2_STACK_OFFSET(sp)
+
+    # save the return address to a callee-saved register
+    ld s2, 8(t6)
+
+    # call to dump_information
+    mv x10, sp
+    call dump_information
+
+    # restore the return address
+    addi ra, s2, 0
+
+    # restore the calee-saved register
+    ld s2, S2_STACK_OFFSET(sp)
+#else
+    # handle t6/x31
+    lw x30, T6_STACK_OFFSET(sp)
     sw x30, 124(t6)
     lw x30, 120(t6)
     # Note: t6 register itself (x31) is not stored to regs_bank0 array
 
     # save the callee-saved register
-    sw s2, -8(sp)
+    sw s2, S2_STACK_OFFSET(sp)
 
     # save the return address to a callee-saved register
     lw s2, 4(t6)
@@ -121,7 +193,8 @@ callee:
     addi ra, s2, 0
 
     # restore the calee-saved register
-    lw s2, -8(sp)
+    lw s2, S2_STACK_OFFSET(sp)
+#endif
 
     ret
 

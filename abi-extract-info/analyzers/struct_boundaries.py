@@ -142,10 +142,10 @@ class StructTests:
             # so we cannot consider the size of an int. If an int is 32-bit,
             # it would split the value, which is incorrect the double data type.
             register_bank_count = self.Target.get_register_bank_count()
-            if dtype == "double" and register_bank_count == "0x2":
-                register_size = self.Target.get_type_details("double")["size"]
+            if dtype == "double" and register_bank_count == 2:
+                register_size = self.Target.get_register_size("regs_bank1")
             else:
-                register_size = self.Target.get_type_details("int")["size"]
+                register_size = self.Target.get_register_size("regs_bank0")
 
             if len(iterations) > 1:
                 iteration = iterations[-2]
@@ -527,7 +527,7 @@ class StructBoundaryAnalyzer(analyzer.Analyzer):
             # The struct has not been passed by reference yet, so increment
             # the char limit by one.
             char_limit += 1
-            if char_limit == 10:
+            if char_limit == 20:
                 print("breaking for safe purposes [struct_boundaries]")
                 break
 
@@ -584,7 +584,7 @@ class StructBoundaryAnalyzer(analyzer.Analyzer):
                     stack = dump_information.get_stack()
                     reg_banks = dump_information.get_reg_banks()
                     # Get the register bank count from the header dump information.
-                    register_bank_count = dump_information.get_header_info(2)
+                    register_bank_count = dump_information.get_reg_bank_count()
 
                     # Extract the struct sizeof from C test case.
                     # Regular expression to match the size
@@ -615,7 +615,6 @@ class StructBoundaryAnalyzer(analyzer.Analyzer):
         return StructTests(self.Target).prepare_summary(results)
 
     def analyze(self):
-        # TODO: Test for 64-bit scenarios.
         content = self.analyze_struct_boundaries()
 
         content += StructBoundaryAnalyzerSpecialCase(

@@ -8,12 +8,18 @@
 
 class DumpInformation:
     def __init__(self):
-        self.HeaderInfo = list()
-        self.RegBanks = dict()
-        self.Stack = list()
+        self.stack_ptr = ""
+        self.stack_ptr_size = 0
+        self.reg_bank_count = 0
+        self.reg_bank_infos = {}
+        self.RegBanks = {}
+        self.Stack = []
 
-    def get_header_info(self, index):
-        return self.HeaderInfo[index]
+    def get_reg_bank_count(self):
+        return self.reg_bank_count
+
+    def get_reg_bank_infos(self):
+        return self.reg_bank_infos
 
     def get_reg_banks(self):
         return self.RegBanks
@@ -31,16 +37,39 @@ class DumpInformation:
             #            return content
             return self.read_header(content[1:])
 
+
         # Delete comment - "// Header info"
         content.pop(0)
 
+        # FIXME Use "take while" if it exists.
+        header_lines = []
         while content:
             Content = content[0]
             if "//" in Content:
                 break
 
             Content = content.pop(0)
-            self.HeaderInfo.append(Content)
+            header_lines.append(Content)
+
+        assert len(header_lines) >= 6
+
+        # header structure:
+        #   - stack_ptr : hex
+        #   - sizeof(stack_ptr) : hex
+        #   - nr_of_register_banks : hex
+        # foreach register bank
+        #   - bank_id : string
+        #   - size of register : hex
+        #   - number of registers : hex
+        self.stack_ptr = int(header_lines[0], 16)
+        self.stack_ptr_size = int(header_lines[1], 16)
+        self.reg_bank_count = int(header_lines[2], 16)
+        for i in [(x * 3) + 3 for x in range(self.reg_bank_count)]:
+            bank_id = header_lines[i]
+            reg_bank_info = {}
+            reg_bank_info["size"] = int(header_lines[i + 1], 16)
+            reg_bank_info["nr"] = int(header_lines[i + 2], 16)
+            self.reg_bank_infos[bank_id] = reg_bank_info
 
         return content
 
@@ -115,10 +144,6 @@ class DumpInformation:
 
     def parse(self, Content):
         return self.parse_lines(Content.splitlines())
-
-
-def get_header_info(index):
-    return DumpInformation().get_header_info(index)
 
 
 def get_reg_banks():

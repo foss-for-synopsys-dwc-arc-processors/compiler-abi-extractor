@@ -11,6 +11,7 @@ class TargetArch:
         self.type_details = dict()
         self.argument_registers = []
         self.register_bank_count = 0
+        self.register_size = {}
 
     def set_type_details(self, type_details):
         self.type_details = type_details
@@ -35,6 +36,17 @@ class TargetArch:
 
     def get_type(self):
         raise NotImplementedError("Subclasses should implement this!")
+
+    def set_register_size(self, regs_bank, size):
+        self.register_size[regs_bank] = size
+
+    def get_register_size(self, regs_bank=None):
+        # Get the size of the general purpose register bank if none is
+        # specified. We consider this to be the first bank in the result of
+        # get_registers()
+        return self.register_size[
+            list(self.get_registers())[0] if regs_bank is None else regs_bank
+        ]
 
 
 # RISCV target specific

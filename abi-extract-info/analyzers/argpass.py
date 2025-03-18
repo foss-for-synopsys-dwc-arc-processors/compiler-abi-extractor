@@ -445,6 +445,12 @@ class ArgPassAnalyzer(analyzer.Analyzer):
                 dump_information = dumpInformation.DumpInformation()
                 dump_information.parse(stdout)
 
+                for (
+                    bank_id,
+                    reg_info,
+                ) in dump_information.get_reg_bank_infos().items():
+                    self.Target.set_register_size(bank_id, reg_info["size"])
+
                 # Get the stack and register bank information
                 stack = dump_information.get_stack()
                 reg_banks = dump_information.get_reg_banks()
