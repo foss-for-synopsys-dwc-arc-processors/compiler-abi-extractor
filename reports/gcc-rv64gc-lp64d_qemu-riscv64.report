@@ -63,6 +63,12 @@ Struct argument passing test:
 - sizeof(S) >  16 : passed by ref: [stack]
   - char : short : int : long : long long : float : a0, a1
   - double : fa0, fa1
+- floating point members
+  - float : double : fa0
+  - float, float : double, double : fa0, fa1
+  - float, char : double, char : fa0, a0
+  - float, float, float : a0, a1
+  - float, char, char : a0
 - empty struct is ignored by C compiler.
 
 Endianess test:

@@ -37,37 +37,6 @@ class StructGenerator:
 
     def generate_include(self):
         self.append("#include <stdio.h>")
-        self.append("#include <string.h>")
-
-    def generate_as_float(self):
-        self.append(
-            """
-inline static float ul_as_float(unsigned long lhs)
-{
-    float result;
-    memcpy(&result, &lhs, sizeof(float));
-    return result;
-}
-"""
-        )
-
-    def generate_as_double(self):
-        self.append(
-            """
-inline static double ull_as_double(unsigned long long lhs)
-{
-    double result;
-    memcpy(&result, &lhs, sizeof(double));
-    return result;
-}
-"""
-        )
-
-    def generate_converter(self):
-        if "float" in self.dtypes:
-            self.generate_as_float()
-        if "double" in self.dtypes:
-            self.generate_as_double()
 
     def generate_single_call_declare(self):
         declare_str = [
@@ -83,6 +52,30 @@ struct structType {
             % (declare_str)
         )
 
+        # The invidivdual members of `structType` will be assigned using
+        # hexadecimal integer values. We generate a "mirror" type with the same
+        # member types, except for the floating-point members replaced with
+        # members with integer types of the same size (and alignment).
+        # A union is used to assign the members using the "mirror" type.
+        MAP_FLOAT = {"float": "unsigned int", "double": "unsigned long long"}
+        assignment_dtypes = []
+        for dtype in self.dtypes:
+            assignment_dtypes.append(
+                MAP_FLOAT[dtype] if dtype in MAP_FLOAT else dtype
+            )
+        assignment_declare_str = [
+            f"    {dtype} a{i + 1};"
+            for i, dtype in enumerate(assignment_dtypes)
+        ]
+        self.append(
+            """
+struct assignmentType {
+%s
+};
+                """
+            % ("\n".join(assignment_declare_str))
+        )
+
     def generate_single_call_prototypes(self):
         self.append("extern void callee(struct structType);")
         self.append("extern void reset_registers();")
@@ -90,19 +83,26 @@ struct structType {
     def generate_single_call_main(self, hvalues):
         hvalues_str = []
         for index, dtype in enumerate(self.dtypes):
-            if dtype == "float":
-                hvalues_str.append(f"ul_as_float({hvalues[index]})")
-            elif dtype == "double":
-                hvalues_str.append(f"ull_as_double({hvalues[index]})")
-            else:
-                hvalues_str.append(hvalues[index])
+            hvalues_str.append(f".a.a{index + 1} = {hvalues[index]}")
+
+        # The struct object is a global value constructed at compile-time so we
+        # don't need any temporary registers to construct it during program
+        # execution which can potentially influence the analysis. The temporary
+        # register or the register used by the ABI can be impossible to
+        # disambiguate as they can contain identical values. We avoid the use
+        # of temporary registers this way. Instead they tend to be loaded
+        # directly in the correct register from memory.
         self.append(
             """
+union {
+    struct structType structTypeObject;
+    struct assignmentType a;
+} u = { %s };
+
 int main (void) {
     printf("Sizeof(struct structType): %%d\\n", sizeof(struct structType));
     reset_registers();
-    struct structType structTypeObject = { %s };
-    callee(structTypeObject);
+    callee(u.structTypeObject);
 
     return 0;
 }
@@ -112,7 +112,6 @@ int main (void) {
 
     def generate_single_call(self, hvalues):
         self.generate_include()
-        self.generate_converter()
         self.generate_single_call_declare()
         self.generate_single_call_prototypes()
         self.generate_single_call_main(hvalues)
@@ -238,88 +237,6 @@ class StructTests:
 
         return types, boundaries, passed_by_ref_value
 
-    def process_special_case(self, results):
-        res = {}
-        # Iterate through each dtype and corresponding iterations
-        for dtype, iterations in results.items():
-            dtype_str = dtype.replace("_", ",")
-
-            # Determine the limit
-            iterations_length = len(iterations)
-            if (
-                iterations[-1].get("passed_by_ref")
-                and iterations_length >= 2
-                and not iterations[-2]["passed_by_ref"]
-            ):
-                limit = len(iterations[-2]["dtypes,hvalues"])
-            else:
-                limit = 0
-
-            limit_str = str(limit)
-
-            # Initialize the data structure if not already present
-            if limit_str not in res:
-                res[limit_str] = {"<=": "", ">": "", "dtypes": []}
-
-            # Access res[limit_str] once
-            data = res[limit_str]
-
-            # Process each iteration
-            for iteration in iterations:
-                argc = len(iteration["dtypes,hvalues"])
-
-                # Handle dtypes and conditionally update "<=" and ">"
-                if argc <= limit:
-                    if dtype_str not in data["dtypes"]:
-                        data["dtypes"].append(dtype_str)
-                    if (
-                        iteration["registers_fill"]
-                        or iteration["registers_combined"]
-                        or iteration["registers_pairs"]
-                    ):
-                        data["<="] = "in registers"
-                    else:
-                        data["<="] = "unknown"
-                else:
-                    if dtype_str not in data["dtypes"]:
-                        data["dtypes"].append(dtype_str)
-                    data[">"] = f"by ref: {iteration['passed_by_ref']}"
-
-            # Second loop to check for matches if limit_str already exists
-            if limit_str in res:
-                for iteration in iterations:
-                    argc = len(iteration["dtypes,hvalues"])
-                    match = False
-
-                    if argc <= limit:
-                        if (
-                            iteration["registers_fill"]
-                            or iteration["registers_combined"]
-                            or iteration["registers_pairs"]
-                        ):
-                            if data["<="] == "in registers":
-                                match = True
-                    else:
-                        if data[">"] == f"by ref: {iteration['passed_by_ref']}":
-                            match = True
-
-                    if match and dtype_str not in data["dtypes"]:
-                        data["dtypes"].append(dtype_str)
-
-        return res
-
-    def summary_results_special_case(self, res):
-        summary = []
-        for limit, data in res.items():
-            if len(data["dtypes"]) != 4:
-                break
-            summary.append(f"- argc <= {limit} : passed {data['<=']}")
-            summary.append(f"- argc >  {limit} : passed {data['>']}")
-            dtypes_str = " : ".join(data["dtypes"])
-            summary.append(f"  - {dtypes_str}")
-        summary.append("")
-        return summary
-
     # Create a summary
     def summary_results(self, types, boundaries, passed_by_ref_value):
         types_dict = {}
@@ -352,12 +269,61 @@ class StructTests:
         return "\n".join(summary)
 
     def prepare_summary_special_case(self, results):
-        # Process the results
-        res = self.process_special_case(results)
+        # `results_map` maps the set of registers (+ pairs order) to the types
+        # that use these registers. Used to group all types that use the same
+        # registers.
+        #
+        # key : str(regs + pairs_order)
+        # value : [ list(regs)
+        #         , str(pairs_order)
+        #         , list(dtypes) ]
+        results_map = {}
+        bank_count = self.Target.get_register_bank_count()
 
-        # Summary and output the results
-        summary = self.summary_results_special_case(res)
-        return "\n".join(summary)
+        for dtypes_str, iterations in results.items():
+            for iteration in iterations:
+
+                # The RISC-V floating-point calling convention specifies that
+                # if structs with 2 members or less contain floating point
+                # members, all members will be passed in registers as if they
+                # were separate arguments (`registers_fill`) instead of being
+                # packed in integer registers (`registers_combined`).
+                member_count = len(iteration["dtypes,hvalues"])
+                combined_cc = (
+                    bank_count == 2
+                    and member_count > 2
+                    or bank_count == 1
+                    and member_count > 1
+                )
+                if iteration["passed_by_ref"]:
+                    regs = iteration["passed_by_ref"]
+                    if not regs in results_map:
+                        results_map[regs] = [[regs], "", []]
+                    results_map[regs][2].append(dtypes_str)
+                else:
+                    regs_fill = list(iteration["registers_pairs"].keys())
+                    if not regs_fill:
+                        regs_fill = list(iteration["registers_fill"].keys())
+                    regs_combined = list(iteration["registers_combined"].keys())
+                    regs = regs_combined if combined_cc else regs_fill
+
+                    pairs = iteration["pairs_order"]
+
+                    regs_key = "_".join(regs + [pairs])
+                    if regs_key not in results_map:
+                        results_map[regs_key] = [regs, "", []]
+                    results_map[regs_key][1] = iteration["pairs_order"]
+                    results_map[regs_key][2].append(dtypes_str)
+
+        res = ["- floating point members"]
+        for _, regs_pairs_dtypes in results_map.items():
+            regs, pairs, dtypes_str = regs_pairs_dtypes
+            # FIXME Don't put the underscore there in the first place.
+            d = " : ".join(dtypes_str)
+            r = ", ".join(regs)
+            res.append(f"  - {d} {pairs}: {r}")
+        res.append("")
+        return "\n".join(res)
 
     # Run the test to check if the value is in registers or the stack.
     def run_test(self, citeration, dtype, stack, register_banks, argv):
@@ -416,58 +382,61 @@ class StructBoundaryAnalyzerSpecialCase(analyzer.Analyzer):
         #   - double/double
         sc_results = {}
         special_cases = [
-            ["float", "double"],
-            ["double", "float"],
+            # Single float reg
+            ["float"],
+            ["double"],
+            # Both float regs
             ["float", "float"],
             ["double", "double"],
+            # Float and integer reg
+            ["float", "char"],
+            ["double", "char"],
+            # More than 2 fields -> integer struct convention
+            ["float", "float", "float"],
+            ["float", "char", "char"],
         ]
         for dtypes in special_cases:
-            dtypes_str = "_".join(dtypes)
+            dtypes_str = ", ".join(dtypes)
             sc_results[dtypes_str] = []
-            for index, i in enumerate([[], ["char"]]):
 
-                dtypes = dtypes + i
-                hvalues = helper.generate_hexa_list_from_datatypes(
-                    dtypes, self.Target
+            hvalues = helper.generate_hexa_list_from_datatypes(
+                dtypes, self.Target
+            )
+
+            stdout = self.generate(
+                StructGenerator(self.Target, None, dtypes).generate_single_call(
+                    hvalues
                 )
+            )
 
-                stdout = self.generate(
-                    StructGenerator(
-                        self.Target, None, dtypes
-                    ).generate_single_call(hvalues)
-                )
+            # Parse the dump information.
+            dump_information = dumpInformation.DumpInformation()
+            dump_information.parse(stdout)
 
-                # Parse the dump information.
-                dump_information = dumpInformation.DumpInformation()
-                dump_information.parse(stdout)
+            # Get stack and register bank information
+            stack = dump_information.get_stack()
+            reg_banks = dump_information.get_reg_banks()
 
-                # Get stack and register bank information
-                stack = dump_information.get_stack()
-                reg_banks = dump_information.get_reg_banks()
+            # Regular expression to match the size
+            regex = r"Sizeof\(struct structType\): (\d+)"
+            size = helper.parse_regex(regex, stdout)
 
-                # Regular expression to match the size
-                regex = r"Sizeof\(struct structType\): (\d+)"
-                size = helper.parse_regex(regex, stdout)
+            citeration = {}
+            citeration["sizeof(S)"] = size
 
-                citeration = {}
-                citeration["sizeof(S)"] = size
+            # Create tuple list of data type and the corresponding hexadecimal
+            # values.
+            tmp = [
+                (dtype, hvalues[index]) for index, dtype in enumerate(dtypes)
+            ]
+            citeration["dtypes,hvalues"] = tmp
 
-                # Create tuple list of data type and the corresponding hexadecimal
-                # values.
-                tmp = [
-                    (dtype, hvalues[index])
-                    for index, dtype in enumerate(dtypes)
-                ]
-                citeration["dtypes,hvalues"] = tmp
-
-                # FIXME The use of "double" is not correct, but it doesn't seem to
-                # make any difference here.
-                struct_tests.run_test(
-                    citeration, "double", stack, reg_banks, hvalues
-                )
-                sc_results[dtypes_str].append(citeration)
-                if citeration["passed_by_ref"] != None:
-                    break
+            # FIXME The use of "double" is not correct, but it doesn't seem to
+            # make any difference here.
+            struct_tests.run_test(
+                citeration, "double", stack, reg_banks, hvalues
+            )
+            sc_results[dtypes_str].append(citeration)
 
         return struct_tests.prepare_summary_special_case(sc_results)
 

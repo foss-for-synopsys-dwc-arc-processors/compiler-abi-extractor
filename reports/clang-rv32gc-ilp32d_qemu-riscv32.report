@@ -78,9 +78,12 @@ Struct argument passing test:
 - sizeof(S) <= 16 : passed in registers
 - sizeof(S) >  16 : passed by ref: [stack]
   - double : fa0, fa1
-- argc <= 2 : passed in registers
-- argc >  2 : passed by ref: [stack]
-  - float,double : double,float : float,float : double,double
+- floating point members
+  - float : double : fa0
+  - float, float : double, double : fa0, fa1
+  - float, char : double, char : fa0, a0
+  - float, float, float : [stack]
+  - float, char, char : a0, a1
 - empty struct is ignored by C compiler.
 
 Endianess test:

@@ -281,11 +281,6 @@ class HexUtils:
             res = []
             tmp = []
 
-            # Check if the current value is already of the expected size.
-            if self.sizeof(value) == register_size:
-                argv.pop(0)
-                continue
-
             # Aggregate values until the combined size reaches or exceeds register_size
             while (
                 argv
