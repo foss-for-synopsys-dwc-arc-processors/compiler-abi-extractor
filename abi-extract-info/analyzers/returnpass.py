@@ -87,7 +87,6 @@ inline static double ull_as_double(unsigned long long lhs)
 
     def generate_single_call_prototypes(self):
         self.append("extern void foo (void);")
-        self.append("extern void reset_registers (void);")
 
     def generate_single_call_bar(self, hvalue_return):
         if self._dtype == "float":
@@ -101,7 +100,6 @@ inline static double ull_as_double(unsigned long long lhs)
             """
 %s bar (void) {
     /* %s a = %s; */
-    reset_registers();
     return %s;
 }
 """

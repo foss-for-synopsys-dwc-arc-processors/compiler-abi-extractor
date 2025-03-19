@@ -78,7 +78,6 @@ struct assignmentType {
 
     def generate_single_call_prototypes(self):
         self.append("extern void callee(struct structType);")
-        self.append("extern void reset_registers();")
 
     def generate_single_call_main(self, hvalues):
         hvalues_str = []
@@ -101,7 +100,6 @@ union {
 
 int main (void) {
     printf("Sizeof(struct structType): %%d\\n", sizeof(struct structType));
-    reset_registers();
     callee(u.structTypeObject);
 
     return 0;

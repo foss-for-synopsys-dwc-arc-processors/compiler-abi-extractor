@@ -46,7 +46,6 @@ class ReturnGenerator:
 
     def generate_prototypes_main(self):
         self.append("extern void callee (void);")
-        self.append("extern void reset_registers (void);")
         self.append("extern void set_registers (int);")
         self.append("#define dump callee // this is temporary.")
         self.append("int* aux (void);")
@@ -81,7 +80,6 @@ void aux (void) {
         self.append(
             """
 int main (void) {
-    reset_registers();
     set_registers(%s);
     aux();
     dump();
